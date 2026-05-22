@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Astrologer {
+  id           Int           @id @default(autoincrement())
+  name         String
+  skills       String
+  price        Int
+  image        String
+  online       Boolean       @default(true)
+  rating       Float
+  createdAt    DateTime      @default(now())
+
+  chatSessions ChatSession[]
+}
+
+model ChatSession {
+  id                    Int        @id @default(autoincrement())
+  astrologerId          Int
+  status                String     @default("ACTIVE")
+  walletBalanceAtStart  Int        @default(0)
+  startedAt             DateTime   @default(now())
+  endedAt               DateTime?
+
+  astrologer            Astrologer @relation(fields: [astrologerId], references: [id])
+}

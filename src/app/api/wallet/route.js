@@ -1,34 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(request) {
   try {
-    let user = await prisma.user.findFirst({
-      where: {
-        email: "demo@astroplatform.com",
-      },
-      include: {
-        wallet: {
-          include: {
-            transactions: {
-              orderBy: { createdAt: "desc" },
-              take: 20,
-            },
-          },
-        },
-      },
-    });
+    const { searchParams } = new URL(request.url);
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          name: "Demo User",
-          email: "demo@astroplatform.com",
-          wallet: {
-            create: {
-              balance: 0,
-            },
-          },
+    const userId = searchParams.get("userId");
+    const phone = searchParams.get("phone");
+
+    let user = null;
+
+    if (userId) {
+      user = await prisma.user.findUnique({
+        where: {
+          id: Number(userId),
         },
         include: {
           wallet: {
@@ -41,6 +26,36 @@ export async function GET() {
           },
         },
       });
+    }
+
+    if (!user && phone) {
+      user = await prisma.user.findUnique({
+        where: {
+          phone,
+        },
+        include: {
+          wallet: {
+            include: {
+              transactions: {
+                orderBy: { createdAt: "desc" },
+                take: 20,
+              },
+            },
+          },
+        },
+      });
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User not found",
+        },
+        {
+          status: 404,
+        }
+      );
     }
 
     let wallet = user.wallet;
@@ -68,8 +83,13 @@ export async function GET() {
     console.error("GET_WALLET_ERROR", error);
 
     return NextResponse.json(
-      { error: "Unable to fetch wallet" },
-      { status: 500 }
+      {
+        success: false,
+        error: "Unable to fetch wallet",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import AuthGuard from "@/components/AuthGuard";
+import HomeWalletBalance from "@/components/HomeWalletBalance";
 
 export default async function HomePage() {
   const astrologers = await prisma.astrologer.findMany({
@@ -30,21 +31,7 @@ export default async function HomePage() {
                 </h1>
               </div>
 
-              <a
-                href="/wallet"
-                className="bg-white/50 backdrop-blur-xl border border-white/70 shadow-lg px-4 py-2 rounded-full min-w-[82px] text-center"
-              >
-                <p className="text-[10px] text-[#8A5A35] font-bold leading-none">
-                  Wallet
-                </p>
-
-                <p
-                  id="home-wallet-balance"
-                  className="text-sm font-extrabold"
-                >
-                  ₹0
-                </p>
-              </a>
+              <HomeWalletBalance />
             </div>
 
             <nav className="grid grid-cols-4 gap-2 text-[13px] font-bold">
@@ -77,34 +64,6 @@ export default async function HomePage() {
               </a>
             </nav>
           </header>
-
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                async function updateHomeWalletBalance() {
-                  try {
-                    const user = localStorage.getItem("astro-user");
-
-                    if (!user) return;
-
-                    const res = await fetch("/api/wallet", { cache: "no-store" });
-                    const data = await res.json();
-
-                    const el = document.getElementById("home-wallet-balance");
-
-                    if (el && data.success && data.wallet) {
-                      el.textContent = "₹" + data.wallet.balance;
-                    }
-                  } catch (error) {
-                    console.error("HOME_WALLET_FETCH_ERROR", error);
-                  }
-                }
-
-                updateHomeWalletBalance();
-                setInterval(updateHomeWalletBalance, 5000);
-              `,
-            }}
-          />
 
           <section className="relative z-10 px-4 pt-6">
             <div className="rounded-[34px] bg-white/38 backdrop-blur-2xl border border-white/65 shadow-2xl p-6 overflow-hidden relative">

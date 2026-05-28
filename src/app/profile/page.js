@@ -50,7 +50,7 @@ export default function ProfilePage() {
 
           <div className="bg-white/45 backdrop-blur-xl border border-white/60 rounded-3xl p-4">
             <p className="text-xs text-[#8A5A35] font-bold uppercase tracking-[0.18em]">
-              Chats
+              Chat
             </p>
             <p className="text-2xl font-extrabold mt-2">2</p>
           </div>
@@ -65,7 +65,7 @@ export default function ProfilePage() {
           </a>
 
           <a
-            href="/chats"
+            href="/chat"
             className="block bg-white/45 backdrop-blur-xl border border-white/60 rounded-3xl p-4 font-bold"
           >
             My Chats

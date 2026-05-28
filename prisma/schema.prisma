@@ -7,26 +7,76 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  email     String?  @unique
+  phone     String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallet       Wallet?
+  chatSessions ChatSession[]
+}
+
 model Astrologer {
-  id           Int           @id @default(autoincrement())
-  name         String
-  skills       String
-  price        Int
-  image        String
-  online       Boolean       @default(true)
-  rating       Float
-  createdAt    DateTime      @default(now())
+  id        Int      @id @default(autoincrement())
+  name      String
+  skills    String
+  price     Int
+  image     String
+  online    Boolean  @default(true)
+  rating    Float
+  createdAt DateTime @default(now())
 
   chatSessions ChatSession[]
 }
 
 model ChatSession {
-  id                    Int        @id @default(autoincrement())
-  astrologerId          Int
-  status                String     @default("ACTIVE")
-  walletBalanceAtStart  Int        @default(0)
-  startedAt             DateTime   @default(now())
-  endedAt               DateTime?
+  id                   Int      @id @default(autoincrement())
+  astrologerId         Int
+  userId               Int?
+  status               String   @default("ACTIVE")
+  walletBalanceAtStart Int      @default(0)
+  startedAt            DateTime @default(now())
+  endedAt              DateTime?
 
-  astrologer            Astrologer @relation(fields: [astrologerId], references: [id])
+  astrologer Astrologer @relation(fields: [astrologerId], references: [id])
+  user       User?      @relation(fields: [userId], references: [id])
+
+  messages ChatMessage[]
+}
+
+model ChatMessage {
+  id            Int      @id @default(autoincrement())
+  chatSessionId Int
+  sender        String
+  message       String
+  createdAt     DateTime @default(now())
+
+  chatSession ChatSession @relation(fields: [chatSessionId], references: [id])
+}
+
+model Wallet {
+  id        Int      @id @default(autoincrement())
+  balance   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id                Int      @id @default(autoincrement())
+  amount            Int
+  status            String   @default("SUCCESS")
+  razorpayOrderId   String
+  razorpayPaymentId String?
+  createdAt         DateTime @default(now())
+
+  walletId Int
+  wallet   Wallet @relation(fields: [walletId], references: [id])
 }

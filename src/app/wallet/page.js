@@ -1,117 +1,203 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
 export default function WalletPage() {
+  const [balance, setBalance] = useState(0);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const rechargePlans = [
+    { amount: 99, bonus: 0 },
+    { amount: 199, bonus: 20 },
+    { amount: 499, bonus: 75 },
+    { amount: 999, bonus: 200 },
+  ];
+
+  const fetchWallet = async () => {
+    try {
+      const res = await fetch("/api/wallet");
+      const data = await res.json();
+
+      if (data.success) {
+        setBalance(data.wallet.balance || 0);
+        setTransactions(data.wallet.transactions || []);
+      }
+    } catch (error) {
+      console.error("FETCH_WALLET_ERROR", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWallet();
+  }, []);
+
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const existingScript = document.querySelector(
+        'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+      );
+
+      if (existingScript) {
+        resolve(true);
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleRecharge = async (amount) => {
+    const loaded = await loadRazorpay();
+
+    if (!loaded) {
+      alert("Razorpay failed to load. Check internet connection.");
+      return;
+    }
+
+    const res = await fetch("/api/payment/create-order", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ amount }),
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert("Unable to create payment order");
+      return;
+    }
+
+    const options = {
+      key: data.key,
+      amount: data.order.amount,
+      currency: "INR",
+      name: "Astro Platform",
+      description: `Wallet Recharge ₹${amount}`,
+      order_id: data.order.id,
+
+      handler: async function (response) {
+        const verifyRes = await fetch("/api/payment/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          }),
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.success) {
+          alert("Wallet recharged successfully!");
+          fetchWallet();
+        } else {
+          alert("Payment verification failed.");
+        }
+      },
+
+      prefill: {
+        name: "Suraj",
+        email: "brandeleven.india@gmail.com",
+      },
+      theme: {
+        color: "#7c3f12",
+      },
+    };
+
+    const paymentObject = new window.Razorpay(options);
+    paymentObject.open();
+  };
+
   return (
-    <main
-      className="min-h-screen bg-[#F7EFE4] text-[#1F130D]"
-      style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
-    >
-      <div className="max-w-md mx-auto min-h-screen bg-gradient-to-br from-[#FFF8EF] via-[#F7E9D9] to-[#EED8BE] px-4 pt-5">
-
+    <main className="min-h-screen bg-[#f8efe3] px-5 py-6">
+      <div className="max-w-md mx-auto">
         <div className="flex items-center justify-between mb-6">
-
-          <a
-            href="/"
-            className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-xl border border-white/60 flex items-center justify-center shadow-md"
-          >
-            ←
-          </a>
-
-          <h1 className="text-2xl font-extrabold tracking-[-0.03em]">
-            Wallet
-          </h1>
-
-          <div className="w-10" />
-
+          <Link href="/" className="text-sm text-[#5b3215]">
+            ← Back
+          </Link>
+          <h1 className="text-xl font-semibold text-[#2b1608]">Wallet</h1>
+          <div />
         </div>
 
-        <div className="rounded-[34px] bg-[#24110A] text-white p-6 shadow-2xl">
-
-          <p className="text-sm text-[#D8C2B2] font-semibold">
-            Available Balance
-          </p>
-
-          <h2 className="text-5xl font-extrabold tracking-[-0.05em] mt-3">
-            ₹0
+        <div className="rounded-3xl bg-gradient-to-br from-[#4b250c] to-[#9b5a20] text-white p-6 shadow-xl mb-6">
+          <p className="text-sm opacity-80">Available Balance</p>
+          <h2 className="text-4xl font-bold mt-2">
+            {loading ? "..." : `₹${balance}`}
           </h2>
-
-          <p className="text-sm text-[#CBAF9C] mt-3">
-            Recharge wallet to start chatting instantly.
+          <p className="text-sm mt-3 opacity-90">
+            Use wallet balance to chat with astrologers.
           </p>
-
         </div>
 
-        <div className="mt-7">
+        <h3 className="text-lg font-semibold text-[#2b1608] mb-3">
+          Recharge Wallet
+        </h3>
 
-          <p className="text-sm uppercase tracking-[0.22em] text-[#8A5A35] font-bold mb-4">
-            Quick Recharge
-          </p>
-
-          <div className="grid grid-cols-2 gap-3">
-
-            {[100, 200, 500, 1000].map((amount) => (
-              <button
-                key={amount}
-                className="bg-white/45 backdrop-blur-xl border border-white/60 rounded-3xl py-5 shadow-lg"
-              >
-                <p className="text-2xl font-extrabold tracking-[-0.04em]">
-                  ₹{amount}
-                </p>
-
-                <p className="text-sm text-[#7A5A45] font-semibold mt-1">
-                  Add Money
-                </p>
-              </button>
-            ))}
-
-          </div>
-
+        <div className="grid grid-cols-2 gap-4">
+          {rechargePlans.map((plan) => (
+            <button
+              key={plan.amount}
+              onClick={() => handleRecharge(plan.amount)}
+              className="rounded-2xl bg-white p-5 text-left shadow-md border border-[#ead8c2] active:scale-95 transition"
+            >
+              <p className="text-2xl font-bold text-[#2b1608]">
+                ₹{plan.amount}
+              </p>
+              <p className="text-sm text-[#7a5a3a] mt-1">
+                {plan.bonus > 0 ? `₹${plan.bonus} bonus` : "Starter recharge"}
+              </p>
+            </button>
+          ))}
         </div>
 
-        <button className="w-full mt-8 bg-[#24110A] text-white rounded-3xl py-4 text-lg font-bold shadow-xl">
-          Proceed to Recharge
-        </button>
+        <div className="mt-6 rounded-2xl bg-white p-5 border border-[#ead8c2]">
+          <h3 className="font-semibold text-[#2b1608]">Transactions</h3>
 
-        <div className="mt-10">
+          {transactions.length === 0 ? (
+            <p className="text-sm text-[#7a5a3a] mt-2">
+              No transactions yet. Your recharge history will appear here.
+            </p>
+          ) : (
+            <div className="mt-3 space-y-3">
+              {transactions.map((txn) => (
+                <div
+                  key={txn.id}
+                  className="flex items-center justify-between rounded-xl bg-[#fff8ef] border border-[#f0dec7] px-4 py-3"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-[#2b1608]">
+                      Wallet Recharge
+                    </p>
+                    <p className="text-xs text-[#8a6a4a]">
+                      {new Date(txn.createdAt).toLocaleString("en-IN")}
+                    </p>
+                  </div>
 
-          <p className="text-sm uppercase tracking-[0.22em] text-[#8A5A35] font-bold mb-4">
-            Recent Transactions
-          </p>
-
-          <div className="space-y-3">
-
-            <div className="bg-white/45 backdrop-blur-xl border border-white/60 rounded-3xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-bold">Wallet Recharge</p>
-                  <p className="text-sm text-[#7A5A45]">
-                    Today • 10:30 AM
-                  </p>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-green-700">
+                      +₹{txn.amount}
+                    </p>
+                    <p className="text-xs text-[#8a6a4a]">{txn.status}</p>
+                  </div>
                 </div>
-
-                <p className="font-extrabold text-green-600">
-                  +₹500
-                </p>
-              </div>
+              ))}
             </div>
-
-            <div className="bg-white/45 backdrop-blur-xl border border-white/60 rounded-3xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-bold">Chat Session</p>
-                  <p className="text-sm text-[#7A5A45]">
-                    Yesterday • 08:15 PM
-                  </p>
-                </div>
-
-                <p className="font-extrabold text-red-500">
-                  -₹75
-                </p>
-              </div>
-            </div>
-
-          </div>
-
+          )}
         </div>
-
       </div>
     </main>
   );

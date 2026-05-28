@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
+
 export default async function HomePage() {
   const astrologers = await prisma.astrologer.findMany({
     orderBy: {
       createdAt: "desc",
     },
   });
+
   return (
     <main
       className="min-h-screen bg-[#F7EFE4] text-[#1F130D]"
@@ -28,13 +30,18 @@ export default async function HomePage() {
 
             <a
               href="/wallet"
-              className="bg-white/50 backdrop-blur-xl border border-white/70 shadow-lg px-4 py-2 rounded-full"
+              className="bg-white/50 backdrop-blur-xl border border-white/70 shadow-lg px-4 py-2 rounded-full min-w-[82px] text-center"
             >
               <p className="text-[10px] text-[#8A5A35] font-bold leading-none">
                 Wallet
               </p>
 
-              <p className="text-sm font-extrabold">₹0</p>
+              <p
+                id="home-wallet-balance"
+                className="text-sm font-extrabold"
+              >
+                ₹0
+              </p>
             </a>
           </div>
 
@@ -54,10 +61,10 @@ export default async function HomePage() {
             </a>
 
             <a
-              href="/chats"
+              href="/chat"
               className="bg-white/45 backdrop-blur-xl border border-white/60 text-[#6F452B] rounded-full py-2.5 text-center"
             >
-              Chats
+              Chat
             </a>
 
             <a
@@ -68,6 +75,30 @@ export default async function HomePage() {
             </a>
           </nav>
         </header>
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              async function updateHomeWalletBalance() {
+                try {
+                  const res = await fetch("/api/wallet", { cache: "no-store" });
+                  const data = await res.json();
+
+                  const el = document.getElementById("home-wallet-balance");
+
+                  if (el && data.success && data.wallet) {
+                    el.textContent = "₹" + data.wallet.balance;
+                  }
+                } catch (error) {
+                  console.error("HOME_WALLET_FETCH_ERROR", error);
+                }
+              }
+
+              updateHomeWalletBalance();
+              setInterval(updateHomeWalletBalance, 5000);
+            `,
+          }}
+        />
 
         <section className="relative z-10 px-4 pt-6">
           <div className="rounded-[34px] bg-white/38 backdrop-blur-2xl border border-white/65 shadow-2xl p-6 overflow-hidden relative">
@@ -147,7 +178,7 @@ export default async function HomePage() {
                   <img
                     src={astro.image}
                     alt={astro.name}
-                      referrerPolicy="no-referrer"
+                    referrerPolicy="no-referrer"
                     className="w-20 h-20 rounded-[24px] object-cover shadow-md"
                   />
 

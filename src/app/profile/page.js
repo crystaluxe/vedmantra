@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import FirstChatOfferBanner from "@/components/FirstChatOfferBanner";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -110,7 +109,6 @@ export default function ProfilePage() {
   ...
 </div>
 
-<FirstChatOfferBanner />
 
 <div className="relative z-10 bg-[#24110A] text-white rounded-[38px] p-5 shadow-2xl overflow-hidden"></div>
         <div className="relative z-10 flex items-center justify-between mb-6">

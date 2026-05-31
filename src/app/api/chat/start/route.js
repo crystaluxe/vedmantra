@@ -3,11 +3,19 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { astrologerId } = body;
+
+    const { astrologerId, userId } = body;
 
     if (!astrologerId) {
       return Response.json(
         { success: false, error: "Astrologer ID is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!userId) {
+      return Response.json(
+        { success: false, error: "User ID is required" },
         { status: 400 }
       );
     }
@@ -32,9 +40,9 @@ export async function POST(request) {
       );
     }
 
-    let user = await prisma.user.findFirst({
+    const user = await prisma.user.findUnique({
       where: {
-        email: "demo@astroplatform.com",
+        id: Number(userId),
       },
       include: {
         wallet: true,
@@ -42,20 +50,10 @@ export async function POST(request) {
     });
 
     if (!user) {
-      user = await prisma.user.create({
-        data: {
-          name: "Demo User",
-          email: "demo@astroplatform.com",
-          wallet: {
-            create: {
-              balance: 0,
-            },
-          },
-        },
-        include: {
-          wallet: true,
-        },
-      });
+      return Response.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
     }
 
     let wallet = user.wallet;

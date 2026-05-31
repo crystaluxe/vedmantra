@@ -11,12 +11,32 @@ export default function StartChatButton({ astrologerId }) {
     try {
       setLoading(true);
 
+      const userData = localStorage.getItem("astro-user");
+
+      if (!userData) {
+        alert("Please login first");
+        router.push("/login");
+        return;
+      }
+
+      const user = JSON.parse(userData);
+
+      if (!user?.id) {
+        alert("Login expired. Please login again.");
+        localStorage.removeItem("astro-user");
+        router.push("/login");
+        return;
+      }
+
       const res = await fetch("/api/chat/start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ astrologerId }),
+        body: JSON.stringify({
+          astrologerId,
+          userId: user.id,
+        }),
       });
 
       const data = await res.json();

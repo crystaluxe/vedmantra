@@ -1,9 +1,5 @@
-import { initializeApp } from "firebase/app";
-
-import {
-  getAuth,
-  RecaptchaVerifier,
-} from "firebase/auth";
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth, RecaptchaVerifier } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAMplxTm0AIrwcubutOG5kPH9tQi69zRAE",
@@ -14,8 +10,7 @@ const firebaseConfig = {
   appId: "1:649288027186:web:379c940bddd36ec8c8402b",
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-
 export { RecaptchaVerifier };

@@ -15,30 +15,26 @@ export default function WalletPage() {
     { amount: 999, bonus: 200 },
   ];
 
+  const getLoggedInUser = () => {
+    const userData = localStorage.getItem("astro-user");
+    return userData ? JSON.parse(userData) : null;
+  };
+
   const fetchWallet = async () => {
     try {
-      const userData = localStorage.getItem("astro-user");
+      setLoading(true);
 
-      if (!userData) {
+      const user = getLoggedInUser();
+
+      if (!user?.id && !user?.phone) {
         setBalance(0);
         setTransactions([]);
         return;
       }
 
-      const user = JSON.parse(userData);
-
-      const userId = user?.id;
-      const phone = user?.phone;
-
-      if (!userId && !phone) {
-        setBalance(0);
-        setTransactions([]);
-        return;
-      }
-
-      const query = userId
-        ? `userId=${userId}`
-        : `phone=${encodeURIComponent(phone)}`;
+      const query = user?.id
+        ? `userId=${user.id}`
+        : `phone=${encodeURIComponent(user.phone)}`;
 
       const res = await fetch(`/api/wallet?${query}`, {
         cache: "no-store",
@@ -46,11 +42,9 @@ export default function WalletPage() {
 
       const data = await res.json();
 
-      console.log("WALLET PAGE RESPONSE:", data);
-
       if (data.success) {
-        setBalance(Number(data.wallet.balance || 0));
-        setTransactions(data.wallet.transactions || []);
+        setBalance(Number(data.wallet?.balance || 0));
+        setTransactions(data.wallet?.transactions || []);
       } else {
         setBalance(0);
         setTransactions([]);
@@ -88,71 +82,85 @@ export default function WalletPage() {
   };
 
   const handleRecharge = async (amount) => {
-    const loaded = await loadRazorpay();
+    try {
+      const user = getLoggedInUser();
 
-    if (!loaded) {
-      alert("Razorpay failed to load. Check internet connection.");
-      return;
+      if (!user?.id) {
+        alert("Please login again before recharging wallet.");
+        return;
+      }
+
+      const loaded = await loadRazorpay();
+
+      if (!loaded) {
+        alert("Razorpay failed to load. Check internet connection.");
+        return;
+      }
+
+      const res = await fetch("/api/payment/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ amount }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert("Unable to create payment order");
+        return;
+      }
+
+      const options = {
+        key: data.key,
+        amount: data.order.amount,
+        currency: "INR",
+        name: "Vedmantra",
+        description: `Wallet Recharge ₹${amount}`,
+        order_id: data.order.id,
+
+        handler: async function (response) {
+          const verifyRes = await fetch("/api/payment/verify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: user.id,
+              amount,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+
+          const verifyData = await verifyRes.json();
+
+          if (verifyData.success) {
+            alert("Wallet recharged successfully!");
+            fetchWallet();
+          } else {
+            alert(verifyData.error || "Payment verification failed.");
+          }
+        },
+
+        prefill: {
+          name: user?.name || "Vedmantra User",
+          email: user?.email || "support@vedmantra.com",
+          contact: user?.phone || "",
+        },
+        theme: {
+          color: "#7c3f12",
+        },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+    } catch (error) {
+      console.error("RECHARGE_ERROR", error);
+      alert("Something went wrong while starting recharge.");
     }
-
-    const res = await fetch("/api/payment/create-order", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ amount }),
-    });
-
-    const data = await res.json();
-
-    if (!data.success) {
-      alert("Unable to create payment order");
-      return;
-    }
-
-    const options = {
-      key: data.key,
-      amount: data.order.amount,
-      currency: "INR",
-      name: "Vedmantra",
-      description: `Wallet Recharge ₹${amount}`,
-      order_id: data.order.id,
-
-      handler: async function (response) {
-        const verifyRes = await fetch("/api/payment/verify", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            amount,
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-          }),
-        });
-
-        const verifyData = await verifyRes.json();
-
-        if (verifyData.success) {
-          alert("Wallet recharged successfully!");
-          fetchWallet();
-        } else {
-          alert("Payment verification failed.");
-        }
-      },
-
-      prefill: {
-        name: "Vedmantra User",
-        email: "support@vedmantra.com",
-      },
-      theme: {
-        color: "#7c3f12",
-      },
-    };
-
-    const paymentObject = new window.Razorpay(options);
-    paymentObject.open();
   };
 
   return (
@@ -218,7 +226,7 @@ export default function WalletPage() {
                 >
                   <div>
                     <p className="text-sm font-semibold text-[#2b1608]">
-                      Wallet Recharge
+                      {txn.type === "DEBIT" ? "Chat Deduction" : "Wallet Recharge"}
                     </p>
 
                     <p className="text-xs text-[#8a6a4a]">
@@ -227,11 +235,19 @@ export default function WalletPage() {
                   </div>
 
                   <div className="text-right">
-                    <p className="text-sm font-bold text-green-700">
-                      +₹{txn.amount}
+                    <p
+                      className={`text-sm font-bold ${
+                        txn.type === "DEBIT"
+                          ? "text-red-700"
+                          : "text-green-700"
+                      }`}
+                    >
+                      {txn.type === "DEBIT" ? "-" : "+"}₹{txn.amount}
                     </p>
 
-                    <p className="text-xs text-[#8a6a4a]">{txn.status}</p>
+                    <p className="text-xs text-[#8a6a4a]">
+                      {txn.status || "SUCCESS"}
+                    </p>
                   </div>
                 </div>
               ))}

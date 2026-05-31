@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req) {
   try {
     const {
+      userId,
       amount,
       razorpay_order_id,
       razorpay_payment_id,
@@ -25,9 +26,9 @@ export async function POST(req) {
       );
     }
 
-    let user = await prisma.user.findFirst({
+    const user = await prisma.user.findUnique({
       where: {
-        email: "demo@astroplatform.com",
+        id: Number(userId),
       },
       include: {
         wallet: true,
@@ -35,20 +36,10 @@ export async function POST(req) {
     });
 
     if (!user) {
-      user = await prisma.user.create({
-        data: {
-          name: "Demo User",
-          email: "demo@astroplatform.com",
-          wallet: {
-            create: {
-              balance: 0,
-            },
-          },
-        },
-        include: {
-          wallet: true,
-        },
-      });
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
     }
 
     let wallet = user.wallet;
@@ -67,10 +58,10 @@ export async function POST(req) {
         id: wallet.id,
       },
       data: {
-        balance: wallet.balance + amount,
+        balance: wallet.balance + Number(amount),
         transactions: {
           create: {
-            amount,
+            amount: Number(amount),
             razorpayOrderId: razorpay_order_id,
             razorpayPaymentId: razorpay_payment_id,
             status: "SUCCESS",

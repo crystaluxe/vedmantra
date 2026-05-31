@@ -10,6 +10,9 @@ export default function ProfilePage() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [chatCount, setChatCount] = useState(0);
 
+  const [editMode, setEditMode] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+
   useEffect(() => {
     const storedUser = localStorage.getItem("astro-user");
 
@@ -20,6 +23,7 @@ export default function ProfilePage() {
 
     const parsedUser = JSON.parse(storedUser);
     setUser(parsedUser);
+    setNameInput(parsedUser?.name || "");
 
     if (parsedUser?.id) {
       fetchWallet(parsedUser.id);
@@ -51,6 +55,24 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("Chat fetch failed:", error);
     }
+  }
+
+  function saveProfile() {
+    if (!nameInput.trim()) {
+      alert("Please enter your name");
+      return;
+    }
+
+    const updatedUser = {
+      ...user,
+      name: nameInput.trim(),
+    };
+
+    setUser(updatedUser);
+    localStorage.setItem("astro-user", JSON.stringify(updatedUser));
+    setEditMode(false);
+
+    alert("Profile updated successfully");
   }
 
   function handleLogout() {
@@ -99,19 +121,63 @@ export default function ProfilePage() {
               {firstLetter}
             </div>
 
-            <div className="flex-1">
-              <p className="text-xs uppercase tracking-[0.22em] text-[#E6C99A] font-bold">
-                Vedmantra Member
-              </p>
+            {editMode ? (
+              <div className="flex-1">
+                <p className="text-xs uppercase tracking-[0.22em] text-[#E6C99A] font-bold">
+                  Edit Profile
+                </p>
 
-              <h2 className="text-2xl font-black tracking-[-0.04em] mt-1">
-                {name}
-              </h2>
+                <input
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full mt-2 h-11 rounded-2xl bg-white/15 border border-white/20 px-4 text-white placeholder:text-white/50 outline-none font-bold"
+                />
 
-              <p className="text-sm text-white/70 font-semibold mt-1">
-                {phone}
-              </p>
-            </div>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={saveProfile}
+                    className="px-4 py-2 rounded-xl bg-[#F7D9A4] text-[#24110A] text-xs font-black"
+                  >
+                    Save
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setNameInput(user?.name || "");
+                      setEditMode(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-white/10 text-white text-xs font-black"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1">
+                <p className="text-xs uppercase tracking-[0.22em] text-[#E6C99A] font-bold">
+                  Vedmantra Member
+                </p>
+
+                <h2 className="text-2xl font-black tracking-[-0.04em] mt-1">
+                  {name}
+                </h2>
+
+                <p className="text-sm text-white/70 font-semibold mt-1">
+                  {phone}
+                </p>
+
+                <button
+                  onClick={() => {
+                    setNameInput(user?.name || "");
+                    setEditMode(true);
+                  }}
+                  className="mt-3 px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-xs font-black text-[#F7D9A4]"
+                >
+                  Edit Profile
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="relative grid grid-cols-2 gap-3 mt-6">
@@ -222,6 +288,7 @@ export default function ProfilePage() {
           <p className="text-xs uppercase tracking-[0.2em] text-[#8A5A35] font-black">
             Account Status
           </p>
+
           <div className="flex items-center justify-between mt-3">
             <div>
               <p className="font-black">Active User</p>

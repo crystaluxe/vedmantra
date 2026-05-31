@@ -9,7 +9,6 @@ export default function ProfilePage() {
   const [user, setUser] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0);
   const [chatCount, setChatCount] = useState(0);
-
   const [editMode, setEditMode] = useState(false);
   const [nameInput, setNameInput] = useState("");
 
@@ -22,7 +21,6 @@ export default function ProfilePage() {
     }
 
     const parsedUser = JSON.parse(storedUser);
-
     setUser(parsedUser);
     setNameInput(parsedUser?.name || "");
 
@@ -84,7 +82,6 @@ export default function ProfilePage() {
     setUser(updatedUser);
     localStorage.setItem("astro-user", JSON.stringify(updatedUser));
     setEditMode(false);
-
     alert("Profile updated successfully");
   }
 
@@ -105,12 +102,7 @@ export default function ProfilePage() {
       <div className="max-w-md mx-auto min-h-screen relative overflow-hidden bg-gradient-to-br from-[#FFF8EF] via-[#F5E4CF] to-[#E7C8A6] px-4 pt-5 pb-8">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#C58A45]/20 rounded-full blur-3xl" />
         <div className="absolute top-52 -left-24 w-56 h-56 bg-[#8B4513]/10 rounded-full blur-3xl" />
-<div className="relative z-10 flex items-center justify-between mb-6">
-  ...
-</div>
 
-
-<div className="relative z-10 bg-[#24110A] text-white rounded-[38px] p-5 shadow-2xl overflow-hidden"></div>
         <div className="relative z-10 flex items-center justify-between mb-6">
           <button
             onClick={() => router.push("/")}
@@ -271,24 +263,6 @@ export default function ProfilePage() {
           </button>
 
           <button
-            onClick={() =>
-              window.open(
-                "https://wa.me/919999999999?text=Hi%20Vedmantra%20Support",
-                "_blank"
-              )
-            }
-            className="w-full flex items-center justify-between p-4 border-b border-[#E8D5BF]"
-          >
-            <div>
-              <p className="font-black">Help & Support</p>
-              <p className="text-xs text-[#7A5A45] font-semibold mt-1">
-                Contact us on WhatsApp
-              </p>
-            </div>
-            <span className="text-xl">›</span>
-          </button>
-
-          <button
             onClick={handleLogout}
             className="w-full flex items-center justify-between p-4 text-red-500"
           >
@@ -300,25 +274,6 @@ export default function ProfilePage() {
             </div>
             <span className="text-xl">›</span>
           </button>
-        </div>
-
-        <div className="relative z-10 mt-6 rounded-[30px] bg-[#FFF8EF]/60 border border-white/70 p-4 shadow-lg">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#8A5A35] font-black">
-            Account Status
-          </p>
-
-          <div className="flex items-center justify-between mt-3">
-            <div>
-              <p className="font-black">Active User</p>
-              <p className="text-xs text-[#7A5A45] font-semibold mt-1">
-                Your account is ready for live astrology consultations.
-              </p>
-            </div>
-
-            <div className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-black">
-              Active
-            </div>
-          </div>
         </div>
       </div>
     </main>

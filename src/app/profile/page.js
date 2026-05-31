@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Toast from "@/components/Toast";
 
 export default function ProfilePage() {
   const router = useRouter();

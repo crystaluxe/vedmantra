@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import FirstChatOfferBanner from "@/components/FirstChatOfferBanner";
 
 export default function WalletPage() {
   const [balance, setBalance] = useState(0);
@@ -176,6 +177,8 @@ export default function WalletPage() {
           <div className="w-10" />
         </div>
 
+        <FirstChatOfferBanner />
+
         <div className="rounded-3xl bg-gradient-to-br from-[#4b250c] to-[#9b5a20] text-white p-6 shadow-xl mb-6">
           <p className="text-sm opacity-80">Available Balance</p>
 
@@ -226,7 +229,9 @@ export default function WalletPage() {
                 >
                   <div>
                     <p className="text-sm font-semibold text-[#2b1608]">
-                      {txn.type === "DEBIT" ? "Chat Deduction" : "Wallet Recharge"}
+                      {txn.type === "DEBIT"
+                        ? "Chat Deduction"
+                        : "Wallet Recharge"}
                     </p>
 
                     <p className="text-xs text-[#8a6a4a]">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import FirstChatOfferBanner from "@/components/FirstChatOfferBanner";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -105,7 +106,13 @@ export default function ProfilePage() {
       <div className="max-w-md mx-auto min-h-screen relative overflow-hidden bg-gradient-to-br from-[#FFF8EF] via-[#F5E4CF] to-[#E7C8A6] px-4 pt-5 pb-8">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#C58A45]/20 rounded-full blur-3xl" />
         <div className="absolute top-52 -left-24 w-56 h-56 bg-[#8B4513]/10 rounded-full blur-3xl" />
+<div className="relative z-10 flex items-center justify-between mb-6">
+  ...
+</div>
 
+<FirstChatOfferBanner />
+
+<div className="relative z-10 bg-[#24110A] text-white rounded-[38px] p-5 shadow-2xl overflow-hidden"></div>
         <div className="relative z-10 flex items-center justify-between mb-6">
           <button
             onClick={() => router.push("/")}

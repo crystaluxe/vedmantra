@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Toast from "@/components/Toast";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -23,6 +22,7 @@ export default function ProfilePage() {
     }
 
     const parsedUser = JSON.parse(storedUser);
+
     setUser(parsedUser);
     setNameInput(parsedUser?.name || "");
 
@@ -34,27 +34,39 @@ export default function ProfilePage() {
 
   async function fetchWallet(userId) {
     try {
-      const res = await fetch(`/api/wallet/get?userId=${userId}`);
+      const res = await fetch(`/api/wallet?userId=${userId}`, {
+        cache: "no-store",
+      });
+
       const data = await res.json();
 
       if (data?.success && data?.wallet) {
-        setWalletBalance(data.wallet.balance || 0);
+        setWalletBalance(Number(data.wallet.balance || 0));
+      } else {
+        setWalletBalance(0);
       }
     } catch (error) {
-      console.error("Wallet fetch failed:", error);
+      console.error("PROFILE_WALLET_FETCH_ERROR:", error);
+      setWalletBalance(0);
     }
   }
 
   async function fetchChats(userId) {
     try {
-      const res = await fetch(`/api/chat?userId=${userId}`);
+      const res = await fetch(`/api/chat/history?userId=${userId}`, {
+        cache: "no-store",
+      });
+
       const data = await res.json();
 
       if (data?.success && Array.isArray(data.chats)) {
         setChatCount(data.chats.length);
+      } else {
+        setChatCount(0);
       }
     } catch (error) {
-      console.error("Chat fetch failed:", error);
+      console.error("PROFILE_CHAT_FETCH_ERROR:", error);
+      setChatCount(0);
     }
   }
 
@@ -228,7 +240,7 @@ export default function ProfilePage() {
 
         <div className="relative z-10 mt-5 rounded-[32px] bg-white/50 backdrop-blur-xl border border-white/70 shadow-xl overflow-hidden">
           <button
-            onClick={() => router.push("/chat")}
+            onClick={() => router.push("/")}
             className="w-full flex items-center justify-between p-4 border-b border-[#E8D5BF]"
           >
             <div>

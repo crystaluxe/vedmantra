@@ -207,104 +207,119 @@ export default function LoginPage() {
 
   return (
     <main
-      className="min-h-screen bg-[#F7EFE4] text-[#1F130D] flex items-center justify-center px-4"
+      className="min-h-screen bg-[#F7EFE4] text-[#1F130D] flex items-center justify-center px-0"
       style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
     >
-      <div className="w-full max-w-md min-h-screen bg-gradient-to-br from-[#FFF8EF] via-[#F7E9D9] to-[#EED8BE] relative overflow-hidden px-5 py-8 flex flex-col justify-between">
-        <div className="absolute -top-24 -right-20 w-72 h-72 bg-[#C99055]/25 rounded-full blur-3xl" />
-        <div className="absolute top-80 -left-28 w-72 h-72 bg-[#6B2D1A]/15 rounded-full blur-3xl" />
+      <div className="w-full max-w-md min-h-screen relative overflow-visible bg-gradient-to-br from-[#FFF8EF] via-[#F3DEC5] to-[#DDB483] px-4 py-6 flex flex-col justify-between">
+        <div className="absolute -top-28 -right-24 w-80 h-80 bg-[#C99055]/30 rounded-full blur-3xl" />
+        <div className="absolute top-64 -left-28 w-72 h-72 bg-[#6B2D1A]/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-0 w-56 h-56 bg-[#F5D49A]/35 rounded-full blur-3xl" />
 
         <div className="relative z-10">
-          <div className="text-center pt-7">
-            <div className="w-20 h-20 mx-auto rounded-[28px] bg-[#24110A] text-white flex items-center justify-center text-4xl shadow-2xl">
+          <div className="text-center pt-8">
+            <div className="w-24 h-24 mx-auto rounded-[32px] bg-[#24110A] text-white flex items-center justify-center text-5xl shadow-2xl border border-[#D9A45D]/30">
               🔮
             </div>
 
-            <p className="mt-6 text-xs uppercase tracking-[0.28em] text-[#8A5A35] font-bold">
+            <p className="mt-6 text-xs uppercase tracking-[0.32em] text-[#8A5A35] font-black">
               Divine Guidance
             </p>
 
-            <h1 className="text-4xl font-extrabold tracking-[-0.04em] mt-2 text-[#24110A]">
+            <h1 className="text-5xl font-black tracking-[-0.07em] mt-2 text-[#24110A]">
               Vedmantra
             </h1>
 
-            <p className="text-[#6F513F] mt-4 text-[15px] leading-7 font-medium">
-              Connect with trusted astrologers for love, career, marriage,
-              kundli and spiritual guidance.
+            <p className="text-[#6F513F] mt-4 text-[15px] leading-7 font-semibold max-w-sm mx-auto">
+              Talk to trusted astrologers for love, career, marriage, kundli
+              and spiritual remedies.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mt-8">
+          <div className="grid grid-cols-4 gap-2 mt-7">
             {[
-              ["❤️", "Love", "Relationship guidance"],
-              ["💼", "Career", "Job & finance clarity"],
-              ["💍", "Marriage", "Kundli matching"],
-              ["✨", "Spiritual", "Remedies & healing"],
+              ["❤️", "Love"],
+              ["💼", "Career"],
+              ["💍", "Marriage"],
+              ["✨", "Remedy"],
             ].map((item) => (
               <div
                 key={item[1]}
-                className="bg-white/45 border border-white/60 rounded-3xl p-4 shadow-lg"
+                className="bg-white/45 border border-white/70 rounded-3xl p-3 shadow-lg text-center backdrop-blur-xl"
               >
                 <p className="text-2xl">{item[0]}</p>
-                <p className="font-extrabold mt-2">{item[1]}</p>
-                <p className="text-xs text-[#7A5A45] mt-1 font-semibold">
-                  {item[2]}
+                <p className="text-[11px] font-black mt-2 text-[#4B2A1B]">
+                  {item[1]}
                 </p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="relative z-10 bg-white/55 backdrop-blur-2xl border border-white/70 rounded-[34px] p-5 shadow-2xl mt-8">
+        <div className="relative z-10 bg-white/60 backdrop-blur-2xl border border-white/80 rounded-[38px] p-5 shadow-2xl mt-7 overflow-visible">
+          <div className="absolute -top-10 right-8 w-24 h-24 bg-[#D9A45D]/25 rounded-full blur-2xl" />
+
           {!confirmationResult ? (
             <>
-              <p className="text-xs uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
-                Secure Login
+              <p className="text-xs uppercase tracking-[0.24em] text-[#8A5A35] font-black">
+                Secure OTP Login
               </p>
 
-              <h2 className="text-2xl font-extrabold tracking-[-0.03em] mt-2">
-                Enter your mobile number
+              <h2 className="text-3xl font-black tracking-[-0.05em] mt-2">
+                Enter mobile number
               </h2>
 
+              <p className="text-sm text-[#7A5A45] font-semibold mt-2">
+                We’ll send a one-time password to verify your account.
+              </p>
+
               <div className="mt-5">
-                <label className="text-sm font-bold text-[#24110A]">
+                <label className="text-sm font-black text-[#24110A]">
                   Mobile Number
                 </label>
 
-                <input
-                  type="tel"
-                  placeholder="9999999999"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full mt-2 h-14 rounded-2xl bg-white border border-white px-5 outline-none font-bold text-lg placeholder:text-[#9A7B62] shadow-sm"
-                />
+                <div className="mt-2 h-15 rounded-[24px] bg-white border border-[#EAD8C2] shadow-sm flex items-center px-4 gap-3">
+                  <span className="font-black text-[#8A5A35]">+91</span>
+                  <input
+                    type="tel"
+                    placeholder="9999999999"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full h-14 bg-transparent outline-none font-black text-lg placeholder:text-[#B4987F]"
+                  />
+                </div>
               </div>
 
-              <div className="mt-4 flex justify-center overflow-hidden">
-                <div id="recaptcha-container" />
+              <div className="mt-5 w-full flex justify-center overflow-visible">
+                <div
+                  id="recaptcha-container"
+                  style={{
+                    transform: "scale(0.9)",
+                    transformOrigin: "center",
+                  }}
+                />
               </div>
 
               <button
                 onClick={sendOtp}
                 disabled={loading}
-                className="w-full mt-5 h-14 rounded-2xl bg-[#24110A] text-white font-bold text-lg shadow-xl disabled:opacity-60 active:scale-[0.98] transition"
+                className="w-full mt-5 h-15 rounded-[24px] bg-[#24110A] text-white font-black text-lg shadow-2xl disabled:opacity-60 active:scale-[0.98] transition"
               >
                 {loading ? "Sending OTP..." : "Send OTP"}
               </button>
             </>
           ) : (
             <>
-              <p className="text-xs uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
+              <p className="text-xs uppercase tracking-[0.24em] text-[#8A5A35] font-black">
                 OTP Verification
               </p>
 
-              <h2 className="text-2xl font-extrabold tracking-[-0.03em] mt-2">
-                Enter verification code
+              <h2 className="text-3xl font-black tracking-[-0.05em] mt-2">
+                Verify your number
               </h2>
 
-              <p className="text-sm text-[#6F513F] mt-2 font-medium">
-                We sent a 6 digit OTP to{" "}
-                <span className="font-extrabold text-[#24110A]">
+              <p className="text-sm text-[#6F513F] mt-2 font-semibold">
+                Enter the 6 digit code sent to{" "}
+                <span className="font-black text-[#24110A]">
                   {formatPhoneNumber(phone)}
                 </span>
               </p>
@@ -322,7 +337,7 @@ export default function LoginPage() {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className="h-14 w-full rounded-2xl bg-white border border-[#ead8c2] text-center text-xl font-extrabold outline-none shadow-sm focus:border-[#24110A]"
+                    className="h-14 w-full rounded-2xl bg-white border border-[#ead8c2] text-center text-xl font-black outline-none shadow-sm focus:border-[#24110A] focus:scale-[1.03] transition"
                   />
                 ))}
               </div>
@@ -330,7 +345,7 @@ export default function LoginPage() {
               <button
                 onClick={verifyOtp}
                 disabled={loading}
-                className="w-full mt-6 h-14 rounded-2xl bg-[#24110A] text-white font-bold text-lg shadow-xl disabled:opacity-60 active:scale-[0.98] transition"
+                className="w-full mt-6 h-15 rounded-[24px] bg-[#24110A] text-white font-black text-lg shadow-2xl disabled:opacity-60 active:scale-[0.98] transition"
               >
                 {loading ? "Verifying..." : "Verify & Continue"}
               </button>
@@ -338,12 +353,12 @@ export default function LoginPage() {
               <button
                 onClick={resetPhone}
                 disabled={loading}
-                className="w-full mt-3 h-12 rounded-2xl bg-[#f6ece0] text-[#24110A] font-bold"
+                className="w-full mt-3 h-12 rounded-[22px] bg-[#F6ECE0] text-[#24110A] font-black"
               >
                 Change Number
               </button>
 
-              <p className="text-center text-xs text-[#7A5A45] mt-4 font-semibold">
+              <p className="text-center text-xs text-[#7A5A45] mt-4 font-bold">
                 Didn’t receive OTP? Change number and try again.
               </p>
             </>
@@ -351,7 +366,7 @@ export default function LoginPage() {
 
           {message && (
             <div
-              className={`mt-4 rounded-2xl px-4 py-3 text-sm font-bold ${
+              className={`mt-4 rounded-2xl px-4 py-3 text-sm font-black ${
                 messageType === "success"
                   ? "bg-green-50 text-green-700 border border-green-100"
                   : "bg-red-50 text-red-600 border border-red-100"
@@ -367,9 +382,9 @@ export default function LoginPage() {
               ["⚡", "Instant"],
               ["✅", "Verified"],
             ].map((item) => (
-              <div key={item[1]} className="bg-white/45 rounded-2xl px-2 py-3">
+              <div key={item[1]} className="bg-white/55 rounded-2xl px-2 py-3">
                 <p className="text-lg">{item[0]}</p>
-                <p className="text-[10px] font-bold text-[#6F513F] mt-1">
+                <p className="text-[10px] font-black text-[#6F513F] mt-1">
                   {item[1]}
                 </p>
               </div>

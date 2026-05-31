@@ -1,82 +1,238 @@
-import { prisma } from "@/lib/prisma";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+  const router = useRouter();
+
+  const [user, setUser] = useState(null);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [chatCount, setChatCount] = useState(0);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("astro-user");
+
+    if (!storedUser) {
+      router.push("/login");
+      return;
+    }
+
+    const parsedUser = JSON.parse(storedUser);
+    setUser(parsedUser);
+
+    if (parsedUser?.id) {
+      fetchWallet(parsedUser.id);
+      fetchChats(parsedUser.id);
+    }
+  }, [router]);
+
+  async function fetchWallet(userId) {
+    try {
+      const res = await fetch(`/api/wallet/get?userId=${userId}`);
+      const data = await res.json();
+
+      if (data?.success && data?.wallet) {
+        setWalletBalance(data.wallet.balance || 0);
+      }
+    } catch (error) {
+      console.error("Wallet fetch failed:", error);
+    }
+  }
+
+  async function fetchChats(userId) {
+    try {
+      const res = await fetch(`/api/chat?userId=${userId}`);
+      const data = await res.json();
+
+      if (data?.success && Array.isArray(data.chats)) {
+        setChatCount(data.chats.length);
+      }
+    } catch (error) {
+      console.error("Chat fetch failed:", error);
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("astro-user");
+    router.push("/login");
+  }
+
+  const name = user?.name || "Vedmantra User";
+  const phone = user?.phone || "+91 XXXXX XXXXX";
+  const firstLetter = name?.charAt(0)?.toUpperCase() || "V";
+
   return (
     <main
       className="min-h-screen bg-[#F7EFE4] text-[#1F130D]"
       style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
     >
-      <div className="max-w-md mx-auto min-h-screen bg-gradient-to-br from-[#FFF8EF] via-[#F7E9D9] to-[#EED8BE] px-4 pt-5">
-        <div className="flex items-center justify-between mb-6">
-          <a
-            href="/"
-            className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-xl border border-white/60 flex items-center justify-center shadow-md"
+      <div className="max-w-md mx-auto min-h-screen relative overflow-hidden bg-gradient-to-br from-[#FFF8EF] via-[#F5E4CF] to-[#E7C8A6] px-4 pt-5 pb-8">
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#C58A45]/20 rounded-full blur-3xl" />
+        <div className="absolute top-52 -left-24 w-56 h-56 bg-[#8B4513]/10 rounded-full blur-3xl" />
+
+        <div className="relative z-10 flex items-center justify-between mb-6">
+          <button
+            onClick={() => router.push("/")}
+            className="w-11 h-11 rounded-full bg-white/55 backdrop-blur-xl border border-white/70 flex items-center justify-center shadow-lg text-xl"
           >
             ←
-          </a>
+          </button>
 
-          <h1 className="text-2xl font-extrabold tracking-[-0.03em]">
-            Profile
+          <h1 className="text-2xl font-extrabold tracking-[-0.04em]">
+            My Profile
           </h1>
 
-          <div className="w-10" />
+          <button
+            onClick={() => router.push("/wallet")}
+            className="w-11 h-11 rounded-full bg-[#24110A] text-white flex items-center justify-center shadow-lg"
+          >
+            ₹
+          </button>
         </div>
 
-        <div className="bg-white/45 backdrop-blur-2xl rounded-[34px] p-5 shadow-xl border border-white/65">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-3xl bg-[#24110A] text-white flex items-center justify-center text-3xl font-extrabold">
-              S
+        <div className="relative z-10 bg-[#24110A] text-white rounded-[38px] p-5 shadow-2xl overflow-hidden">
+          <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#D9A45D]/25 rounded-full blur-2xl" />
+
+          <div className="relative flex items-center gap-4">
+            <div className="w-20 h-20 rounded-[28px] bg-gradient-to-br from-[#F7D9A4] to-[#B97835] text-[#24110A] flex items-center justify-center text-3xl font-black shadow-xl">
+              {firstLetter}
             </div>
 
-            <div>
-              <h2 className="text-2xl font-extrabold tracking-[-0.03em]">
-                Suraj
+            <div className="flex-1">
+              <p className="text-xs uppercase tracking-[0.22em] text-[#E6C99A] font-bold">
+                Vedmantra Member
+              </p>
+
+              <h2 className="text-2xl font-black tracking-[-0.04em] mt-1">
+                {name}
               </h2>
 
-              <p className="text-sm text-[#7A5A45] font-semibold mt-1">
-                +91 XXXXX XXXXX
+              <p className="text-sm text-white/70 font-semibold mt-1">
+                {phone}
               </p>
             </div>
           </div>
+
+          <div className="relative grid grid-cols-2 gap-3 mt-6">
+            <div className="bg-white/10 border border-white/15 rounded-3xl p-4">
+              <p className="text-xs text-white/55 font-bold uppercase tracking-[0.16em]">
+                Wallet
+              </p>
+              <p className="text-3xl font-black mt-1">₹{walletBalance}</p>
+            </div>
+
+            <div className="bg-white/10 border border-white/15 rounded-3xl p-4">
+              <p className="text-xs text-white/55 font-bold uppercase tracking-[0.16em]">
+                Consults
+              </p>
+              <p className="text-3xl font-black mt-1">{chatCount}</p>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-5">
-          <div className="bg-white/45 backdrop-blur-xl border border-white/60 rounded-3xl p-4">
-            <p className="text-xs text-[#8A5A35] font-bold uppercase tracking-[0.18em]">
-              Wallet
+        <div className="relative z-10 grid grid-cols-2 gap-3 mt-5">
+          <button
+            onClick={() => router.push("/wallet")}
+            className="rounded-[28px] p-4 bg-white/55 backdrop-blur-xl border border-white/70 shadow-lg text-left"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-[#FFF0D8] flex items-center justify-center text-xl mb-3">
+              💰
+            </div>
+            <p className="font-black tracking-[-0.02em]">Recharge</p>
+            <p className="text-xs text-[#7A5A45] font-semibold mt-1">
+              Add wallet balance
             </p>
-            <p className="text-2xl font-extrabold mt-2">₹0</p>
-          </div>
+          </button>
 
-          <div className="bg-white/45 backdrop-blur-xl border border-white/60 rounded-3xl p-4">
-            <p className="text-xs text-[#8A5A35] font-bold uppercase tracking-[0.18em]">
-              Chat
+          <button
+            onClick={() => router.push("/chat")}
+            className="rounded-[28px] p-4 bg-white/55 backdrop-blur-xl border border-white/70 shadow-lg text-left"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-[#FFF0D8] flex items-center justify-center text-xl mb-3">
+              🔮
+            </div>
+            <p className="font-black tracking-[-0.02em]">My Chats</p>
+            <p className="text-xs text-[#7A5A45] font-semibold mt-1">
+              View consultations
             </p>
-            <p className="text-2xl font-extrabold mt-2">2</p>
-          </div>
+          </button>
         </div>
 
-        <div className="mt-7 space-y-3">
-          <a
-            href="/wallet"
-            className="block bg-white/45 backdrop-blur-xl border border-white/60 rounded-3xl p-4 font-bold"
+        <div className="relative z-10 mt-5 rounded-[32px] bg-white/50 backdrop-blur-xl border border-white/70 shadow-xl overflow-hidden">
+          <button
+            onClick={() => router.push("/chat")}
+            className="w-full flex items-center justify-between p-4 border-b border-[#E8D5BF]"
           >
-            Wallet & Recharge
-          </a>
+            <div>
+              <p className="font-black">Talk to Astrologer</p>
+              <p className="text-xs text-[#7A5A45] font-semibold mt-1">
+                Start a new live consultation
+              </p>
+            </div>
+            <span className="text-xl">›</span>
+          </button>
 
-          <a
-            href="/chat"
-            className="block bg-white/45 backdrop-blur-xl border border-white/60 rounded-3xl p-4 font-bold"
+          <button
+            onClick={() => router.push("/wallet")}
+            className="w-full flex items-center justify-between p-4 border-b border-[#E8D5BF]"
           >
-            My Chats
-          </a>
+            <div>
+              <p className="font-black">Wallet & Recharge</p>
+              <p className="text-xs text-[#7A5A45] font-semibold mt-1">
+                Manage your wallet balance
+              </p>
+            </div>
+            <span className="text-xl">›</span>
+          </button>
 
-          <div className="bg-white/45 backdrop-blur-xl border border-white/60 rounded-3xl p-4 font-bold">
-            Help & Support
-          </div>
+          <button
+            onClick={() =>
+              window.open(
+                "https://wa.me/919999999999?text=Hi%20Vedmantra%20Support",
+                "_blank"
+              )
+            }
+            className="w-full flex items-center justify-between p-4 border-b border-[#E8D5BF]"
+          >
+            <div>
+              <p className="font-black">Help & Support</p>
+              <p className="text-xs text-[#7A5A45] font-semibold mt-1">
+                Contact us on WhatsApp
+              </p>
+            </div>
+            <span className="text-xl">›</span>
+          </button>
 
-          <div className="bg-white/45 backdrop-blur-xl border border-white/60 rounded-3xl p-4 font-bold text-red-500">
-            Logout
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-between p-4 text-red-500"
+          >
+            <div>
+              <p className="font-black">Logout</p>
+              <p className="text-xs text-red-400 font-semibold mt-1">
+                Sign out from this device
+              </p>
+            </div>
+            <span className="text-xl">›</span>
+          </button>
+        </div>
+
+        <div className="relative z-10 mt-6 rounded-[30px] bg-[#FFF8EF]/60 border border-white/70 p-4 shadow-lg">
+          <p className="text-xs uppercase tracking-[0.2em] text-[#8A5A35] font-black">
+            Account Status
+          </p>
+          <div className="flex items-center justify-between mt-3">
+            <div>
+              <p className="font-black">Active User</p>
+              <p className="text-xs text-[#7A5A45] font-semibold mt-1">
+                Your account is ready for live astrology consultations.
+              </p>
+            </div>
+
+            <div className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-black">
+              Active
+            </div>
           </div>
         </div>
       </div>

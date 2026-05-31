@@ -67,19 +67,23 @@ export async function POST(request) {
       });
     }
 
-    const minimumBalanceRequired = astrologer.price;
+    const hasFreeOffer = !user.freeChatUsed;
 
-    if (wallet.balance < minimumBalanceRequired) {
-      return Response.json(
-        {
-          success: false,
-          error: `Insufficient wallet balance. Recharge at least ₹${minimumBalanceRequired} to start chat.`,
-          code: "INSUFFICIENT_BALANCE",
-          balance: wallet.balance,
-          required: minimumBalanceRequired,
-        },
-        { status: 402 }
-      );
+    if (!hasFreeOffer) {
+      const minimumBalanceRequired = astrologer.price;
+
+      if (wallet.balance < minimumBalanceRequired) {
+        return Response.json(
+          {
+            success: false,
+            error: `Insufficient wallet balance. Recharge at least ₹${minimumBalanceRequired} to start chat.`,
+            code: "INSUFFICIENT_BALANCE",
+            balance: wallet.balance,
+            required: minimumBalanceRequired,
+          },
+          { status: 402 }
+        );
+      }
     }
 
     const chatSession = await prisma.chatSession.create({
@@ -88,14 +92,28 @@ export async function POST(request) {
         userId: user.id,
         status: "ACTIVE",
         walletBalanceAtStart: wallet.balance,
+        freeMinutesRemaining: hasFreeOffer ? 5 : 0,
       },
     });
+
+    if (hasFreeOffer) {
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          freeChatUsed: true,
+        },
+      });
+    }
 
     return Response.json({
       success: true,
       chatSessionId: chatSession.id,
       walletBalanceAtStart: wallet.balance,
       astrologerPrice: astrologer.price,
+      freeOfferApplied: hasFreeOffer,
+      freeMinutesRemaining: hasFreeOffer ? 5 : 0,
     });
   } catch (error) {
     console.error("START_CHAT_ERROR:", error);

@@ -17,15 +17,48 @@ export default function WalletPage() {
 
   const fetchWallet = async () => {
     try {
-      const res = await fetch("/api/wallet");
+      const userData = localStorage.getItem("astro-user");
+
+      if (!userData) {
+        setBalance(0);
+        setTransactions([]);
+        return;
+      }
+
+      const user = JSON.parse(userData);
+
+      const userId = user?.id;
+      const phone = user?.phone;
+
+      if (!userId && !phone) {
+        setBalance(0);
+        setTransactions([]);
+        return;
+      }
+
+      const query = userId
+        ? `userId=${userId}`
+        : `phone=${encodeURIComponent(phone)}`;
+
+      const res = await fetch(`/api/wallet?${query}`, {
+        cache: "no-store",
+      });
+
       const data = await res.json();
 
+      console.log("WALLET PAGE RESPONSE:", data);
+
       if (data.success) {
-        setBalance(data.wallet.balance || 0);
+        setBalance(Number(data.wallet.balance || 0));
         setTransactions(data.wallet.transactions || []);
+      } else {
+        setBalance(0);
+        setTransactions([]);
       }
     } catch (error) {
       console.error("FETCH_WALLET_ERROR", error);
+      setBalance(0);
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -81,7 +114,7 @@ export default function WalletPage() {
       key: data.key,
       amount: data.order.amount,
       currency: "INR",
-      name: "Astro Platform",
+      name: "Vedmantra",
       description: `Wallet Recharge ₹${amount}`,
       order_id: data.order.id,
 
@@ -110,8 +143,8 @@ export default function WalletPage() {
       },
 
       prefill: {
-        name: "Suraj",
-        email: "brandeleven.india@gmail.com",
+        name: "Vedmantra User",
+        email: "support@vedmantra.com",
       },
       theme: {
         color: "#7c3f12",
@@ -129,15 +162,19 @@ export default function WalletPage() {
           <Link href="/" className="text-sm text-[#5b3215]">
             ← Back
           </Link>
+
           <h1 className="text-xl font-semibold text-[#2b1608]">Wallet</h1>
-          <div />
+
+          <div className="w-10" />
         </div>
 
         <div className="rounded-3xl bg-gradient-to-br from-[#4b250c] to-[#9b5a20] text-white p-6 shadow-xl mb-6">
           <p className="text-sm opacity-80">Available Balance</p>
+
           <h2 className="text-4xl font-bold mt-2">
             {loading ? "..." : `₹${balance}`}
           </h2>
+
           <p className="text-sm mt-3 opacity-90">
             Use wallet balance to chat with astrologers.
           </p>
@@ -157,6 +194,7 @@ export default function WalletPage() {
               <p className="text-2xl font-bold text-[#2b1608]">
                 ₹{plan.amount}
               </p>
+
               <p className="text-sm text-[#7a5a3a] mt-1">
                 {plan.bonus > 0 ? `₹${plan.bonus} bonus` : "Starter recharge"}
               </p>
@@ -182,6 +220,7 @@ export default function WalletPage() {
                     <p className="text-sm font-semibold text-[#2b1608]">
                       Wallet Recharge
                     </p>
+
                     <p className="text-xs text-[#8a6a4a]">
                       {new Date(txn.createdAt).toLocaleString("en-IN")}
                     </p>
@@ -191,6 +230,7 @@ export default function WalletPage() {
                     <p className="text-sm font-bold text-green-700">
                       +₹{txn.amount}
                     </p>
+
                     <p className="text-xs text-[#8a6a4a]">{txn.status}</p>
                   </div>
                 </div>

@@ -9,21 +9,47 @@ export default function HomeWalletBalance() {
     try {
       const userData = localStorage.getItem("astro-user");
 
-      if (!userData) return;
+      if (!userData) {
+        setBalance(0);
+        return;
+      }
 
       const user = JSON.parse(userData);
 
-      const res = await fetch(`/api/wallet?userId=${user.id}`, {
+      const userId = user?.id;
+      const phone = user?.phone;
+
+      if (!userId && !phone) {
+        setBalance(0);
+        return;
+      }
+
+      const query = userId
+        ? `userId=${userId}`
+        : `phone=${encodeURIComponent(phone)}`;
+
+      const res = await fetch(`/api/wallet?${query}`, {
         cache: "no-store",
       });
 
       const data = await res.json();
 
-      if (data.success && data.wallet) {
-        setBalance(data.wallet.balance);
+      console.log("HOME WALLET RESPONSE:", data);
+
+      if (data.success) {
+        const currentBalance =
+          data?.wallet?.balance ??
+          data?.balance ??
+          user?.wallet?.balance ??
+          0;
+
+        setBalance(Number(currentBalance));
+      } else {
+        setBalance(0);
       }
     } catch (error) {
       console.error("HOME_WALLET_ERROR", error);
+      setBalance(0);
     }
   };
 

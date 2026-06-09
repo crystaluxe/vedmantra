@@ -505,6 +505,96 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      <div className="relative z-10 mt-8 pb-10">
+  <footer className="rounded-[34px] overflow-hidden border border-[#E7CFAE] shadow-2xl bg-gradient-to-br from-[#2A1109] via-[#4A1B12] to-[#170805] text-[#FFF4E5]">
+    <div className="px-5 pt-7 pb-6">
+      <div className="text-center">
+        <div className="mx-auto mb-3 h-11 w-11 rounded-full border border-[#D6A85F] flex items-center justify-center text-[#F7D99B] text-2xl">
+          ✦
+        </div>
+
+        <h3 className="text-3xl font-black tracking-[-0.06em]">
+          Vedmantra
+        </h3>
+
+        <p className="mt-3 text-sm leading-6 text-[#F4D9B7]/80 font-semibold">
+          Ancient Vedic wisdom blended with modern guidance for love,
+          career, marriage, business and spiritual growth.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mt-6">
+        {[
+          ["📜", "Terms & Conditions", "/terms"],
+          ["🛡️", "Privacy Policy", "/privacy-policy"],
+          ["₹", "Refund Policy", "/refund-policy"],
+          ["🚚", "Shipping Policy", "/shipping-policy"],
+        ].map((item) => (
+          <a
+            key={item[1]}
+            href={item[2]}
+            className="rounded-[22px] bg-white/10 border border-white/10 px-3 py-4 text-center shadow-lg backdrop-blur-xl active:scale-[0.98] transition"
+          >
+            <div className="mx-auto mb-2 h-9 w-9 rounded-full bg-[#F7D99B]/15 border border-[#F7D99B]/30 flex items-center justify-center text-[#F7D99B] font-black">
+              {item[0]}
+            </div>
+            <p className="text-xs font-black text-[#FFF4E5] leading-4">
+              {item[1]}
+            </p>
+          </a>
+        ))}
+      </div>
+
+      <a
+        href="/cancellation-policy"
+        className="mt-3 flex items-center justify-center gap-2 rounded-[22px] bg-white/10 border border-white/10 px-4 py-4 text-center shadow-lg backdrop-blur-xl active:scale-[0.98] transition"
+      >
+        <span className="h-8 w-8 rounded-full bg-[#F7D99B]/15 border border-[#F7D99B]/30 flex items-center justify-center text-[#F7D99B] font-black">
+          ×
+        </span>
+        <span className="text-xs font-black text-[#FFF4E5]">
+          Cancellation Policy
+        </span>
+      </a>
+
+      <div className="grid grid-cols-3 gap-2 mt-6">
+        {[
+          ["🔐", "Secure"],
+          ["✅", "Verified"],
+          ["💬", "Support"],
+        ].map((item) => (
+          <div
+            key={item[1]}
+            className="rounded-2xl bg-[#F7D99B]/10 border border-[#F7D99B]/15 px-2 py-3 text-center"
+          >
+            <p className="text-lg">{item[0]}</p>
+            <p className="text-[10px] font-black text-[#F4D9B7] mt-1">
+              {item[1]}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 pt-5 border-t border-[#D6A85F]/30 text-center">
+        <p className="text-xs font-black text-[#F7D99B]">
+          © 2026 Vedmantra. All Rights Reserved.
+        </p>
+
+        <p className="mt-3 text-[11px] leading-5 text-[#F4D9B7]/70 font-semibold">
+          Astrology services are provided for guidance purposes only. Outcomes
+          may vary based on individual circumstances.
+        </p>
+
+        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#D6A85F]/40 bg-[#F7D99B]/10 px-4 py-2">
+          <span>🔒</span>
+          <span className="text-[11px] font-black text-[#F7D99B]">
+            Made with devotion • Guided by wisdom
+          </span>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
     </main>
   );
 }

@@ -29,7 +29,6 @@ export default function LoginPage() {
         } catch (error) {
           console.error(error);
         }
-
         window.recaptchaVerifier = null;
       }
     };
@@ -42,26 +41,20 @@ export default function LoginPage() {
 
   const formatPhoneNumber = (value) => {
     const cleaned = value.replace(/\s/g, "").replace(/-/g, "");
-
     if (cleaned.startsWith("+")) return cleaned;
     if (cleaned.length === 10) return `+91${cleaned}`;
-
     return cleaned;
   };
 
   const setupRecaptcha = async () => {
-    if (window.recaptchaVerifier) {
-      return window.recaptchaVerifier;
-    }
+    if (window.recaptchaVerifier) return window.recaptchaVerifier;
 
     window.recaptchaVerifier = new RecaptchaVerifier(
       auth,
       "recaptcha-container",
       {
         size: "normal",
-        callback: () => {
-          console.log("reCAPTCHA solved");
-        },
+        callback: () => console.log("reCAPTCHA solved"),
         "expired-callback": () => {
           window.recaptchaVerifier = null;
           showMessage("Security check expired. Please try again.", "error");
@@ -108,7 +101,6 @@ export default function LoginPage() {
         } catch (clearError) {
           console.error(clearError);
         }
-
         window.recaptchaVerifier = null;
       }
 
@@ -200,10 +192,15 @@ export default function LoginPage() {
       } catch (error) {
         console.error(error);
       }
-
       window.recaptchaVerifier = null;
     }
   };
+
+  const astrologers = [
+    ["Acharya Rahul", "Love & Marriage", "4.9"],
+    ["Kavita Rao", "Career & Finance", "4.8"],
+    ["Nidhi Sharma", "Kundali Expert", "4.9"],
+  ];
 
   return (
     <main
@@ -214,12 +211,12 @@ export default function LoginPage() {
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#C99055]/25 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-64 -left-24 w-64 h-64 bg-[#6B2D1A]/12 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 text-center pt-6">
-          <div className="w-24 h-24 mx-auto rounded-[32px] bg-[#24110A] text-white flex items-center justify-center text-5xl shadow-2xl">
-            🔮
+        <div className="relative z-10 text-center pt-5">
+          <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-[#2A130A] to-[#6B2D1A] text-[#F8D89B] flex items-center justify-center text-5xl shadow-2xl border border-[#F7D9A5]/40">
+            ☸
           </div>
 
-          <p className="mt-6 text-xs uppercase tracking-[0.28em] text-[#8A5A35] font-black">
+          <p className="mt-6 text-xs uppercase tracking-[0.3em] text-[#8A5A35] font-black">
             Divine Guidance
           </p>
 
@@ -227,32 +224,108 @@ export default function LoginPage() {
             Vedmantra
           </h1>
 
-          <p className="text-[#6F513F] mt-4 text-[15px] leading-7 font-semibold max-w-[320px] mx-auto">
-            Talk to trusted astrologers for love, career, marriage, kundli and
+          <p className="text-[#6F513F] mt-4 text-[15px] leading-7 font-semibold max-w-[340px] mx-auto">
+            Talk to verified astrologers for love, career, marriage, kundli and
             spiritual remedies.
           </p>
+
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {[
+              ["12k+", "Consults"],
+              ["20+", "Astrologers"],
+              ["2 min", "Avg Reply"],
+            ].map((item) => (
+              <div
+                key={item[1]}
+                className="bg-white/45 border border-white/70 rounded-3xl px-2 py-3 shadow-lg backdrop-blur-xl"
+              >
+                <p className="text-lg font-black text-[#24110A]">{item[0]}</p>
+                <p className="text-[10px] font-black text-[#7A5A45] mt-1">
+                  {item[1]}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="relative z-10 grid grid-cols-4 gap-2 mt-7">
-          {[
-            ["❤️", "Love"],
-            ["💼", "Career"],
-            ["💍", "Marriage"],
-            ["✨", "Remedy"],
-          ].map((item) => (
-            <div
-              key={item[1]}
-              className="min-w-0 bg-white/45 border border-white/70 rounded-3xl p-3 shadow-lg text-center backdrop-blur-xl"
-            >
-              <p className="text-2xl">{item[0]}</p>
-              <p className="text-[11px] font-black mt-2 text-[#4B2A1B] truncate">
-                {item[1]}
+        <div className="relative z-10 mt-6 bg-white/45 border border-white/70 rounded-[30px] p-4 shadow-xl backdrop-blur-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#8A5A35] font-black">
+                Today&apos;s Panchang
               </p>
+              <h3 className="text-xl font-black tracking-[-0.04em] mt-1">
+                Daily Vedic Insights
+              </h3>
             </div>
-          ))}
+            <div className="text-3xl">🌞</div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            {[
+              ["Tithi", "Shukla"],
+              ["Nakshatra", "Punarvasu"],
+              ["Sunrise", "05:44"],
+            ].map((item) => (
+              <div key={item[0]} className="bg-white/60 rounded-2xl p-3">
+                <p className="text-[10px] font-black text-[#8A5A35]">
+                  {item[0]}
+                </p>
+                <p className="text-xs font-black text-[#24110A] mt-1">
+                  {item[1]}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="relative z-10 mt-7 bg-white/60 backdrop-blur-2xl border border-white/80 rounded-[34px] p-5 shadow-2xl overflow-visible">
+        <div className="relative z-10 mt-5">
+          <p className="text-xs uppercase tracking-[0.22em] text-[#8A5A35] font-black mb-3">
+            Available Astrologers
+          </p>
+
+          <div className="space-y-3">
+            {astrologers.map((item, index) => (
+              <div
+                key={item[0]}
+                className="bg-white/55 border border-white/75 rounded-[26px] p-4 shadow-lg backdrop-blur-xl flex items-center gap-3"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-[#24110A] text-white flex items-center justify-center font-black">
+                  {index + 1}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-black text-[#24110A] truncate">
+                    {item[0]}
+                  </h3>
+                  <p className="text-xs font-bold text-[#7A5A45] mt-1">
+                    {item[1]}
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-xs font-black text-[#24110A]">
+                    ⭐ {item[2]}
+                  </p>
+                  <p className="text-[10px] font-black text-green-700 mt-1">
+                    Online
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-6 bg-white/60 backdrop-blur-2xl border border-white/80 rounded-[34px] p-5 shadow-2xl overflow-visible">
+          <div className="mb-5 bg-[#FFF8EF] border border-[#F0DEC8] rounded-[24px] px-4 py-3 text-center">
+            <p className="text-sm font-black text-[#24110A]">
+              ★★★★★ 4.9/5 Rating
+            </p>
+            <p className="text-xs font-bold text-[#7A5A45] mt-1">
+              Trusted by thousands across India
+            </p>
+          </div>
+
           {!confirmationResult ? (
             <>
               <p className="text-xs uppercase tracking-[0.22em] text-[#8A5A35] font-black">
@@ -260,11 +333,11 @@ export default function LoginPage() {
               </p>
 
               <h2 className="text-3xl font-black tracking-[-0.05em] mt-2 leading-tight">
-                Enter mobile number
+                Continue to talk with astrologers
               </h2>
 
               <p className="text-sm text-[#7A5A45] font-semibold mt-2 leading-6">
-                We’ll send a one-time password to verify your account.
+                Enter your mobile number and start your private astrology chat.
               </p>
 
               <div className="mt-5">
@@ -381,6 +454,52 @@ export default function LoginPage() {
                 <p className="text-[10px] font-black text-[#6F513F] mt-1">
                   {item[1]}
                 </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-6 bg-[#24110A] text-white rounded-[32px] p-5 shadow-2xl">
+          <p className="text-xs uppercase tracking-[0.22em] text-[#F8D89B] font-black">
+            Free Kundali
+          </p>
+
+          <h3 className="text-2xl font-black tracking-[-0.05em] mt-2">
+            Want detailed kundali analysis?
+          </h3>
+
+          <p className="text-sm text-white/70 font-semibold leading-6 mt-2">
+            Login to generate your profile and connect with a kundali expert.
+          </p>
+
+          <button
+            onClick={() => {
+              document.querySelector("input[type='tel']")?.focus();
+            }}
+            className="w-full mt-4 h-13 rounded-[22px] bg-[#F8D89B] text-[#24110A] font-black"
+          >
+            Generate Janam Kundali
+          </button>
+        </div>
+
+        <div className="relative z-10 mt-6 pb-8">
+          <p className="text-xs uppercase tracking-[0.22em] text-[#8A5A35] font-black mb-3">
+            People usually ask
+          </p>
+
+          <div className="grid grid-cols-1 gap-2">
+            {[
+              "❤️ Will my relationship work?",
+              "💼 When will I get a job change?",
+              "💍 When will I get married?",
+              "💰 Will my business grow?",
+              "🏠 Is this a good time to buy property?",
+            ].map((question) => (
+              <div
+                key={question}
+                className="bg-white/45 border border-white/70 rounded-2xl px-4 py-3 text-sm font-black text-[#4B2A1B]"
+              >
+                {question}
               </div>
             ))}
           </div>

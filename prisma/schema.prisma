@@ -18,6 +18,18 @@ model User {
 
   wallet       Wallet?
   chatSessions ChatSession[]
+  pushTokens   UserPushToken[]
+}
+
+model UserPushToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model Astrologer {

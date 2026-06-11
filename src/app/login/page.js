@@ -167,6 +167,26 @@ export default function LoginPage() {
       }
 
       localStorage.setItem("astro-user", JSON.stringify(dbData.user));
+      try {
+  const { requestFcmToken } = await import("@/lib/firebase-messaging");
+
+  const token = await requestFcmToken();
+
+  if (token && dbData.user?.id) {
+    await fetch("/api/notifications/save-token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: dbData.user.id,
+        token,
+      }),
+    });
+  }
+} catch (notificationError) {
+  console.error("SAVE_PUSH_TOKEN_ERROR", notificationError);
+}
 
       showMessage("Login successful. Preparing your dashboard...", "success");
 

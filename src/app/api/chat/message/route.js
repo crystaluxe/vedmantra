@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import admin from "@/lib/firebase-admin";
+import { getFirebaseAdmin } from "@/lib/firebase-admin";
 
 export async function POST(request) {
   try {
@@ -23,20 +23,16 @@ export async function POST(request) {
     if (sender === "ADMIN") {
       try {
         const session = await prisma.chatSession.findUnique({
-          where: {
-            id: Number(chatSessionId),
-          },
-          include: {
-            astrologer: true,
-          },
+          where: { id: Number(chatSessionId) },
+          include: { astrologer: true },
         });
 
         if (session?.userId) {
           const tokens = await prisma.userPushToken.findMany({
-            where: {
-              userId: session.userId,
-            },
+            where: { userId: session.userId },
           });
+
+          const admin = getFirebaseAdmin();
 
           for (const tokenRow of tokens) {
             try {
@@ -59,11 +55,7 @@ export async function POST(request) {
                 },
               });
 
-              console.log(
-                "PUSH_SENT",
-                session.userId,
-                tokenRow.token.substring(0, 20)
-              );
+              console.log("PUSH_SENT", session.userId);
             } catch (pushError) {
               console.error("PUSH_SEND_ERROR", pushError);
             }

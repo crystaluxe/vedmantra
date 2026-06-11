@@ -61,9 +61,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
     try {
       const res = await fetch(
         `/api/chat/messages?chatSessionId=${chatSessionId}`,
-        {
-          cache: "no-store",
-        }
+        { cache: "no-store" }
       );
 
       const data = await safeJson(res);
@@ -72,9 +70,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         const newMessages = data.messages || [];
 
         const latestMessage =
-          newMessages.length > 0
-            ? newMessages[newMessages.length - 1]
-            : null;
+          newMessages.length > 0 ? newMessages[newMessages.length - 1] : null;
 
         if (
           latestMessage &&
@@ -173,7 +169,6 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
 
   const postMessageToServer = async (payload) => {
     const endpoints = ["/api/chat/message", "/api/chat/messages"];
-
     let lastError = null;
 
     for (const endpoint of endpoints) {
@@ -201,9 +196,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
     return {
       success: false,
       error:
-        lastError?.message ||
-        lastError ||
-        "Unable to connect to chat API",
+        lastError?.message || lastError || "Unable to connect to chat API",
     };
   };
 
@@ -296,10 +289,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
   };
 
   const formatTime = () => {
-    const mins = Math.floor(seconds / 60)
-      .toString()
-      .padStart(2, "0");
-
+    const mins = Math.floor(seconds / 60).toString().padStart(2, "0");
     const secs = (seconds % 60).toString().padStart(2, "0");
 
     return `${mins}:${secs}`;
@@ -320,13 +310,9 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           </div>
 
           <div className="text-right">
-            <p className="text-xs text-[#D8C2B2] font-bold">
-              Duration
-            </p>
+            <p className="text-xs text-[#D8C2B2] font-bold">Duration</p>
 
-            <p className="text-2xl font-extrabold">
-              {formatTime()}
-            </p>
+            <p className="text-2xl font-extrabold">{formatTime()}</p>
           </div>
 
           {deductedAmount && (
@@ -336,32 +322,11 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           )}
         </div>
 
-        <div className="mt-3 bg-white rounded-2xl p-4 shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-[#7a5a3a] font-bold">
-                LIVE WALLET BALANCE
-              </p>
-
-              <p className="text-2xl font-extrabold text-[#24110A]">
-                ₹{walletBalance}
-              </p>
-            </div>
-
-            <button
-              onClick={() => {
-                window.location.href = "/wallet";
-              }}
-              className="px-5 h-11 rounded-2xl bg-[#24110A] text-white font-semibold"
-            >
-              Recharge
-            </button>
-          </div>
-
+        <div className="mt-3">
           <button
             onClick={endChat}
             disabled={endingChat || chatEnded}
-            className="w-full mt-4 h-12 rounded-2xl bg-red-500 text-white font-bold shadow-lg disabled:opacity-60"
+            className="w-full h-12 rounded-2xl bg-red-500 text-white font-bold shadow-lg disabled:opacity-60"
           >
             {chatEnded
               ? "Consultation Ended"
@@ -391,9 +356,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           return (
             <div
               key={msg.id}
-              className={`flex ${
-                isUser ? "justify-end" : "justify-start"
-              }`}
+              className={`flex ${isUser ? "justify-end" : "justify-start"}`}
             >
               <div
                 className={`max-w-[82%] rounded-[24px] px-4 py-3 shadow-md ${
@@ -402,9 +365,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
                     : "bg-white/55 backdrop-blur-xl border border-white/60 rounded-tl-md"
                 } ${msg.pending ? "opacity-70" : ""}`}
               >
-                <p className="text-sm leading-6 font-medium">
-                  {msg.message}
-                </p>
+                <p className="text-sm leading-6 font-medium">{msg.message}</p>
 
                 <p
                   className={`text-[11px] mt-2 font-semibold ${
@@ -444,8 +405,8 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
             </h2>
 
             <p className="text-[#6b4b36] text-center mt-3 leading-7">
-              Your wallet balance is running low. Recharge now to
-              continue chatting without interruption.
+              Your wallet balance is running low. Recharge now to continue
+              chatting without interruption.
             </p>
 
             <div className="mt-6 space-y-3">
@@ -484,9 +445,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
               }
             }}
             placeholder={
-              chatEnded
-                ? "Consultation has ended"
-                : "Type your message..."
+              chatEnded ? "Consultation has ended" : "Type your message..."
             }
             className="flex-1 h-14 rounded-2xl bg-white/55 border border-white/70 px-5 outline-none placeholder:text-[#8A6B55] shadow-sm disabled:opacity-60"
           />

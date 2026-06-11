@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import FirstChatOfferBanner from "@/components/FirstChatOfferBanner";
 
 export default function WalletPage() {
   const [balance, setBalance] = useState(0);
@@ -149,7 +148,6 @@ export default function WalletPage() {
 
           if (verifyData.success) {
             trackMetaEvent("Purchase", amount);
-
             alert("Wallet recharged successfully!");
             fetchWallet();
           } else {
@@ -162,6 +160,7 @@ export default function WalletPage() {
           email: user?.email || "support@vedmantra.com",
           contact: user?.phone || "",
         },
+
         theme: {
           color: "#7c3f12",
         },
@@ -185,12 +184,12 @@ export default function WalletPage() {
             ← Back
           </Link>
 
-          <h1 className="text-xl font-semibold text-[#2b1608]">Wallet</h1>
+          <h1 className="text-xl font-semibold text-[#2b1608]">
+            Wallet
+          </h1>
 
           <div className="w-10" />
         </div>
-
-        <FirstChatOfferBanner />
 
         <div className="rounded-3xl bg-gradient-to-br from-[#4b250c] to-[#9b5a20] text-white p-6 shadow-xl mb-6">
           <p className="text-sm opacity-80">Available Balance</p>
@@ -220,14 +219,18 @@ export default function WalletPage() {
               </p>
 
               <p className="text-sm text-[#7a5a3a] mt-1">
-                {plan.bonus > 0 ? `₹${plan.bonus} bonus` : "Starter recharge"}
+                {plan.bonus > 0
+                  ? `₹${plan.bonus} bonus`
+                  : "Starter recharge"}
               </p>
             </button>
           ))}
         </div>
 
         <div className="mt-6 rounded-2xl bg-white p-5 border border-[#ead8c2]">
-          <h3 className="font-semibold text-[#2b1608]">Transactions</h3>
+          <h3 className="font-semibold text-[#2b1608]">
+            Transactions
+          </h3>
 
           {transactions.length === 0 ? (
             <p className="text-sm text-[#7a5a3a] mt-2">

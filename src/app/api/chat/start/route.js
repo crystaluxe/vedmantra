@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request) {
   try {
     const body = await request.json();
-
     const { astrologerId, userId } = body;
 
     if (!astrologerId) {
@@ -67,23 +66,21 @@ export async function POST(request) {
       });
     }
 
-    const hasFreeOffer = !user.freeChatUsed;
+    const currentBalance = Number(wallet.balance || 0);
+    const minimumBalanceRequired = Number(astrologer.price || 0);
 
-    if (!hasFreeOffer) {
-      const minimumBalanceRequired = astrologer.price;
-
-      if (wallet.balance < minimumBalanceRequired) {
-        return Response.json(
-          {
-            success: false,
-            error: `Insufficient wallet balance. Recharge at least ₹${minimumBalanceRequired} to start chat.`,
-            code: "INSUFFICIENT_BALANCE",
-            balance: wallet.balance,
-            required: minimumBalanceRequired,
-          },
-          { status: 402 }
-        );
-      }
+    if (currentBalance < minimumBalanceRequired) {
+      return Response.json(
+        {
+          success: false,
+          code: "INSUFFICIENT_BALANCE",
+          error: `Your wallet balance is ₹${currentBalance}. Please recharge to start chat with this astrologer.`,
+          balance: currentBalance,
+          required: minimumBalanceRequired,
+          redirectTo: "/wallet",
+        },
+        { status: 402 }
+      );
     }
 
     const chatSession = await prisma.chatSession.create({
@@ -91,29 +88,18 @@ export async function POST(request) {
         astrologerId: astrologer.id,
         userId: user.id,
         status: "ACTIVE",
-        walletBalanceAtStart: wallet.balance,
-        freeMinutesRemaining: hasFreeOffer ? 5 : 0,
+        walletBalanceAtStart: currentBalance,
+        freeMinutesRemaining: 0,
       },
     });
-
-    if (hasFreeOffer) {
-      await prisma.user.update({
-        where: {
-          id: user.id,
-        },
-        data: {
-          freeChatUsed: true,
-        },
-      });
-    }
 
     return Response.json({
       success: true,
       chatSessionId: chatSession.id,
-      walletBalanceAtStart: wallet.balance,
-      astrologerPrice: astrologer.price,
-      freeOfferApplied: hasFreeOffer,
-      freeMinutesRemaining: hasFreeOffer ? 5 : 0,
+      walletBalanceAtStart: currentBalance,
+      astrologerPrice: minimumBalanceRequired,
+      freeOfferApplied: false,
+      freeMinutesRemaining: 0,
     });
   } catch (error) {
     console.error("START_CHAT_ERROR:", error);

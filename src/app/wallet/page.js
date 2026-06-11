@@ -82,6 +82,15 @@ export default function WalletPage() {
     });
   };
 
+  const trackMetaEvent = (eventName, amount) => {
+    if (typeof window !== "undefined" && window.fbq) {
+      window.fbq("track", eventName, {
+        value: amount,
+        currency: "INR",
+      });
+    }
+  };
+
   const handleRecharge = async (amount) => {
     try {
       const user = getLoggedInUser();
@@ -139,6 +148,8 @@ export default function WalletPage() {
           const verifyData = await verifyRes.json();
 
           if (verifyData.success) {
+            trackMetaEvent("Purchase", amount);
+
             alert("Wallet recharged successfully!");
             fetchWallet();
           } else {
@@ -155,6 +166,8 @@ export default function WalletPage() {
           color: "#7c3f12",
         },
       };
+
+      trackMetaEvent("InitiateCheckout", amount);
 
       const paymentObject = new window.Razorpay(options);
       paymentObject.open();

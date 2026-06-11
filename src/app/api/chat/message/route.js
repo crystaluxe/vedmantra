@@ -20,7 +20,6 @@ export async function POST(request) {
       },
     });
 
-    // SEND PUSH ONLY WHEN ASTROLOGER / ADMIN REPLIES
     if (sender === "ADMIN") {
       try {
         const session = await prisma.chatSession.findUnique({
@@ -44,7 +43,9 @@ export async function POST(request) {
               await admin.messaging().send({
                 token: tokenRow.token,
                 notification: {
-                  title: `New message from ${session.astrologer?.name || "Astrologer"}`,
+                  title: `New message from ${
+                    session.astrologer?.name || "Astrologer"
+                  }`,
                   body:
                     message.length > 100
                       ? message.slice(0, 100) + "..."

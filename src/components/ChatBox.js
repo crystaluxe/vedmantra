@@ -15,6 +15,16 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
   const [chatEnded, setChatEnded] = useState(false);
 
   const messagesEndRef = useRef(null);
+  const lastMessageIdRef = useRef(null);
+  const notificationSoundRef = useRef(null);
+
+  useEffect(() => {
+    if ("Notification" in window) {
+      Notification.requestPermission();
+    }
+
+    notificationSoundRef.current = new Audio("/notification.mp3");
+  }, []);
 
   const safeJson = async (res) => {
     const text = await res.text();
@@ -59,7 +69,40 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
       const data = await safeJson(res);
 
       if (data.success) {
-        setMessages(data.messages || []);
+        const newMessages = data.messages || [];
+
+        const latestMessage =
+          newMessages.length > 0
+            ? newMessages[newMessages.length - 1]
+            : null;
+
+        if (
+          latestMessage &&
+          latestMessage.sender === "ADMIN" &&
+          latestMessage.id !== lastMessageIdRef.current
+        ) {
+          lastMessageIdRef.current = latestMessage.id;
+
+          if (document.visibilityState !== "visible") {
+            if (
+              "Notification" in window &&
+              Notification.permission === "granted"
+            ) {
+              new Notification("Vedmantra", {
+                body: "Your astrologer has replied.",
+                icon: "/favicon.ico",
+              });
+            }
+
+            try {
+              notificationSoundRef.current?.play();
+            } catch (error) {
+              console.error("NOTIFICATION_SOUND_ERROR", error);
+            }
+          }
+        }
+
+        setMessages(newMessages);
       }
     } catch (error) {
       console.error("FETCH_MESSAGES_ERROR", error);
@@ -71,7 +114,6 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
     fetchWallet();
 
     const messageInterval = setInterval(fetchMessages, 2000);
-
     const walletInterval = setInterval(fetchWallet, 5000);
 
     const timerInterval = setInterval(() => {
@@ -150,7 +192,6 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         }
 
         const data = await safeJson(res);
-
         return data;
       } catch (error) {
         lastError = error;
@@ -244,13 +285,10 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
       }
 
       setChatEnded(true);
-
       alert("Consultation ended successfully");
-
       window.location.href = "/";
     } catch (error) {
       console.error("END_CHAT_ERROR", error);
-
       alert("Unable to end chat");
     } finally {
       setEndingChat(false);

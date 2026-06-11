@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import admin from "@/lib/firebase-admin";
 
 export async function POST(request) {
   try {
@@ -18,6 +19,59 @@ export async function POST(request) {
         message,
       },
     });
+
+    // SEND PUSH ONLY WHEN ASTROLOGER / ADMIN REPLIES
+    if (sender === "ADMIN") {
+      try {
+        const session = await prisma.chatSession.findUnique({
+          where: {
+            id: Number(chatSessionId),
+          },
+          include: {
+            astrologer: true,
+          },
+        });
+
+        if (session?.userId) {
+          const tokens = await prisma.userPushToken.findMany({
+            where: {
+              userId: session.userId,
+            },
+          });
+
+          for (const tokenRow of tokens) {
+            try {
+              await admin.messaging().send({
+                token: tokenRow.token,
+                notification: {
+                  title: `New message from ${session.astrologer?.name || "Astrologer"}`,
+                  body:
+                    message.length > 100
+                      ? message.slice(0, 100) + "..."
+                      : message,
+                },
+                webpush: {
+                  notification: {
+                    icon: "/favicon.ico",
+                    badge: "/favicon.ico",
+                  },
+                },
+              });
+
+              console.log(
+                "PUSH_SENT",
+                session.userId,
+                tokenRow.token.substring(0, 20)
+              );
+            } catch (pushError) {
+              console.error("PUSH_SEND_ERROR", pushError);
+            }
+          }
+        }
+      } catch (notificationError) {
+        console.error("NOTIFICATION_ERROR", notificationError);
+      }
+    }
 
     return Response.json({
       success: true,

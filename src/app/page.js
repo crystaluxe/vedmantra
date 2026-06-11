@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import AuthGuard from "@/components/AuthGuard";
 import HomeWalletBalance from "@/components/HomeWalletBalance";
+import PushNotificationRegister from "@/components/PushNotificationRegister";
 
 export default async function HomePage() {
   const astrologers = await prisma.astrologer.findMany({
@@ -11,6 +12,7 @@ export default async function HomePage() {
 
   return (
     <AuthGuard>
+      <PushNotificationRegister />
       <main
         className="min-h-screen bg-[#F7EFE4] text-[#1F130D]"
         style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}

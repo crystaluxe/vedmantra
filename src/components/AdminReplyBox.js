@@ -11,9 +11,11 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
   const [chatMeta, setChatMeta] = useState(null);
   const [duration, setDuration] = useState("00:00");
   const [isTyping, setIsTyping] = useState(false);
+  const [showNewMessageButton, setShowNewMessageButton] = useState(false);
 
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const shouldAutoScroll = useRef(true);
 
   const safeJson = async (res) => {
     const text = await res.text();
@@ -57,7 +59,16 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
       const data = await safeJson(res);
 
       if (data.success) {
-        setMessages(data.messages || []);
+        setMessages((prev) => {
+          const oldLength = prev.length;
+          const newMessages = data.messages || [];
+
+          if (newMessages.length > oldLength && !shouldAutoScroll.current) {
+            setShowNewMessageButton(true);
+          }
+
+          return newMessages;
+        });
       }
     } catch (error) {
       console.error("FETCH_ADMIN_MESSAGES_ERROR", error);
@@ -82,6 +93,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
 
     const updateDuration = () => {
       const start = new Date(chatMeta.startedAt).getTime();
+
       const end =
         chatMeta.status === "ENDED" && chatMeta.endedAt
           ? new Date(chatMeta.endedAt).getTime()
@@ -102,10 +114,32 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
   }, [chatMeta?.startedAt, chatMeta?.status, chatMeta?.endedAt]);
 
   useEffect(() => {
+    if (shouldAutoScroll.current) {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }
+  }, [messages]);
+
+  const handleScroll = (e) => {
+    const el = e.target;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+
+    shouldAutoScroll.current = distanceFromBottom < 150;
+
+    if (shouldAutoScroll.current) {
+      setShowNewMessageButton(false);
+    }
+  };
+
+  const scrollToBottom = () => {
+    shouldAutoScroll.current = true;
+    setShowNewMessageButton(false);
+
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
     });
-  }, [messages]);
+  };
 
   const postMessageToServer = async (payload) => {
     const endpoints = ["/api/chat/message", "/api/chat/messages"];
@@ -155,6 +189,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
       setMessages((prev) => [...prev, tempMessage]);
       setMessage("");
       setIsTyping(false);
+      shouldAutoScroll.current = true;
 
       const data = await postMessageToServer({
         chatSessionId: Number(chatId),
@@ -175,9 +210,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
     } catch (error) {
       console.error("SEND_ADMIN_REPLY_ERROR", error);
 
-      setMessages((prev) =>
-        prev.filter((msg) => msg.id !== tempMessage.id)
-      );
+      setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
 
       alert("Something went wrong");
     } finally {
@@ -189,6 +222,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
     if (ending || !chatId) return;
 
     const confirmed = window.confirm("End this chat now?");
+
     if (!confirmed) return;
 
     try {
@@ -290,7 +324,10 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
         </button>
       </section>
 
-      <section className="flex-1 overflow-y-auto px-3 py-4 md:p-6 bg-[#f7efe4]">
+      <section
+        onScroll={handleScroll}
+        className="relative flex-1 overflow-y-auto px-3 py-4 md:p-6 bg-[#f7efe4]"
+      >
         <div className="space-y-4">
           {messages.map((msg) => {
             const isAstrologer =
@@ -353,6 +390,15 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
 
           <div ref={messagesEndRef} />
         </div>
+
+        {showNewMessageButton && (
+          <button
+            onClick={scrollToBottom}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#2b1208] text-white px-4 py-2 rounded-full text-xs font-bold shadow-xl"
+          >
+            New message ↓
+          </button>
+        )}
       </section>
 
       <footer className="bg-white border-t border-[#ead8c2] p-3 md:p-5">

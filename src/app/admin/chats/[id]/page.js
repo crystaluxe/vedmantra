@@ -11,7 +11,11 @@ export default async function AdminSingleChatPage({ params }) {
     },
     include: {
       astrologer: true,
-      user: true,
+      user: {
+        include: {
+          wallet: true,
+        },
+      },
       messages: {
         orderBy: {
           createdAt: "asc",
@@ -24,61 +28,108 @@ export default async function AdminSingleChatPage({ params }) {
     return <div>Chat not found</div>;
   }
 
+  const walletBalance = chat.user?.wallet?.balance || 0;
+
+  const startedAt = new Date(chat.startedAt);
+  const now = new Date();
+
+  const totalMinutes = Math.floor(
+    (now.getTime() - startedAt.getTime()) / 60000
+  );
+
   return (
     <main className="min-h-screen bg-[#f7efe4]">
-      <div className="max-w-2xl mx-auto min-h-screen flex flex-col">
-        <header className="bg-white p-5 shadow-sm border-b border-[#ead8c2]">
-          <h1 className="text-2xl font-bold text-[#2b1208]">
-            {chat.astrologer.name}
-          </h1>
+      <div className="max-w-4xl mx-auto min-h-screen flex flex-col">
 
-          <p className="text-sm text-[#7a5a3a] mt-1">
-            User: {chat.user?.name || "Demo User"}
-          </p>
-        </header>
+        <header className="bg-white border-b border-[#ead8c2] p-5 shadow-sm">
 
-        <section className="flex-1 p-5 space-y-4 overflow-y-auto">
-          {chat.messages.map((msg) => {
-            const isAstrologer = msg.sender === "ASTROLOGER";
+          <div className="flex justify-between items-start">
 
-            return (
-              <div
-                key={msg.id}
-                className={`flex ${
-                  isAstrologer ? "justify-end" : "justify-start"
+            <div>
+              <h1 className="text-3xl font-bold text-[#2b1208]">
+                {chat.astrologer.name}
+              </h1>
+
+              <p className="text-[#7a5a3a] mt-1">
+                User: {chat.user?.name || "Guest User"}
+              </p>
+            </div>
+
+            <div>
+              <form action="/api/end" method="POST">
+                <input
+                  type="hidden"
+                  name="chatSessionId"
+                  value={chat.id}
+                />
+
+                <button
+                  className="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-semibold"
+                >
+                  End Chat
+                </button>
+              </form>
+            </div>
+
+          </div>
+
+          <div className="grid grid-cols-4 gap-4 mt-5">
+
+            <div className="bg-[#fff8ef] border border-[#ead8c2] rounded-xl p-4">
+              <p className="text-xs text-[#7a5a3a] font-semibold">
+                Wallet Balance
+              </p>
+
+              <p className="text-2xl font-bold text-green-600">
+                ₹{walletBalance}
+              </p>
+            </div>
+
+            <div className="bg-[#fff8ef] border border-[#ead8c2] rounded-xl p-4">
+              <p className="text-xs text-[#7a5a3a] font-semibold">
+                Rate
+              </p>
+
+              <p className="text-2xl font-bold">
+                ₹{chat.astrologer.price}/min
+              </p>
+            </div>
+
+            <div className="bg-[#fff8ef] border border-[#ead8c2] rounded-xl p-4">
+              <p className="text-xs text-[#7a5a3a] font-semibold">
+                Session Time
+              </p>
+
+              <p className="text-2xl font-bold">
+                {totalMinutes} min
+              </p>
+            </div>
+
+            <div className="bg-[#fff8ef] border border-[#ead8c2] rounded-xl p-4">
+              <p className="text-xs text-[#7a5a3a] font-semibold">
+                Status
+              </p>
+
+              <p
+                className={`text-xl font-bold ${
+                  chat.status === "ACTIVE"
+                    ? "text-green-600"
+                    : "text-red-600"
                 }`}
               >
-                <div
-                  className={`max-w-[80%] px-4 py-3 rounded-3xl shadow-md ${
-                    isAstrologer
-                      ? "bg-[#2b1208] text-white"
-                      : "bg-white"
-                  }`}
-                >
-                  <p>{msg.message}</p>
+                {chat.status}
+              </p>
+            </div>
 
-                  <p
-                    className={`text-xs mt-2 ${
-                      isAstrologer
-                        ? "text-[#d8c2b2]"
-                        : "text-[#7a5a3a]"
-                    }`}
-                  >
-                    {new Date(msg.createdAt).toLocaleTimeString("en-IN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </section>
+          </div>
+
+        </header>
 
         <AdminReplyBox
-  chatId={chat.id}
-  initialMessages={chat.messages}
-/>
+          chatId={chat.id}
+          initialMessages={chat.messages}
+        />
+
       </div>
     </main>
   );

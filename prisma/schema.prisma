@@ -46,13 +46,14 @@ model Astrologer {
 }
 
 model ChatSession {
-  id                   Int      @id @default(autoincrement())
+  id                   Int       @id @default(autoincrement())
   astrologerId         Int
   userId               Int?
-  status               String   @default("ACTIVE")
-  walletBalanceAtStart Int      @default(0)
-  freeMinutesRemaining Int      @default(0)
-  startedAt            DateTime @default(now())
+  status               String    @default("ACTIVE")
+  walletBalanceAtStart Int       @default(0)
+  freeMinutesRemaining Int       @default(0)
+  startedAt            DateTime  @default(now())
+  lastDeductedAt       DateTime?
   endedAt              DateTime?
 
   astrologer Astrologer @relation(fields: [astrologerId], references: [id])

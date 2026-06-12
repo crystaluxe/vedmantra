@@ -5,18 +5,25 @@ export async function POST(request) {
     const { chatSessionId } = await request.json();
 
     const chatSession = await prisma.chatSession.findUnique({
-      where: { id: Number(chatSessionId) },
+      where: {
+        id: Number(chatSessionId),
+      },
       include: {
         astrologer: true,
         user: {
-          include: { wallet: true },
+          include: {
+            wallet: true,
+          },
         },
       },
     });
 
     if (!chatSession) {
       return Response.json(
-        { success: false, error: "Chat session not found" },
+        {
+          success: false,
+          error: "Chat session not found",
+        },
         { status: 404 }
       );
     }
@@ -33,71 +40,98 @@ export async function POST(request) {
 
     if (!wallet) {
       return Response.json(
-        { success: false, error: "Wallet not found" },
+        {
+          success: false,
+          error: "Wallet not found",
+        },
         { status: 404 }
       );
     }
 
     const astrologerPrice = Number(chatSession.astrologer.price || 0);
-    const currentBalance = Number(wallet.balance || 0);
 
-    if (currentBalance <= 0) {
-      await prisma.chatSession.update({
-        where: { id: chatSession.id },
-        data: {
-          status: "ENDED",
-          endedAt: new Date(),
-        },
-      });
+    const lastDeductedAt =
+      chatSession.lastDeductedAt || chatSession.startedAt;
 
+    const now = new Date();
+
+    const minutesElapsed = Math.floor(
+      (now.getTime() - new Date(lastDeductedAt).getTime()) / 60000
+    );
+
+    if (minutesElapsed < 1) {
       return Response.json({
-        success: false,
-        code: "LOW_BALANCE",
-        error: "Wallet balance exhausted",
-        balance: 0,
-        required: astrologerPrice,
-        chatEnded: true,
+        success: true,
+        balance: wallet.balance,
+        deducted: 0,
+        waiting: true,
       });
     }
 
-    const deductionAmount = Math.min(currentBalance, astrologerPrice);
+    const totalCharge = minutesElapsed * astrologerPrice;
+
+    const currentBalance = Number(wallet.balance || 0);
+
+    const deductionAmount = Math.min(
+      currentBalance,
+      totalCharge
+    );
+
     const newBalance = currentBalance - deductionAmount;
 
     const updatedWallet = await prisma.wallet.update({
-      where: { id: wallet.id },
-      data: { balance: newBalance },
+      where: {
+        id: wallet.id,
+      },
+      data: {
+        balance: newBalance,
+      },
+    });
+
+    await prisma.chatSession.update({
+      where: {
+        id: chatSession.id,
+      },
+      data: {
+        lastDeductedAt: now,
+      },
     });
 
     if (newBalance <= 0) {
       await prisma.chatSession.update({
-        where: { id: chatSession.id },
+        where: {
+          id: chatSession.id,
+        },
         data: {
           status: "ENDED",
-          endedAt: new Date(),
+          endedAt: now,
         },
       });
 
       return Response.json({
         success: true,
         code: "LOW_BALANCE",
-        balance: updatedWallet.balance,
         deducted: deductionAmount,
+        balance: 0,
         chatEnded: true,
-        message: "Wallet exhausted. Please recharge to continue.",
       });
     }
 
     return Response.json({
       success: true,
-      balance: updatedWallet.balance,
       deducted: deductionAmount,
+      balance: updatedWallet.balance,
+      minutesCharged: minutesElapsed,
       chatEnded: false,
     });
   } catch (error) {
     console.error("CHAT_DEDUCTION_ERROR", error);
 
     return Response.json(
-      { success: false, error: error.message },
+      {
+        success: false,
+        error: error.message,
+      },
       { status: 500 }
     );
   }

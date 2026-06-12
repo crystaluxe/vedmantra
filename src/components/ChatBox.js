@@ -139,6 +139,11 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           setTimeout(() => {
             setDeductedAmount(null);
           }, 2500);
+
+          if (data.chatEnded || data.code === "LOW_BALANCE") {
+            setChatPaused(true);
+            setShowRechargePopup(true);
+          }
         }
 
         if (!data.success && data.code === "LOW_BALANCE") {
@@ -397,10 +402,17 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         })}
 
         {chatPaused && (
-          <div className="flex justify-center">
-            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 rounded-full text-xs font-bold">
-              Recharge required to continue this chat
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-2 rounded-full text-xs font-extrabold">
+                CHAT ENDED
+              </div>
             </div>
+
+            <p className="text-center text-sm text-[#6b4b36] leading-6 px-4">
+              Your chat ended due to low wallet balance. Please recharge to
+              continue this consultation.
+            </p>
           </div>
         )}
 
@@ -421,22 +433,26 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
             <div className="w-16 h-1.5 bg-[#e7d4bf] rounded-full mx-auto mb-5" />
 
             <h2 className="text-2xl font-extrabold text-[#24110A] text-center">
-              Recharge Required
+              Continue This Chat
             </h2>
 
             <p className="text-[#6b4b36] text-center mt-3 leading-7">
-              Your wallet balance is below the astrologer&apos;s per minute
-              price. Please recharge to continue this consultation.
+              Your wallet balance is exhausted. Recharge now to continue your
+              consultation with the astrologer.
             </p>
 
-            <div className="mt-6">
+            <div className="mt-5 rounded-2xl bg-green-50 border border-green-100 px-4 py-4 text-green-700 font-bold text-center">
+              🎁 Recharge ₹199 and Get ₹20 Extra
+            </div>
+
+            <div className="mt-5">
               <button
                 onClick={() => {
                   window.location.href = "/wallet";
                 }}
-                className="w-full h-14 rounded-2xl bg-[#24110A] text-white font-bold text-lg shadow-xl"
+                className="w-full h-14 rounded-2xl bg-[#ff6a00] text-white font-bold text-lg shadow-xl"
               >
-                Recharge Wallet
+                Yes, Continue this chat
               </button>
             </div>
           </div>

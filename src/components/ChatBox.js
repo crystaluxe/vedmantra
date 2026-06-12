@@ -20,6 +20,30 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
   const notificationSoundRef = useRef(null);
 
   useEffect(() => {
+    if (!chatSessionId) return;
+
+    const key = `chat-started-at-${chatSessionId}`;
+    let startedAt = localStorage.getItem(key);
+
+    if (!startedAt) {
+      startedAt = new Date().toISOString();
+      localStorage.setItem(key, startedAt);
+    }
+
+    const updateTimer = () => {
+      const elapsed = Math.floor(
+        (Date.now() - new Date(startedAt).getTime()) / 1000
+      );
+      setSeconds(elapsed);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [chatSessionId]);
+
+  useEffect(() => {
     if ("Notification" in window) {
       Notification.requestPermission();
     }
@@ -112,10 +136,6 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
     const messageInterval = setInterval(fetchMessages, 2000);
     const walletInterval = setInterval(fetchWallet, 5000);
 
-    const timerInterval = setInterval(() => {
-      setSeconds((prev) => prev + 1);
-    }, 1000);
-
     const deductionInterval = setInterval(async () => {
       if (!chatSessionId || chatEnded || chatPaused) return;
 
@@ -134,11 +154,14 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
 
         if (data.success) {
           setWalletBalance(data.balance);
-          setDeductedAmount(data.deducted);
 
-          setTimeout(() => {
-            setDeductedAmount(null);
-          }, 2500);
+          if (data.deducted > 0) {
+            setDeductedAmount(data.deducted);
+
+            setTimeout(() => {
+              setDeductedAmount(null);
+            }, 2500);
+          }
 
           if (data.chatEnded || data.code === "LOW_BALANCE") {
             setChatPaused(true);
@@ -157,12 +180,11 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
       } catch (error) {
         console.error("DEDUCTION_ERROR", error);
       }
-    }, 60000);
+    }, 10000);
 
     return () => {
       clearInterval(messageInterval);
       clearInterval(walletInterval);
-      clearInterval(timerInterval);
       clearInterval(deductionInterval);
     };
   }, [chatSessionId, chatEnded, chatPaused]);
@@ -291,6 +313,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         return;
       }
 
+      localStorage.removeItem(`chat-started-at-${chatSessionId}`);
       setChatEnded(true);
       alert("Consultation ended successfully");
       window.location.href = "/";

@@ -13,6 +13,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
   const [seconds, setSeconds] = useState(0);
   const [endingChat, setEndingChat] = useState(false);
   const [chatEnded, setChatEnded] = useState(false);
+  const [chatPaused, setChatPaused] = useState(false);
 
   const messagesEndRef = useRef(null);
   const lastMessageIdRef = useRef(null);
@@ -68,7 +69,6 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
 
       if (data.success) {
         const newMessages = data.messages || [];
-
         const latestMessage =
           newMessages.length > 0 ? newMessages[newMessages.length - 1] : null;
 
@@ -117,7 +117,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
     }, 1000);
 
     const deductionInterval = setInterval(async () => {
-      if (!chatSessionId || chatEnded) return;
+      if (!chatSessionId || chatEnded || chatPaused) return;
 
       try {
         const res = await fetch("/api/chat/deduct", {
@@ -142,6 +142,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         }
 
         if (!data.success && data.code === "LOW_BALANCE") {
+          setChatPaused(true);
           setShowRechargePopup(true);
         }
 
@@ -159,7 +160,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
       clearInterval(timerInterval);
       clearInterval(deductionInterval);
     };
-  }, [chatSessionId, chatEnded]);
+  }, [chatSessionId, chatEnded, chatPaused]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -203,7 +204,15 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
   const sendMessage = async () => {
     const cleanMessage = input.trim();
 
-    if (!cleanMessage || sending || !chatSessionId || chatEnded) return;
+    if (
+      !cleanMessage ||
+      sending ||
+      !chatSessionId ||
+      chatEnded ||
+      chatPaused
+    ) {
+      return;
+    }
 
     const tempMessage = {
       id: `temp-${Date.now()}`,
@@ -305,13 +314,16 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
             </p>
 
             <p className="text-sm font-semibold mt-1">
-              {chatEnded ? "Session ended" : "Session running"}
+              {chatPaused
+                ? "Recharge required"
+                : chatEnded
+                ? "Session ended"
+                : "Session running"}
             </p>
           </div>
 
           <div className="text-right">
             <p className="text-xs text-[#D8C2B2] font-bold">Duration</p>
-
             <p className="text-2xl font-extrabold">{formatTime()}</p>
           </div>
 
@@ -384,6 +396,14 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           );
         })}
 
+        {chatPaused && (
+          <div className="flex justify-center">
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 rounded-full text-xs font-bold">
+              Recharge required to continue this chat
+            </div>
+          </div>
+        )}
+
         {chatEnded && (
           <div className="flex justify-center">
             <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-2 rounded-full text-xs font-bold">
@@ -401,15 +421,15 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
             <div className="w-16 h-1.5 bg-[#e7d4bf] rounded-full mx-auto mb-5" />
 
             <h2 className="text-2xl font-extrabold text-[#24110A] text-center">
-              Low Wallet Balance
+              Recharge Required
             </h2>
 
             <p className="text-[#6b4b36] text-center mt-3 leading-7">
-              Your wallet balance is running low. Recharge now to continue
-              chatting without interruption.
+              Your wallet balance is below the astrologer&apos;s per minute
+              price. Please recharge to continue this consultation.
             </p>
 
-            <div className="mt-6 space-y-3">
+            <div className="mt-6">
               <button
                 onClick={() => {
                   window.location.href = "/wallet";
@@ -417,15 +437,6 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
                 className="w-full h-14 rounded-2xl bg-[#24110A] text-white font-bold text-lg shadow-xl"
               >
                 Recharge Wallet
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowRechargePopup(false);
-                }}
-                className="w-full h-12 rounded-2xl bg-[#f6ece0] text-[#24110A] font-semibold"
-              >
-                Continue Chat
               </button>
             </div>
           </div>
@@ -437,7 +448,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           <input
             type="text"
             value={input}
-            disabled={chatEnded}
+            disabled={chatEnded || chatPaused}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -445,14 +456,18 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
               }
             }}
             placeholder={
-              chatEnded ? "Consultation has ended" : "Type your message..."
+              chatPaused
+                ? "Recharge required to continue chat"
+                : chatEnded
+                ? "Consultation has ended"
+                : "Type your message..."
             }
             className="flex-1 h-14 rounded-2xl bg-white/55 border border-white/70 px-5 outline-none placeholder:text-[#8A6B55] shadow-sm disabled:opacity-60"
           />
 
           <button
             onClick={sendMessage}
-            disabled={sending || !input.trim() || chatEnded}
+            disabled={sending || !input.trim() || chatEnded || chatPaused}
             className="w-14 h-14 rounded-2xl bg-[#24110A] text-white text-xl font-bold shadow-xl disabled:opacity-60"
           >
             {sending ? "…" : "→"}

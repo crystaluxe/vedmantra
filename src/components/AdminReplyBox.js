@@ -120,9 +120,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
           body: JSON.stringify(payload),
         });
 
-        if (res.status === 404 || res.status === 405) {
-          continue;
-        }
+        if (res.status === 404 || res.status === 405) continue;
 
         return await safeJson(res);
       } catch (error) {
@@ -191,7 +189,6 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
     if (ending || !chatId) return;
 
     const confirmed = window.confirm("End this chat now?");
-
     if (!confirmed) return;
 
     try {
@@ -241,33 +238,41 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
 
   return (
     <>
-      <section className="bg-white border-b border-[#ead8c2] px-5 py-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="rounded-2xl bg-[#fff8ef] border border-[#ead8c2] p-4">
-            <p className="text-xs font-bold text-[#7a5a3a]">Customer Wallet</p>
-            <p className="text-2xl font-extrabold text-green-700">
+      <section className="bg-white border-b border-[#ead8c2] px-3 py-3">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-[#fff8ef] border border-[#ead8c2] p-3">
+            <p className="text-[10px] font-bold text-[#7a5a3a] uppercase">
+              Wallet
+            </p>
+            <p className="text-lg font-extrabold text-green-700 mt-1">
               ₹{chatMeta?.walletBalance ?? "..."}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-[#fff8ef] border border-[#ead8c2] p-4">
-            <p className="text-xs font-bold text-[#7a5a3a]">Timer</p>
-            <p className="text-2xl font-extrabold text-[#2b1208]">
+          <div className="rounded-xl bg-[#fff8ef] border border-[#ead8c2] p-3">
+            <p className="text-[10px] font-bold text-[#7a5a3a] uppercase">
+              Timer
+            </p>
+            <p className="text-lg font-extrabold text-[#2b1208] mt-1">
               {duration}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-[#fff8ef] border border-[#ead8c2] p-4">
-            <p className="text-xs font-bold text-[#7a5a3a]">Rate</p>
-            <p className="text-2xl font-extrabold text-[#2b1208]">
-              ₹{chatMeta?.astrologerPrice ?? "..."}/min
+          <div className="rounded-xl bg-[#fff8ef] border border-[#ead8c2] p-3">
+            <p className="text-[10px] font-bold text-[#7a5a3a] uppercase">
+              Rate
+            </p>
+            <p className="text-lg font-extrabold text-[#2b1208] mt-1">
+              ₹{chatMeta?.astrologerPrice ?? "..."}
             </p>
           </div>
 
-          <div className="rounded-2xl bg-[#fff8ef] border border-[#ead8c2] p-4">
-            <p className="text-xs font-bold text-[#7a5a3a]">Status</p>
+          <div className="rounded-xl bg-[#fff8ef] border border-[#ead8c2] p-3">
+            <p className="text-[10px] font-bold text-[#7a5a3a] uppercase">
+              Status
+            </p>
             <p
-              className={`text-2xl font-extrabold ${
+              className={`text-lg font-extrabold mt-1 ${
                 isChatEnded ? "text-red-600" : "text-green-600"
               }`}
             >
@@ -279,18 +284,14 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
         <button
           onClick={endChat}
           disabled={ending || isChatEnded}
-          className="mt-4 w-full h-12 rounded-2xl bg-red-600 text-white font-bold disabled:opacity-50"
+          className="mt-3 w-full h-11 rounded-xl bg-red-600 text-white text-sm font-bold disabled:opacity-50"
         >
-          {isChatEnded
-            ? "Chat Already Ended"
-            : ending
-            ? "Ending Chat..."
-            : "End Chat"}
+          {isChatEnded ? "Chat Ended" : ending ? "Ending..." : "End Chat"}
         </button>
       </section>
 
-      <section className="flex-1 overflow-y-auto p-6 bg-[#f7efe4]">
-        <div className="space-y-5">
+      <section className="flex-1 overflow-y-auto px-3 py-4 md:p-6 bg-[#f7efe4]">
+        <div className="space-y-4">
           {messages.map((msg) => {
             const isAstrologer =
               msg.sender === "ASTROLOGER" || msg.sender === "ADMIN";
@@ -303,22 +304,22 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
                 }`}
               >
                 <div
-                  className={`max-w-[78%] rounded-3xl px-5 py-4 shadow-md ${
+                  className={`max-w-[88%] md:max-w-[78%] rounded-3xl px-4 md:px-5 py-3 md:py-4 shadow-md ${
                     isAstrologer
                       ? "bg-[#2b1208] text-white rounded-br-md"
                       : "bg-[#fff8ef] border border-[#ead8c2] text-[#2b1208] rounded-bl-md"
                   } ${msg.pending ? "opacity-70" : ""}`}
                 >
-                  <div className="text-xs font-bold mb-2 opacity-70">
+                  <div className="text-[11px] md:text-xs font-bold mb-1.5 opacity-70">
                     {isAstrologer ? "Astrologer" : "Customer"}
                   </div>
 
-                  <p className="text-[15px] leading-7 break-words">
+                  <p className="text-sm md:text-[15px] leading-6 md:leading-7 break-words">
                     {msg.message}
                   </p>
 
                   <div
-                    className={`text-xs mt-3 ${
+                    className={`text-[11px] mt-2 ${
                       isAstrologer ? "text-[#d8c2b2]" : "text-[#7a5a3a]"
                     }`}
                   >
@@ -336,7 +337,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
 
           {isTyping && !isChatEnded && (
             <div className="flex justify-end">
-              <div className="bg-[#2b1208] text-white rounded-3xl rounded-br-md px-5 py-3 shadow-md flex items-center gap-2">
+              <div className="bg-[#2b1208] text-white rounded-3xl rounded-br-md px-4 py-3 shadow-md flex items-center gap-2">
                 <span className="text-xs font-semibold opacity-80">
                   Typing
                 </span>
@@ -354,23 +355,21 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
         </div>
       </section>
 
-      <footer className="bg-white border-t border-[#ead8c2] p-5">
+      <footer className="bg-white border-t border-[#ead8c2] p-3 md:p-5">
         {isChatEnded && (
           <div className="mb-3 rounded-2xl bg-red-50 border border-red-100 text-red-600 px-4 py-3 text-sm font-bold text-center">
             This chat has ended. Replies are disabled.
           </div>
         )}
 
-        <div className="flex gap-3">
+        <div className="flex gap-2 md:gap-3">
           <input
             type="text"
             value={message}
             disabled={isChatEnded}
             onChange={(e) => handleTyping(e.target.value)}
-            placeholder={
-              isChatEnded ? "Chat ended" : "Reply as astrologer..."
-            }
-            className="flex-1 h-14 rounded-2xl border border-[#ead8c2] px-5 outline-none bg-white disabled:opacity-60"
+            placeholder={isChatEnded ? "Chat ended" : "Reply as astrologer..."}
+            className="min-w-0 flex-1 h-12 md:h-14 rounded-2xl border border-[#ead8c2] px-4 md:px-5 outline-none bg-white disabled:opacity-60 text-sm"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 sendReply();
@@ -381,9 +380,9 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
           <button
             onClick={sendReply}
             disabled={sending || !message.trim() || isChatEnded}
-            className="px-8 rounded-2xl bg-[#2b1208] text-white font-semibold hover:opacity-90 disabled:opacity-50"
+            className="shrink-0 px-4 md:px-8 rounded-2xl bg-[#2b1208] text-white text-sm md:text-base font-semibold hover:opacity-90 disabled:opacity-50"
           >
-            {sending ? "Sending..." : "Send"}
+            {sending ? "..." : "Send"}
           </button>
         </div>
       </footer>

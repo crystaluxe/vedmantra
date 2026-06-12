@@ -54,15 +54,25 @@ export default async function LiveChatPage({ params }) {
                 <h1 className="font-extrabold tracking-[-0.02em]">
                   {astrologer.name}
                 </h1>
-                <p className="text-xs text-green-600 font-bold">
-                  ● Online • Typing...
-                </p>
+
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+
+                  <span className="text-xs text-green-600 font-semibold">
+                    Online
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="bg-[#24110A] text-white px-3 py-2 rounded-2xl shadow-lg">
-              <p className="text-[10px] text-[#D8C2B2] font-bold">Wallet</p>
-              <p className="text-sm font-extrabold">₹{walletBalance}</p>
+              <p className="text-[10px] text-[#D8C2B2] font-bold">
+                Wallet
+              </p>
+
+              <p className="text-sm font-extrabold">
+                ₹{walletBalance}
+              </p>
             </div>
           </div>
         </header>
@@ -73,14 +83,20 @@ export default async function LiveChatPage({ params }) {
               <p className="text-xs uppercase tracking-[0.18em] text-[#D8C2B2] font-bold">
                 Live Session
               </p>
+
               <p className="text-sm font-semibold mt-1">
                 ₹{astrologer.price}/min is being deducted
               </p>
             </div>
 
             <div className="text-right">
-              <p className="text-xs text-[#D8C2B2] font-bold">Status</p>
-              <p className="text-xl font-extrabold">{chatSession.status}</p>
+              <p className="text-xs text-[#D8C2B2] font-bold">
+                Status
+              </p>
+
+              <p className="text-xl font-extrabold">
+                {chatSession.status}
+              </p>
             </div>
           </div>
         </section>

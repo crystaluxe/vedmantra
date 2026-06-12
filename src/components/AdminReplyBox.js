@@ -15,7 +15,8 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
 
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-  const shouldAutoScroll = useRef(true);
+  const messagesLengthRef = useRef(initialMessages?.length || 0);
+  const manuallyScrolledRef = useRef(false);
 
   const safeJson = async (res) => {
     const text = await res.text();
@@ -59,16 +60,17 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
       const data = await safeJson(res);
 
       if (data.success) {
-        setMessages((prev) => {
-          const oldLength = prev.length;
-          const newMessages = data.messages || [];
+        const newMessages = data.messages || [];
 
-          if (newMessages.length > oldLength && !shouldAutoScroll.current) {
-            setShowNewMessageButton(true);
-          }
+        if (
+          newMessages.length > messagesLengthRef.current &&
+          manuallyScrolledRef.current
+        ) {
+          setShowNewMessageButton(true);
+        }
 
-          return newMessages;
-        });
+        messagesLengthRef.current = newMessages.length;
+        setMessages(newMessages);
       }
     } catch (error) {
       console.error("FETCH_ADMIN_MESSAGES_ERROR", error);
@@ -113,28 +115,13 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
     return () => clearInterval(timer);
   }, [chatMeta?.startedAt, chatMeta?.status, chatMeta?.endedAt]);
 
-  useEffect(() => {
-    if (shouldAutoScroll.current) {
-      messagesEndRef.current?.scrollIntoView({
-        behavior: "smooth",
-      });
-    }
-  }, [messages]);
-
-  const handleScroll = (e) => {
-    const el = e.target;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-
-    shouldAutoScroll.current = distanceFromBottom < 150;
-
-    if (shouldAutoScroll.current) {
-      setShowNewMessageButton(false);
-    }
+  const handleScroll = () => {
+    manuallyScrolledRef.current = true;
   };
 
   const scrollToBottom = () => {
-    shouldAutoScroll.current = true;
     setShowNewMessageButton(false);
+    manuallyScrolledRef.current = false;
 
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -189,7 +176,6 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
       setMessages((prev) => [...prev, tempMessage]);
       setMessage("");
       setIsTyping(false);
-      shouldAutoScroll.current = true;
 
       const data = await postMessageToServer({
         chatSessionId: Number(chatId),
@@ -207,11 +193,14 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
       }
 
       await fetchMessages();
+
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({
+          behavior: "smooth",
+        });
+      }, 100);
     } catch (error) {
       console.error("SEND_ADMIN_REPLY_ERROR", error);
-
-      setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
-
       alert("Something went wrong");
     } finally {
       setSending(false);
@@ -222,7 +211,6 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
     if (ending || !chatId) return;
 
     const confirmed = window.confirm("End this chat now?");
-
     if (!confirmed) return;
 
     try {
@@ -272,42 +260,40 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
 
   return (
     <>
-      <section className="bg-white border-b border-[#ead8c2] px-3 py-3">
+      <section className="bg-[#075E54] text-white px-3 py-3 shadow-md">
         <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl bg-[#fff8ef] border border-[#ead8c2] p-3">
-            <p className="text-[10px] font-bold text-[#7a5a3a] uppercase">
+          <div className="rounded-2xl bg-white/12 border border-white/15 p-3">
+            <p className="text-[10px] font-bold uppercase opacity-75">
               Wallet
             </p>
-            <p className="text-lg font-extrabold text-green-700 mt-1">
+            <p className="text-lg font-extrabold mt-1">
               ₹{chatMeta?.walletBalance ?? "..."}
             </p>
           </div>
 
-          <div className="rounded-xl bg-[#fff8ef] border border-[#ead8c2] p-3">
-            <p className="text-[10px] font-bold text-[#7a5a3a] uppercase">
+          <div className="rounded-2xl bg-white/12 border border-white/15 p-3">
+            <p className="text-[10px] font-bold uppercase opacity-75">
               Timer
             </p>
-            <p className="text-lg font-extrabold text-[#2b1208] mt-1">
-              {duration}
-            </p>
+            <p className="text-lg font-extrabold mt-1">{duration}</p>
           </div>
 
-          <div className="rounded-xl bg-[#fff8ef] border border-[#ead8c2] p-3">
-            <p className="text-[10px] font-bold text-[#7a5a3a] uppercase">
+          <div className="rounded-2xl bg-white/12 border border-white/15 p-3">
+            <p className="text-[10px] font-bold uppercase opacity-75">
               Rate
             </p>
-            <p className="text-lg font-extrabold text-[#2b1208] mt-1">
+            <p className="text-lg font-extrabold mt-1">
               ₹{chatMeta?.astrologerPrice ?? "..."}
             </p>
           </div>
 
-          <div className="rounded-xl bg-[#fff8ef] border border-[#ead8c2] p-3">
-            <p className="text-[10px] font-bold text-[#7a5a3a] uppercase">
+          <div className="rounded-2xl bg-white/12 border border-white/15 p-3">
+            <p className="text-[10px] font-bold uppercase opacity-75">
               Status
             </p>
             <p
               className={`text-lg font-extrabold mt-1 ${
-                isChatEnded ? "text-red-600" : "text-green-600"
+                isChatEnded ? "text-red-200" : "text-green-200"
               }`}
             >
               {chatMeta?.status || "..."}
@@ -318,7 +304,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
         <button
           onClick={endChat}
           disabled={ending || isChatEnded}
-          className="mt-3 w-full h-11 rounded-xl bg-red-600 text-white text-sm font-bold disabled:opacity-50"
+          className="mt-3 w-full h-11 rounded-2xl bg-red-500 text-white text-sm font-bold disabled:opacity-50"
         >
           {isChatEnded ? "Chat Ended" : ending ? "Ending..." : "End Chat"}
         </button>
@@ -326,9 +312,9 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
 
       <section
         onScroll={handleScroll}
-        className="relative flex-1 overflow-y-auto px-3 py-4 md:p-6 bg-[#f7efe4]"
+        className="relative flex-1 overflow-y-auto px-3 py-4 md:p-6 bg-[#ECE5DD]"
       >
-        <div className="space-y-4">
+        <div className="space-y-3">
           {messages.map((msg) => {
             const isAstrologer =
               msg.sender === "ASTROLOGER" || msg.sender === "ADMIN";
@@ -341,31 +327,33 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
                 }`}
               >
                 <div
-                  className={`max-w-[88%] md:max-w-[78%] rounded-3xl px-4 md:px-5 py-3 md:py-4 shadow-md ${
+                  className={`max-w-[88%] md:max-w-[75%] px-4 py-2.5 shadow-sm ${
                     isAstrologer
-                      ? "bg-[#2b1208] text-white rounded-br-md"
-                      : "bg-[#fff8ef] border border-[#ead8c2] text-[#2b1208] rounded-bl-md"
+                      ? "bg-[#DCF8C6] text-[#111B21] rounded-2xl rounded-tr-sm"
+                      : "bg-white text-[#111B21] rounded-2xl rounded-tl-sm"
                   } ${msg.pending ? "opacity-70" : ""}`}
                 >
-                  <div className="text-[11px] md:text-xs font-bold mb-1.5 opacity-70">
+                  <div
+                    className={`text-[11px] font-bold mb-1 ${
+                      isAstrologer ? "text-[#128C7E]" : "text-[#6B7280]"
+                    }`}
+                  >
                     {isAstrologer ? "Astrologer" : "Customer"}
                   </div>
 
-                  <p className="text-sm md:text-[15px] leading-6 md:leading-7 break-words">
+                  <p className="text-[15px] leading-6 break-words">
                     {msg.message}
                   </p>
 
-                  <div
-                    className={`text-[11px] mt-2 ${
-                      isAstrologer ? "text-[#d8c2b2]" : "text-[#7a5a3a]"
-                    }`}
-                  >
-                    {msg.pending
-                      ? "Sending..."
-                      : new Date(msg.createdAt).toLocaleTimeString("en-IN", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                  <div className="flex justify-end">
+                    <span className="text-[10px] text-[#667781] mt-1">
+                      {msg.pending
+                        ? "Sending..."
+                        : new Date(msg.createdAt).toLocaleTimeString("en-IN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -374,15 +362,15 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
 
           {isTyping && !isChatEnded && (
             <div className="flex justify-end">
-              <div className="bg-[#2b1208] text-white rounded-3xl rounded-br-md px-4 py-3 shadow-md flex items-center gap-2">
-                <span className="text-xs font-semibold opacity-80">
+              <div className="bg-[#DCF8C6] text-[#111B21] rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm flex items-center gap-2">
+                <span className="text-xs font-semibold text-[#128C7E]">
                   Typing
                 </span>
 
                 <span className="flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" />
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:120ms]" />
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce [animation-delay:240ms]" />
+                  <span className="w-1.5 h-1.5 bg-[#128C7E] rounded-full animate-bounce" />
+                  <span className="w-1.5 h-1.5 bg-[#128C7E] rounded-full animate-bounce [animation-delay:120ms]" />
+                  <span className="w-1.5 h-1.5 bg-[#128C7E] rounded-full animate-bounce [animation-delay:240ms]" />
                 </span>
               </div>
             </div>
@@ -394,28 +382,28 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
         {showNewMessageButton && (
           <button
             onClick={scrollToBottom}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#2b1208] text-white px-4 py-2 rounded-full text-xs font-bold shadow-xl"
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#25D366] text-[#111B21] px-4 py-2 rounded-full text-xs font-bold shadow-xl"
           >
             New message ↓
           </button>
         )}
       </section>
 
-      <footer className="bg-white border-t border-[#ead8c2] p-3 md:p-5">
+      <footer className="bg-[#F0F2F5] border-t border-[#d9d9d9] p-3 md:p-4">
         {isChatEnded && (
           <div className="mb-3 rounded-2xl bg-red-50 border border-red-100 text-red-600 px-4 py-3 text-sm font-bold text-center">
             This chat has ended. Replies are disabled.
           </div>
         )}
 
-        <div className="flex gap-2 md:gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <input
             type="text"
             value={message}
             disabled={isChatEnded}
             onChange={(e) => handleTyping(e.target.value)}
-            placeholder={isChatEnded ? "Chat ended" : "Reply as astrologer..."}
-            className="min-w-0 flex-1 h-12 md:h-14 rounded-2xl border border-[#ead8c2] px-4 md:px-5 outline-none bg-white disabled:opacity-60 text-sm"
+            placeholder={isChatEnded ? "Chat ended" : "Type a message"}
+            className="min-w-0 flex-1 h-12 rounded-full border border-transparent px-5 outline-none bg-white disabled:opacity-60 text-sm shadow-sm"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 sendReply();
@@ -426,9 +414,9 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
           <button
             onClick={sendReply}
             disabled={sending || !message.trim() || isChatEnded}
-            className="shrink-0 px-4 md:px-8 rounded-2xl bg-[#2b1208] text-white text-sm md:text-base font-semibold hover:opacity-90 disabled:opacity-50"
+            className="shrink-0 w-12 h-12 rounded-full bg-[#25D366] text-white text-lg font-bold flex items-center justify-center shadow-md disabled:opacity-50"
           >
-            {sending ? "..." : "Send"}
+            {sending ? "…" : "➤"}
           </button>
         </div>
       </footer>

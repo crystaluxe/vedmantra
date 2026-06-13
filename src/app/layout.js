@@ -25,11 +25,12 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        style={{
-          fontFamily: "Plus Jakarta Sans, sans-serif",
-          background: "#F7EFE4",
-        }}
-      >
+  style={{
+    fontFamily: "Plus Jakarta Sans, sans-serif",
+    background: "#F7EFE4",
+    paddingTop: "48px",
+  }}
+>
         {children}
         <PWAInstall />
 

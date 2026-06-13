@@ -1,9 +1,22 @@
 import "./globals.css";
 import Script from "next/script";
+import PWAInstall from "@/components/PWAInstall";
 
 export const metadata = {
   title: "Vedmantra",
-  description: "Premium Astrology Platform",
+  description: "Chat with Top Rated Astrologers",
+  manifest: "/manifest.json",
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Vedmantra",
+  },
+
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 const FB_PIXEL_ID = "1685249759459324";
@@ -18,6 +31,7 @@ export default function RootLayout({ children }) {
         }}
       >
         {children}
+        <PWAInstall />
 
         {/* Meta Pixel */}
         <Script id="facebook-pixel" strategy="afterInteractive">

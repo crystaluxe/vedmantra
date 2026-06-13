@@ -1,0 +1,17 @@
+{
+  "name": "Vedmantra",
+  "short_name": "Vedmantra",
+  "description": "Chat with Top Rated Astrologers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7EFE4",
+  "theme_color": "#8B5E3C",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}

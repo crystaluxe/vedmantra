@@ -1,6 +1,6 @@
 import "./globals.css";
 import Script from "next/script";
-
+import PWAInstall from "@/components/PWAInstall";
 
 export const metadata = {
   title: "Vedmantra",
@@ -25,14 +25,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-  style={{
-    fontFamily: "Plus Jakarta Sans, sans-serif",
-    background: "#F7EFE4",
-    
-  }}
->
+        style={{
+          fontFamily: "Plus Jakarta Sans, sans-serif",
+          background: "#F7EFE4",
+        }}
+      >
         {children}
-
+        <PWAInstall />
 
         {/* Meta Pixel */}
         <Script id="facebook-pixel" strategy="afterInteractive">

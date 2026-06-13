@@ -34,12 +34,12 @@ export default async function LiveChatPage({ params }) {
   return (
     <main className="min-h-screen bg-[#F7EFE4] text-[#1F130D]">
       <div className="max-w-md mx-auto min-h-screen bg-gradient-to-br from-[#FFF8EF] via-[#F7E9D9] to-[#EED8BE] flex flex-col">
-        <header className="sticky top-0 z-50 bg-white/40 backdrop-blur-2xl border-b border-white/60 px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-50 bg-white/45 backdrop-blur-2xl border-b border-white/60 px-4 py-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <a
                 href="/chat"
-                className="w-10 h-10 rounded-full bg-white/50 border border-white/60 flex items-center justify-center shadow-md"
+                className="w-11 h-11 rounded-full bg-white/70 border border-white/70 flex items-center justify-center shadow-md text-lg font-bold shrink-0"
               >
                 ←
               </a>
@@ -47,59 +47,35 @@ export default async function LiveChatPage({ params }) {
               <img
                 src={astrologer.image}
                 alt={astrologer.name}
-                className="w-12 h-12 rounded-2xl object-cover shadow-md"
+                className="w-13 h-13 rounded-2xl object-cover shadow-md shrink-0"
               />
 
-              <div>
-                <h1 className="font-extrabold tracking-[-0.02em]">
+              <div className="min-w-0">
+                <h1 className="font-black tracking-[-0.03em] text-[17px] leading-tight truncate">
                   {astrologer.name}
                 </h1>
 
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
 
-                  <span className="text-xs text-green-600 font-semibold">
+                  <span className="text-sm text-green-600 font-bold">
                     Online
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-[#24110A] text-white px-3 py-2 rounded-2xl shadow-lg">
-              <p className="text-[10px] text-[#D8C2B2] font-bold">
+            <div className="bg-[#24110A] text-white px-4 py-3 rounded-[22px] shadow-xl shrink-0">
+              <p className="text-[10px] text-[#D8C2B2] font-bold leading-none">
                 Wallet
               </p>
 
-              <p className="text-sm font-extrabold">
+              <p className="text-lg font-black leading-tight mt-1">
                 ₹{walletBalance}
               </p>
             </div>
           </div>
         </header>
-
-        <section className="px-4 py-3">
-          <div className="bg-[#24110A] text-white rounded-3xl p-4 shadow-xl flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-[#D8C2B2] font-bold">
-                Live Session
-              </p>
-
-              <p className="text-sm font-semibold mt-1">
-                ₹{astrologer.price}/min is being deducted
-              </p>
-            </div>
-
-            <div className="text-right">
-              <p className="text-xs text-[#D8C2B2] font-bold">
-                Status
-              </p>
-
-              <p className="text-xl font-extrabold">
-                {chatSession.status}
-              </p>
-            </div>
-          </div>
-        </section>
 
         <ChatBox
           chatSessionId={chatSession.id}

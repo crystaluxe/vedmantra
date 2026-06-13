@@ -14,6 +14,8 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
   const [endingChat, setEndingChat] = useState(false);
   const [chatEnded, setChatEnded] = useState(false);
   const [chatPaused, setChatPaused] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [typing, setTyping] = useState(false);
 
   const messagesEndRef = useRef(null);
   const lastMessageIdRef = useRef(null);
@@ -49,6 +51,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
     }
 
     notificationSoundRef.current = new Audio("/notification.mp3");
+    notificationSoundRef.current.preload = "auto";
   }, []);
 
   const safeJson = async (res) => {
@@ -61,6 +64,32 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         success: false,
         error: text || "Invalid server response",
       };
+    }
+  };
+
+  const playSound = async () => {
+    if (!soundEnabled) return;
+
+    try {
+      if (!notificationSoundRef.current) return;
+      notificationSoundRef.current.currentTime = 0;
+      await notificationSoundRef.current.play();
+    } catch (error) {
+      console.error("NOTIFICATION_SOUND_ERROR", error);
+    }
+  };
+
+  const unlockSound = async () => {
+    try {
+      if (!notificationSoundRef.current) return;
+      notificationSoundRef.current.volume = 0.6;
+      await notificationSoundRef.current.play();
+      notificationSoundRef.current.pause();
+      notificationSoundRef.current.currentTime = 0;
+      setSoundEnabled(true);
+    } catch (error) {
+      console.error("SOUND_UNLOCK_ERROR", error);
+      setSoundEnabled(true);
     }
   };
 
@@ -101,9 +130,12 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           latestMessage.sender === "ADMIN" &&
           latestMessage.id !== lastMessageIdRef.current
         ) {
+          const alreadyHadMessages = lastMessageIdRef.current !== null;
           lastMessageIdRef.current = latestMessage.id;
 
-          if (document.visibilityState !== "visible") {
+          if (alreadyHadMessages) {
+            await playSound();
+
             if (
               "Notification" in window &&
               Notification.permission === "granted"
@@ -112,12 +144,6 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
                 body: "Your astrologer has replied.",
                 icon: "/favicon.ico",
               });
-            }
-
-            try {
-              notificationSoundRef.current?.play();
-            } catch (error) {
-              console.error("NOTIFICATION_SOUND_ERROR", error);
             }
           }
         }
@@ -187,13 +213,13 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
       clearInterval(walletInterval);
       clearInterval(deductionInterval);
     };
-  }, [chatSessionId, chatEnded, chatPaused]);
+  }, [chatSessionId, chatEnded, chatPaused, soundEnabled]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
     });
-  }, [messages]);
+  }, [messages, typing]);
 
   const postMessageToServer = async (payload) => {
     const endpoints = ["/api/chat/message", "/api/chat/messages"];
@@ -223,21 +249,14 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
 
     return {
       success: false,
-      error:
-        lastError?.message || lastError || "Unable to connect to chat API",
+      error: lastError?.message || lastError || "Unable to connect to chat API",
     };
   };
 
   const sendMessage = async () => {
     const cleanMessage = input.trim();
 
-    if (
-      !cleanMessage ||
-      sending ||
-      !chatSessionId ||
-      chatEnded ||
-      chatPaused
-    ) {
+    if (!cleanMessage || sending || !chatSessionId || chatEnded || chatPaused) {
       return;
     }
 
@@ -254,6 +273,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
       setSending(true);
       setMessages((prev) => [...prev, tempMessage]);
       setInput("");
+      setTyping(true);
 
       const data = await postMessageToServer({
         chatSessionId: Number(chatSessionId),
@@ -261,11 +281,12 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         sender: "USER",
       });
 
-      if (!data.success) {
-        setMessages((prev) =>
-          prev.filter((msg) => msg.id !== tempMessage.id)
-        );
+      setTimeout(() => {
+        setTyping(false);
+      }, 2200);
 
+      if (!data.success) {
+        setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
         alert(data.error || "Unable to send message");
         return;
       }
@@ -274,9 +295,8 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
     } catch (error) {
       console.error("SEND_MESSAGE_CLIENT_ERROR", error);
 
-      setMessages((prev) =>
-        prev.filter((msg) => msg.id !== tempMessage.id)
-      );
+      setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
+      setTyping(false);
 
       alert("Something went wrong while sending message.");
     } finally {
@@ -334,54 +354,64 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
 
   return (
     <>
-      <section className="px-3 py-3 bg-[#075E54] text-white shadow-md">
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-2xl bg-white/12 border border-white/15 px-3 py-2">
-            <p className="text-[10px] uppercase font-bold opacity-75">
-              Wallet
-            </p>
-            <p className="text-lg font-extrabold">₹{walletBalance}</p>
-          </div>
-
-          <div className="rounded-2xl bg-white/12 border border-white/15 px-3 py-2">
-            <p className="text-[10px] uppercase font-bold opacity-75">
+      <section className="px-4 py-3">
+        <div className="bg-gradient-to-r from-[#052F36] via-[#073E45] to-[#052F36] rounded-[28px] p-5 shadow-2xl grid grid-cols-2 gap-4 text-white border border-white/10">
+          <div className="border-r border-white/20 pr-4">
+            <p className="text-[11px] uppercase font-extrabold tracking-[0.16em] text-white/65">
               Timer
             </p>
-            <p className="text-lg font-extrabold">{formatTime()}</p>
+            <p className="text-3xl font-black mt-2 tracking-tight">
+              {formatTime()}
+            </p>
           </div>
 
-          <div className="rounded-2xl bg-white/12 border border-white/15 px-3 py-2">
-            <p className="text-[10px] uppercase font-bold opacity-75">
+          <div className="pl-2">
+            <p className="text-[11px] uppercase font-extrabold tracking-[0.16em] text-white/65">
               Status
             </p>
-            <p className="text-sm font-extrabold mt-1">
+            <p className="text-2xl font-black mt-2 text-[#38E27C]">
               {chatPaused ? "Recharge" : chatEnded ? "Ended" : "Live"}
             </p>
           </div>
         </div>
 
         {deductedAmount && (
-          <div className="mt-2 text-center text-xs font-bold text-red-100 animate-bounce">
-            -₹{deductedAmount} deducted
+          <div className="mt-3 text-center text-xs font-bold text-[#5A120D] animate-bounce">
+            ₹{deductedAmount} deducted
           </div>
         )}
 
         <button
           onClick={endChat}
           disabled={endingChat || chatEnded}
-          className="mt-3 w-full h-11 rounded-2xl bg-red-500 text-white text-sm font-bold disabled:opacity-50"
+          className="mt-3 w-full h-12 rounded-[24px] bg-gradient-to-r from-[#5A120D] via-[#6B170F] to-[#4A0C08] text-white text-sm font-extrabold disabled:opacity-50 shadow-xl"
         >
           {chatEnded
             ? "Consultation Ended"
             : endingChat
             ? "Ending..."
-            : "End Consultation"}
+            : "☎ End Consultation"}
         </button>
       </section>
 
-      <section className="relative flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-[#ECE5DD]">
+      <section
+        className="relative flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-[#F6F1EA]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at left bottom, rgba(139, 92, 45, 0.10), transparent 34%), linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0))",
+          backgroundSize: "100% 100%",
+          backgroundPosition: "left bottom",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div className="flex justify-center mb-4">
+          <div className="px-4 py-2 rounded-full bg-white/80 backdrop-blur-md border border-white text-[#2E7D32] text-xs font-semibold shadow-sm">
+            🔒 Your conversation is secure and private
+          </div>
+        </div>
+
         <div className="flex justify-start">
-          <div className="max-w-[88%] bg-white text-[#111B21] rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-sm">
+          <div className="max-w-[88%] bg-white text-[#111B21] rounded-3xl rounded-tl-sm px-5 py-3 shadow-md">
             <p className="text-[15px] leading-6">
               Namaste 🙏 Please share your concern.
             </p>
@@ -400,10 +430,10 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
               className={`flex ${isUser ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[88%] px-4 py-2.5 shadow-sm ${
+                className={`max-w-[84%] px-4 py-2.5 shadow-md ${
                   isUser
-                    ? "bg-[#DCF8C6] text-[#111B21] rounded-2xl rounded-tr-sm"
-                    : "bg-white text-[#111B21] rounded-2xl rounded-tl-sm"
+                    ? "bg-[#DDF8C8] text-[#111B21] rounded-3xl rounded-tr-sm"
+                    : "bg-white text-[#111B21] rounded-3xl rounded-tl-sm"
                 } ${msg.pending ? "opacity-70" : ""}`}
               >
                 <p className="text-[15px] leading-6 break-words">
@@ -421,9 +451,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
                   </span>
 
                   {isUser && !msg.pending && (
-                    <span className="text-[10px] text-[#53bdeb] mt-1">
-                      ✓✓
-                    </span>
+                    <span className="text-[10px] text-[#53bdeb] mt-1">✓✓</span>
                   )}
                 </div>
               </div>
@@ -431,16 +459,28 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           );
         })}
 
+        {typing && (
+          <div className="flex justify-start">
+            <div className="bg-white rounded-2xl px-4 py-3 shadow-md">
+              <div className="flex gap-1">
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]"></span>
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:300ms]"></span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {chatPaused && (
           <div className="space-y-3 py-2">
             <div className="flex justify-center">
               <div className="bg-white border border-[#ddd] text-[#111B21] px-4 py-2 rounded-full text-xs font-extrabold shadow-sm">
-                CHAT ENDED
+                CHAT PAUSED
               </div>
             </div>
 
             <p className="text-center text-sm text-[#3b4a54] leading-6 px-4">
-              Your chat ended due to low wallet balance. Please recharge to
+              Your chat paused due to low wallet balance. Please recharge to
               continue this consultation.
             </p>
           </div>
@@ -456,6 +496,17 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
 
         <div ref={messagesEndRef} />
       </section>
+
+      <button
+        onClick={() => {
+          const next = !soundEnabled;
+          setSoundEnabled(next);
+          if (next) unlockSound();
+        }}
+        className="fixed bottom-[88px] left-1/2 -translate-x-1/2 z-30 px-5 py-3 rounded-full bg-[#24110A] text-white text-sm font-extrabold shadow-2xl border border-white/10"
+      >
+        {soundEnabled ? "🔊 Sound on" : "🔇 Sound off"}
+      </button>
 
       {showRechargePopup && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-end justify-center">
@@ -487,13 +538,14 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         </div>
       )}
 
-      <footer className="sticky bottom-0 bg-[#F0F2F5] border-t border-[#d9d9d9] p-3">
-        <div className="flex items-center gap-2">
+      <footer className="sticky bottom-0 bg-[#F7F8FA] border-t border-[#e8e8e8] p-3">
+        <div className="flex items-center gap-3">
           <input
             type="text"
             value={input}
             disabled={chatEnded || chatPaused}
             onChange={(e) => setInput(e.target.value)}
+            onFocus={unlockSound}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 sendMessage();
@@ -504,15 +556,15 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
                 ? "Recharge required to continue chat"
                 : chatEnded
                 ? "Consultation has ended"
-                : "Type a message"
+                : "Type a message..."
             }
-            className="min-w-0 flex-1 h-12 rounded-full border border-transparent px-5 outline-none bg-white disabled:opacity-60 text-sm shadow-sm"
+            className="min-w-0 flex-1 h-14 rounded-full bg-white shadow-lg border border-[#ECECEC] px-6 outline-none disabled:opacity-60 text-[15px]"
           />
 
           <button
             onClick={sendMessage}
             disabled={sending || !input.trim() || chatEnded || chatPaused}
-            className="shrink-0 w-12 h-12 rounded-full bg-[#25D366] text-white text-lg font-bold flex items-center justify-center shadow-md disabled:opacity-50"
+            className="shrink-0 w-14 h-14 rounded-full bg-[#16A34A] text-white text-xl font-bold flex items-center justify-center shadow-xl disabled:opacity-50"
           >
             {sending ? "…" : "➤"}
           </button>

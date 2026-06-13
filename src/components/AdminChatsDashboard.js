@@ -5,9 +5,7 @@ import AdminReplyBox from "@/components/AdminReplyBox";
 
 export default function AdminChatsDashboard({ initialChats, selectedChatId }) {
   const [chats, setChats] = useState(initialChats || []);
-  const [activeChatId, setActiveChatId] = useState(
-    selectedChatId || initialChats?.[0]?.id || null
-  );
+  const [activeChatId, setActiveChatId] = useState(selectedChatId || null);
   const [soundEnabled, setSoundEnabled] = useState(false);
 
   const audioRef = useRef(null);
@@ -16,6 +14,10 @@ export default function AdminChatsDashboard({ initialChats, selectedChatId }) {
 
   useEffect(() => {
     audioRef.current = new Audio("/notification.mp3");
+
+    if (typeof window !== "undefined" && "Notification" in window) {
+      Notification.requestPermission();
+    }
   }, []);
 
   const enableSound = async () => {
@@ -25,7 +27,7 @@ export default function AdminChatsDashboard({ initialChats, selectedChatId }) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     } catch (error) {
-      console.log("Sound enabled after interaction.");
+      console.log("Sound will work after interaction.");
     }
   };
 
@@ -65,6 +67,16 @@ export default function AdminChatsDashboard({ initialChats, selectedChatId }) {
             lastMessage.sender === "USER"
           ) {
             playSound();
+
+            if (
+              typeof window !== "undefined" &&
+              "Notification" in window &&
+              Notification.permission === "granted"
+            ) {
+              new Notification("New Vedmantra Message", {
+                body: `${chat.userName}: ${lastMessage.message}`,
+              });
+            }
           }
         });
       }
@@ -77,10 +89,6 @@ export default function AdminChatsDashboard({ initialChats, selectedChatId }) {
 
       firstLoadRef.current = false;
       setChats(newChats);
-
-      if (!activeChatId && newChats.length > 0) {
-        setActiveChatId(newChats[0].id);
-      }
     } catch (error) {
       console.error("FETCH_ADMIN_CHATS_ERROR", error);
     }
@@ -92,7 +100,7 @@ export default function AdminChatsDashboard({ initialChats, selectedChatId }) {
     const interval = setInterval(fetchChats, 3000);
 
     return () => clearInterval(interval);
-  }, [activeChatId, soundEnabled]);
+  }, [soundEnabled]);
 
   const activeChat = chats.find((chat) => chat.id === activeChatId);
 
@@ -226,7 +234,9 @@ export default function AdminChatsDashboard({ initialChats, selectedChatId }) {
 
                   <div className="text-right shrink-0">
                     <p className="text-xs text-white/75">Wallet</p>
-                    <p className="font-extrabold">₹{activeChat.walletBalance}</p>
+                    <p className="font-extrabold">
+                      ₹{activeChat.walletBalance}
+                    </p>
                   </div>
                 </div>
               </header>
@@ -238,18 +248,22 @@ export default function AdminChatsDashboard({ initialChats, selectedChatId }) {
               />
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-24 h-24 rounded-full bg-[#075E54] mx-auto flex items-center justify-center text-white text-4xl">
+            <div className="hidden md:flex flex-1 items-center justify-center bg-[#efeae2]">
+              <div className="text-center max-w-md px-6">
+                <div className="w-28 h-28 rounded-full bg-[#075E54] mx-auto flex items-center justify-center text-white text-5xl">
                   💬
                 </div>
 
-                <h2 className="text-2xl font-extrabold text-[#111b21] mt-5">
-                  Select a chat
+                <h2 className="text-3xl font-bold text-[#111b21] mt-6">
+                  Vedmantra Admin
                 </h2>
 
-                <p className="text-[#667781] mt-2">
-                  Choose a customer conversation from the left panel.
+                <p className="text-[#667781] mt-3">
+                  Select a conversation from the left panel to start chatting.
+                </p>
+
+                <p className="text-sm text-[#8696A0] mt-2">
+                  New chats and messages will appear automatically.
                 </p>
               </div>
             </div>

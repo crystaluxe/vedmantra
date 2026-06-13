@@ -31,8 +31,9 @@ export default function RootLayout({ children }) {
           
         }}
       >
-        {children}
+
         <PWAInstall />
+        {children}
 
         {/* Meta Pixel */}
         <Script id="facebook-pixel" strategy="afterInteractive">

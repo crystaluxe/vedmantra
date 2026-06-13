@@ -334,57 +334,58 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
 
   return (
     <>
-      <div className="px-4 pt-2">
-        <div className="bg-[#24110A] text-white rounded-3xl p-4 shadow-xl flex items-center justify-between relative overflow-hidden">
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-[#D8C2B2] font-bold">
-              Live Session
+      <section className="px-3 py-3 bg-[#075E54] text-white shadow-md">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-2xl bg-white/12 border border-white/15 px-3 py-2">
+            <p className="text-[10px] uppercase font-bold opacity-75">
+              Wallet
             </p>
-
-            <p className="text-sm font-semibold mt-1">
-              {chatPaused
-                ? "Recharge required"
-                : chatEnded
-                ? "Session ended"
-                : "Session running"}
-            </p>
+            <p className="text-lg font-extrabold">₹{walletBalance}</p>
           </div>
 
-          <div className="text-right">
-            <p className="text-xs text-[#D8C2B2] font-bold">Duration</p>
-            <p className="text-2xl font-extrabold">{formatTime()}</p>
+          <div className="rounded-2xl bg-white/12 border border-white/15 px-3 py-2">
+            <p className="text-[10px] uppercase font-bold opacity-75">
+              Timer
+            </p>
+            <p className="text-lg font-extrabold">{formatTime()}</p>
           </div>
 
-          {deductedAmount && (
-            <div className="absolute right-5 bottom-3 text-red-300 text-sm font-bold animate-bounce">
-              -₹{deductedAmount}
-            </div>
-          )}
+          <div className="rounded-2xl bg-white/12 border border-white/15 px-3 py-2">
+            <p className="text-[10px] uppercase font-bold opacity-75">
+              Status
+            </p>
+            <p className="text-sm font-extrabold mt-1">
+              {chatPaused ? "Recharge" : chatEnded ? "Ended" : "Live"}
+            </p>
+          </div>
         </div>
 
-        <div className="mt-3">
-          <button
-            onClick={endChat}
-            disabled={endingChat || chatEnded}
-            className="w-full h-12 rounded-2xl bg-red-500 text-white font-bold shadow-lg disabled:opacity-60"
-          >
-            {chatEnded
-              ? "Consultation Ended"
-              : endingChat
-              ? "Ending..."
-              : "End Consultation"}
-          </button>
-        </div>
-      </div>
+        {deductedAmount && (
+          <div className="mt-2 text-center text-xs font-bold text-red-100 animate-bounce">
+            -₹{deductedAmount} deducted
+          </div>
+        )}
 
-      <section className="flex-1 px-4 py-3 space-y-4 overflow-y-auto">
+        <button
+          onClick={endChat}
+          disabled={endingChat || chatEnded}
+          className="mt-3 w-full h-11 rounded-2xl bg-red-500 text-white text-sm font-bold disabled:opacity-50"
+        >
+          {chatEnded
+            ? "Consultation Ended"
+            : endingChat
+            ? "Ending..."
+            : "End Consultation"}
+        </button>
+      </section>
+
+      <section className="relative flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-[#ECE5DD]">
         <div className="flex justify-start">
-          <div className="max-w-[82%] bg-white/55 backdrop-blur-xl border border-white/60 rounded-[24px] rounded-tl-md px-4 py-3 shadow-md">
-            <p className="text-sm leading-6 font-medium">
+          <div className="max-w-[88%] bg-white text-[#111B21] rounded-2xl rounded-tl-sm px-4 py-2.5 shadow-sm">
+            <p className="text-[15px] leading-6">
               Namaste 🙏 Please share your concern.
             </p>
-
-            <p className="text-[11px] text-[#7A5A45] mt-2 font-semibold">
+            <p className="text-[10px] text-[#667781] mt-1 text-right">
               Just now
             </p>
           </div>
@@ -399,40 +400,46 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
               className={`flex ${isUser ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[82%] rounded-[24px] px-4 py-3 shadow-md ${
+                className={`max-w-[88%] px-4 py-2.5 shadow-sm ${
                   isUser
-                    ? "bg-[#24110A] text-white rounded-tr-md"
-                    : "bg-white/55 backdrop-blur-xl border border-white/60 rounded-tl-md"
+                    ? "bg-[#DCF8C6] text-[#111B21] rounded-2xl rounded-tr-sm"
+                    : "bg-white text-[#111B21] rounded-2xl rounded-tl-sm"
                 } ${msg.pending ? "opacity-70" : ""}`}
               >
-                <p className="text-sm leading-6 font-medium">{msg.message}</p>
-
-                <p
-                  className={`text-[11px] mt-2 font-semibold ${
-                    isUser ? "text-[#D8C2B2]" : "text-[#7A5A45]"
-                  }`}
-                >
-                  {msg.pending
-                    ? "Sending..."
-                    : new Date(msg.createdAt).toLocaleTimeString("en-IN", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                <p className="text-[15px] leading-6 break-words">
+                  {msg.message}
                 </p>
+
+                <div className="flex justify-end items-center gap-1">
+                  <span className="text-[10px] text-[#667781] mt-1">
+                    {msg.pending
+                      ? "Sending..."
+                      : new Date(msg.createdAt).toLocaleTimeString("en-IN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                  </span>
+
+                  {isUser && !msg.pending && (
+                    <span className="text-[10px] text-[#53bdeb] mt-1">
+                      ✓✓
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           );
         })}
 
         {chatPaused && (
-          <div className="space-y-4">
+          <div className="space-y-3 py-2">
             <div className="flex justify-center">
-              <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-2 rounded-full text-xs font-extrabold">
+              <div className="bg-white border border-[#ddd] text-[#111B21] px-4 py-2 rounded-full text-xs font-extrabold shadow-sm">
                 CHAT ENDED
               </div>
             </div>
 
-            <p className="text-center text-sm text-[#6b4b36] leading-6 px-4">
+            <p className="text-center text-sm text-[#3b4a54] leading-6 px-4">
               Your chat ended due to low wallet balance. Please recharge to
               continue this consultation.
             </p>
@@ -441,7 +448,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
 
         {chatEnded && (
           <div className="flex justify-center">
-            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-2 rounded-full text-xs font-bold">
+            <div className="bg-white border border-[#ddd] text-red-600 px-4 py-2 rounded-full text-xs font-bold shadow-sm">
               This consultation has ended
             </div>
           </div>
@@ -451,39 +458,37 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
       </section>
 
       {showRechargePopup && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-[32px] p-6 shadow-2xl">
-            <div className="w-16 h-1.5 bg-[#e7d4bf] rounded-full mx-auto mb-5" />
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-end justify-center">
+          <div className="w-full max-w-md bg-white rounded-t-[32px] p-6 shadow-2xl">
+            <div className="w-16 h-1.5 bg-[#d9d9d9] rounded-full mx-auto mb-5" />
 
-            <h2 className="text-2xl font-extrabold text-[#24110A] text-center">
+            <h2 className="text-2xl font-extrabold text-[#111B21] text-center">
               Continue This Chat
             </h2>
 
-            <p className="text-[#6b4b36] text-center mt-3 leading-7">
+            <p className="text-[#667781] text-center mt-3 leading-7">
               Your wallet balance is exhausted. Recharge now to continue your
-              consultation with the astrologer.
+              consultation.
             </p>
 
-            <div className="mt-5 rounded-2xl bg-green-50 border border-green-100 px-4 py-4 text-green-700 font-bold text-center">
+            <div className="mt-5 rounded-2xl bg-[#E7FCE3] border border-[#C8E6C9] px-4 py-4 text-[#128C7E] font-bold text-center">
               🎁 Recharge ₹199 and Get ₹20 Extra
             </div>
 
-            <div className="mt-5">
-              <button
-                onClick={() => {
-                  window.location.href = "/wallet";
-                }}
-                className="w-full h-14 rounded-2xl bg-[#ff6a00] text-white font-bold text-lg shadow-xl"
-              >
-                Yes, Continue this chat
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                window.location.href = "/wallet";
+              }}
+              className="w-full mt-5 h-14 rounded-2xl bg-[#25D366] text-white font-bold text-lg shadow-lg"
+            >
+              Yes, Continue this chat
+            </button>
           </div>
         </div>
       )}
 
-      <footer className="sticky bottom-0 bg-white/40 backdrop-blur-2xl border-t border-white/60 p-4">
-        <div className="flex gap-3">
+      <footer className="sticky bottom-0 bg-[#F0F2F5] border-t border-[#d9d9d9] p-3">
+        <div className="flex items-center gap-2">
           <input
             type="text"
             value={input}
@@ -499,17 +504,17 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
                 ? "Recharge required to continue chat"
                 : chatEnded
                 ? "Consultation has ended"
-                : "Type your message..."
+                : "Type a message"
             }
-            className="flex-1 h-14 rounded-2xl bg-white/55 border border-white/70 px-5 outline-none placeholder:text-[#8A6B55] shadow-sm disabled:opacity-60"
+            className="min-w-0 flex-1 h-12 rounded-full border border-transparent px-5 outline-none bg-white disabled:opacity-60 text-sm shadow-sm"
           />
 
           <button
             onClick={sendMessage}
             disabled={sending || !input.trim() || chatEnded || chatPaused}
-            className="w-14 h-14 rounded-2xl bg-[#24110A] text-white text-xl font-bold shadow-xl disabled:opacity-60"
+            className="shrink-0 w-12 h-12 rounded-full bg-[#25D366] text-white text-lg font-bold flex items-center justify-center shadow-md disabled:opacity-50"
           >
-            {sending ? "…" : "→"}
+            {sending ? "…" : "➤"}
           </button>
         </div>
       </footer>

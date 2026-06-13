@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
         style={{
           fontFamily: "Plus Jakarta Sans, sans-serif",
           background: "#F7EFE4",
-          paddingTop: "52px",
+          
         }}
       >
         {children}

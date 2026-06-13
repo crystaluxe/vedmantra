@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 export default function PWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [dismissed, setDismissed] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(true);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const standalone =
@@ -14,6 +15,7 @@ export default function PWAInstall() {
       document.referrer.startsWith("android-app://");
 
     setIsStandalone(standalone);
+    setLoaded(true);
 
     const handler = (e) => {
       e.preventDefault();
@@ -26,6 +28,8 @@ export default function PWAInstall() {
       window.removeEventListener("beforeinstallprompt", handler);
     };
   }, []);
+
+  if (!loaded) return null;
 
   if (dismissed || isStandalone) return null;
 
@@ -49,10 +53,8 @@ export default function PWAInstall() {
 
   return (
     <>
-      {/* Spacer so page content doesn't go behind banner */}
       <div className="h-[58px]" />
 
-      {/* Fixed Banner */}
       <div className="fixed top-0 left-0 right-0 z-[99999]">
         <div className="bg-gradient-to-r from-[#24110A] via-[#3A1D12] to-[#24110A] text-white px-4 py-1.5 shadow-lg border-b border-[#4B281A]">
           <div className="max-w-md mx-auto flex items-center justify-between gap-3">
@@ -72,7 +74,7 @@ export default function PWAInstall() {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={installApp}
-                className="bg-[#D4A373] text-[#24110A] px-4 py-2 rounded-full text-xs font-extrabold shadow-md hover:opacity-90 transition"
+                className="bg-[#D4A373] text-[#24110A] px-4 py-2 rounded-full text-xs font-extrabold shadow-md"
               >
                 Install
               </button>

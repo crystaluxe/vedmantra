@@ -10,7 +10,8 @@ export default function PWAInstall() {
   useEffect(() => {
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      window.navigator.standalone === true;
+      window.navigator.standalone === true ||
+      document.referrer.startsWith("android-app://");
 
     setIsStandalone(standalone);
 
@@ -31,6 +32,7 @@ export default function PWAInstall() {
   const installApp = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
+
       const choice = await deferredPrompt.userChoice;
 
       if (choice?.outcome === "accepted") {
@@ -46,39 +48,45 @@ export default function PWAInstall() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[99999]">
-      <div className="bg-gradient-to-r from-[#24110A] via-[#3A1D12] to-[#24110A] text-white px-4 py-2 shadow-lg">
-        <div className="max-w-md mx-auto flex items-center justify-between gap-3">
-          <button
-            onClick={installApp}
-            className="flex flex-col text-left min-w-0"
-          >
-            <div className="font-extrabold text-sm truncate">
-              📲 Install Vedmantra
-            </div>
+    <>
+      {/* Spacer so page content doesn't go behind banner */}
+      <div className="h-[58px]" />
 
-            <div className="text-[11px] text-yellow-300 font-semibold">
-              ⭐⭐⭐⭐⭐ 4.8 Rated Astrology Platform
-            </div>
-          </button>
-
-          <div className="flex items-center gap-2 shrink-0">
+      {/* Fixed Banner */}
+      <div className="fixed top-0 left-0 right-0 z-[99999]">
+        <div className="bg-gradient-to-r from-[#24110A] via-[#3A1D12] to-[#24110A] text-white px-4 py-1.5 shadow-lg border-b border-[#4B281A]">
+          <div className="max-w-md mx-auto flex items-center justify-between gap-3">
             <button
               onClick={installApp}
-              className="bg-[#D4A373] text-[#24110A] px-4 py-2 rounded-full text-xs font-extrabold shadow-md"
+              className="flex flex-col text-left min-w-0"
             >
-              Install
+              <div className="font-extrabold text-sm truncate">
+                📲 Install Vedmantra
+              </div>
+
+              <div className="text-[11px] text-yellow-300 font-semibold">
+                ⭐⭐⭐⭐⭐ 4.8 Rated
+              </div>
             </button>
 
-            <button
-              onClick={() => setDismissed(true)}
-              className="text-white/70 text-xl leading-none px-1"
-            >
-              ×
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={installApp}
+                className="bg-[#D4A373] text-[#24110A] px-4 py-2 rounded-full text-xs font-extrabold shadow-md hover:opacity-90 transition"
+              >
+                Install
+              </button>
+
+              <button
+                onClick={() => setDismissed(true)}
+                className="text-white/70 text-xl leading-none px-1"
+              >
+                ×
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

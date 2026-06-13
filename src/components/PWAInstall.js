@@ -53,7 +53,7 @@ export default function PWAInstall() {
 
   return (
     <>
-      <div className="h-[70px]" />
+      <div className="h-[52px]" />
 
       <div className="fixed top-0 left-0 right-0 z-[99999]">
         <div className="bg-gradient-to-r from-[#24110A] via-[#3A1D12] to-[#24110A] text-white px-4 py-1.5 shadow-lg border-b border-[#4B281A]">

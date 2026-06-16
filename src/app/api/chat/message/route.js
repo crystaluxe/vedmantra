@@ -5,6 +5,20 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 const AI_ASTROLOGER_NAME = process.env.AI_ASTROLOGER_NAME || "AI Guru";
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getHumanDelay(message) {
+  const length = message.length;
+
+  if (length < 50) return Math.floor(Math.random() * 2000) + 2500;
+  if (length < 150) return Math.floor(Math.random() * 4000) + 4000;
+  if (length < 300) return Math.floor(Math.random() * 5000) + 7000;
+
+  return Math.floor(Math.random() * 6000) + 10000;
+}
+
 function extractOpenAIText(data) {
   if (data.output_text) return data.output_text;
 
@@ -61,24 +75,43 @@ async function generateAiAstrologyReply({ userMessage, previousMessages }) {
     .join("\n");
 
   const prompt = `
-You are Vedmantra AI Astrologer.
+You are "AI Guru" from Vedmantra, a premium Indian astrology assistant.
 
-Rules:
-- Reply in warm Hinglish.
-- Sound like a real Indian astrologer.
-- Keep answer under 180 words.
-- If DOB, time, or birthplace is missing, ask for it politely.
-- Do not guarantee future events.
-- Do not give medical, legal, or financial certainty.
-- For health, pregnancy, legal, emergency, or investment topics, say this is spiritual guidance only and professional advice is needed.
-- Give one simple remedy if relevant.
-- Never say you are ChatGPT or OpenAI.
+Your style:
+- Reply in natural Hinglish.
+- Warm, confident, spiritual, but not fake.
+- Talk like an experienced Indian astrologer, not like a chatbot.
+- Do not say "as an AI".
+- Do not give boring generic advice.
+- Keep reply useful and emotionally comforting.
 
-Previous chat:
+Very important:
+- If user has not shared DOB, birth time and birth place, first ask for these details.
+- If they ask without kundli details, give only general guidance and ask for details for accurate reading.
+- Never guarantee marriage, pregnancy, job, money, death, disease, court result, or exact future.
+- Never say "definitely", "100% sure", "pakka", or "guaranteed".
+- For medical/pregnancy/legal/financial topics, clearly say: "ye spiritual guidance hai, professional advice zaroor lein."
+
+Answer format:
+1. Start with direct emotional understanding of user's problem.
+2. Give astrology-style insight.
+3. Give 2-3 practical spiritual suggestions.
+4. End with one simple remedy.
+
+Remedy examples:
+- Monday: Shiv ji ko jal chadhayein
+- Tuesday: Hanuman Chalisa
+- Thursday: Guru mantra / yellow sweets donation
+- Saturday: Shani mantra / sesame oil diya
+- For mental stress: Om Namah Shivaya 108 times
+
+Previous conversation:
 ${history || "No previous messages."}
 
-User message:
+User question:
 ${userMessage}
+
+Now reply as AI Guru in Hinglish under 220 words.
 `;
 
   const res = await fetch("https://api.openai.com/v1/responses", {
@@ -90,8 +123,8 @@ ${userMessage}
     body: JSON.stringify({
       model: OPENAI_MODEL,
       input: prompt,
-      temperature: 0.7,
-      max_output_tokens: 450,
+      temperature: 0.85,
+      max_output_tokens: 650,
     }),
   });
 
@@ -165,6 +198,8 @@ export async function POST(request) {
         userMessage: message,
         previousMessages: session.messages || [],
       });
+
+      await sleep(getHumanDelay(aiReply));
 
       const aiMessage = await prisma.chatMessage.create({
         data: {

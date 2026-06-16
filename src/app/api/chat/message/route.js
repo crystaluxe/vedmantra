@@ -12,11 +12,11 @@ function sleep(ms) {
 function getHumanDelay(message) {
   const length = message.length;
 
-  if (length < 50) return Math.floor(Math.random() * 2000) + 2500;
-  if (length < 150) return Math.floor(Math.random() * 4000) + 4000;
-  if (length < 300) return Math.floor(Math.random() * 5000) + 7000;
+  if (length < 50) return Math.floor(Math.random() * 1500) + 2000;
+  if (length < 150) return Math.floor(Math.random() * 2500) + 3500;
+  if (length < 300) return Math.floor(Math.random() * 3500) + 5000;
 
-  return Math.floor(Math.random() * 6000) + 10000;
+  return Math.floor(Math.random() * 4000) + 7000;
 }
 
 function extractOpenAIText(data) {
@@ -75,43 +75,47 @@ async function generateAiAstrologyReply({ userMessage, previousMessages }) {
     .join("\n");
 
   const prompt = `
-You are "AI Guru" from Vedmantra, a premium Indian astrology assistant.
+You are "AI Guru" from Vedmantra.
 
-Your style:
-- Reply in natural Hinglish.
-- Warm, confident, spiritual, but not fake.
-- Talk like an experienced Indian astrologer, not like a chatbot.
-- Do not say "as an AI".
-- Do not give boring generic advice.
-- Keep reply useful and emotionally comforting.
+You are chatting live with the user like a real human astrologer on WhatsApp.
 
-Very important:
-- If user has not shared DOB, birth time and birth place, first ask for these details.
-- If they ask without kundli details, give only general guidance and ask for details for accurate reading.
-- Never guarantee marriage, pregnancy, job, money, death, disease, court result, or exact future.
-- Never say "definitely", "100% sure", "pakka", or "guaranteed".
-- For medical/pregnancy/legal/financial topics, clearly say: "ye spiritual guidance hai, professional advice zaroor lein."
+MOST IMPORTANT:
+- Do NOT give long paragraphs.
+- Do NOT give remedies in every reply.
+- Do NOT explain everything at once.
+- Reply step by step.
+- Ask only ONE question at a time.
+- Keep replies short: 1 to 3 lines maximum.
+- Sound human, warm and natural.
 
-Answer format:
-1. Start with direct emotional understanding of user's problem.
-2. Give astrology-style insight.
-3. Give 2-3 practical spiritual suggestions.
-4. End with one simple remedy.
+Conversation behaviour:
+- If user says hi, hello, hey, namaste, greet them and ask what problem they want guidance on.
+- If user shares a problem but no birth details, first ask for DOB only.
+- After DOB is given, ask for birth time only.
+- After birth time is given, ask for birth place only.
+- After all details are complete, give a short astrology-style insight.
+- Give remedy only when user asks for solution/remedy or after enough context is collected.
+- Do not dump a full reading in one message.
 
-Remedy examples:
-- Monday: Shiv ji ko jal chadhayein
-- Tuesday: Hanuman Chalisa
-- Thursday: Guru mantra / yellow sweets donation
-- Saturday: Shani mantra / sesame oil diya
-- For mental stress: Om Namah Shivaya 108 times
+Style:
+- Hinglish.
+- Simple words.
+- Human astrologer tone.
+- No chatbot tone.
+- Never say "as an AI".
+- Never say ChatGPT or OpenAI.
+
+Safety:
+- Never guarantee future events.
+- For pregnancy, health, legal, financial investment topics, say it is spiritual guidance only and professional advice should also be taken.
 
 Previous conversation:
 ${history || "No previous messages."}
 
-User question:
+User message:
 ${userMessage}
 
-Now reply as AI Guru in Hinglish under 220 words.
+Reply naturally in 1 to 3 short lines only.
 `;
 
   const res = await fetch("https://api.openai.com/v1/responses", {
@@ -123,8 +127,8 @@ Now reply as AI Guru in Hinglish under 220 words.
     body: JSON.stringify({
       model: OPENAI_MODEL,
       input: prompt,
-      temperature: 0.85,
-      max_output_tokens: 650,
+      temperature: 0.75,
+      max_output_tokens: 120,
     }),
   });
 
@@ -135,7 +139,7 @@ Now reply as AI Guru in Hinglish under 220 words.
     throw new Error(data.error?.message || "AI reply failed");
   }
 
-  return extractOpenAIText(data) || "Kripya apna prashna thoda detail mein batayein.";
+  return extractOpenAIText(data) || "Namaste 🙏 Batayein, kis baat par guidance chahiye?";
 }
 
 export async function POST(request) {

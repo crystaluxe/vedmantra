@@ -41,6 +41,8 @@ function getGenderWords(gender = "male") {
       guidance: "guidance dungi",
       canAnswer: "sakti hoon",
       tell: "bataungi",
+      explore: "samajhungi",
+      give: "dungi",
     };
   }
 
@@ -48,6 +50,8 @@ function getGenderWords(gender = "male") {
     guidance: "guidance dunga",
     canAnswer: "sakta hoon",
     tell: "bataunga",
+    explore: "samajhunga",
+    give: "dunga",
   };
 }
 
@@ -312,7 +316,9 @@ function extractConsultationData(messages = []) {
       if (timeRegex.test(text)) return false;
       if (isLifeProblemAllowedForAstrology(text)) return false;
       if (isClearlyAstrologyRelated(text)) return false;
-      return text.length >= 2 && text.length <= 35 && /^[a-zA-Z\s.]+$/.test(text);
+      return (
+        text.length >= 2 && text.length <= 35 && /^[a-zA-Z\s.]+$/.test(text)
+      );
     });
 
   const hasQuestion = userMessages.some((msg) => {
@@ -369,10 +375,90 @@ function getNextRequiredQuestion({ consultationData, astrologerGender }) {
   }
 
   if (!consultationData.hasQuestion) {
-    return `Ab apna main prashna batayiye, main kundli ke basis par ${words.guidance}.`;
+    return `Ab apna main prashna batayiye. Main isse kundli ke deeper angle se ${words.explore}.`;
   }
 
   return null;
+}
+
+function ensureFollowUpQuestion(reply, userMessage) {
+  const text = String(reply || "").trim();
+  if (text.includes("?") || text.includes("batayiye") || text.includes("batayenge")) {
+    return text;
+  }
+
+  const userText = normalizeText(userMessage);
+
+  if (
+    userText.includes("exam") ||
+    userText.includes("result") ||
+    userText.includes("selection") ||
+    userText.includes("promotion")
+  ) {
+    return `${text}\n\nIs result ke baad interview/document verification bhi hoga ya direct selection hai?`;
+  }
+
+  if (
+    userText.includes("career") ||
+    userText.includes("job") ||
+    userText.includes("office") ||
+    userText.includes("work")
+  ) {
+    return `${text}\n\nYe issue manager approval, office politics, job change ya workload se related hai?`;
+  }
+
+  if (
+    userText.includes("business") ||
+    userText.includes("money") ||
+    userText.includes("finance") ||
+    userText.includes("debt") ||
+    userText.includes("loss")
+  ) {
+    return `${text}\n\nAapki main problem cashflow, sales, debt ya partnership se related hai?`;
+  }
+
+  if (
+    userText.includes("love") ||
+    userText.includes("relationship") ||
+    userText.includes("breakup")
+  ) {
+    return `${text}\n\nYe relationship current chal raha hai, breakup phase mein hai ya one-sided situation hai?`;
+  }
+
+  if (
+    userText.includes("marriage") ||
+    userText.includes("shaadi") ||
+    userText.includes("vivah")
+  ) {
+    return `${text}\n\nYe love marriage ka case hai, arranged marriage ka ya family delay chal raha hai?`;
+  }
+
+  if (
+    userText.includes("pregnancy") ||
+    userText.includes("baby") ||
+    userText.includes("child")
+  ) {
+    return `${text}\n\nAapki current concern pregnancy journey, baby health ya conception timing se related hai?`;
+  }
+
+  if (
+    userText.includes("family") ||
+    userText.includes("property") ||
+    userText.includes("legal") ||
+    userText.includes("court")
+  ) {
+    return `${text}\n\nIs issue mein family pressure zyada hai, property matter hai ya legal delay chal raha hai?`;
+  }
+
+  if (
+    userText.includes("health") ||
+    userText.includes("medical") ||
+    userText.includes("bimari")
+  ) {
+    return `${text}\n\nYe issue recent start hua hai ya kaafi time se chal raha hai?`;
+  }
+
+  return `${text}\n\nIs point ko aur clearly samajhne ke liye aap apni situation thodi detail mein batayenge?`;
 }
 
 async function sendPushToUser({ session, message }) {
@@ -448,17 +534,6 @@ Do NOT restart the onboarding flow.
 ABSOLUTE SCOPE RULE:
 You must answer ONLY astrology, horoscope, kundli, numerology, vastu, spiritual remedies, muhurat, dasha, graha, nakshatra and spiritual guidance related questions.
 
-VERY IMPORTANT:
-- If user asks about business, career, money, relationship, health, pregnancy, family, legal or life problems, answer ONLY from astrology/kundli/graha-dasha perspective.
-- Do NOT give marketing strategy.
-- Do NOT give business consulting.
-- Do NOT give startup advice.
-- Do NOT give medical advice.
-- Do NOT give legal advice.
-- Do NOT give investment advice.
-- Do NOT answer general knowledge, history, politics, science, coding, news, celebrities, sports or random questions.
-- If the question is outside astrology/spiritual guidance, politely refuse.
-
 NEVER ASK USER FOR:
 - Graha dasha
 - Mahadasha
@@ -468,38 +543,89 @@ NEVER ASK USER FOR:
 - Houses
 - Kundli calculations
 
-These are astrologer's responsibility.
-
 NEVER SAY:
 - Main check kar raha hoon
 - Main dekh raha hoon
 - Main calculate kar raha hoon
-- Main kundli analyse kar raha hoon
 - Ek minute
 - Thodi der rukiyega
 - Kripya wait kariye
 
-You must immediately give a useful short response.
+MANDATORY ENGAGEMENT RULE:
+Every astrology reply must end with exactly ONE relevant follow-up question.
+Never end with final reassurance like:
+- achha hoga
+- sab theek hoga
+- vishwas rakhiye
+- dhairya rakhiye
+- positive rahiye
+- chances acche hain
 
-MOST IMPORTANT CHAT STYLE:
-- Do NOT give long paragraphs.
-- Do NOT give remedies in every reply.
-- Do NOT explain everything at once.
-- Reply step by step.
-- Keep replies short: 2 to 4 lines maximum.
-- Sound human, warm and natural.
+Do not satisfy the user fully in one answer.
+Give partial insight + one hidden factor + one follow-up question.
+Reveal final conclusion slowly over multiple exchanges.
 
-Style:
+QUERY-SPECIFIC HOOK RULES:
+
+Exam / Result / Selection:
+Mention supportive yog + one risk/delay factor.
+Ask about interview, document verification, direct selection, exam confidence, or result process.
+
+Career / Job / Promotion:
+Mention growth possibility + obstacle.
+Ask whether issue is manager approval, office politics, workload, job change, exam, or appraisal.
+
+Business / Finance / Money:
+Mention money flow/recovery/blockage.
+Ask whether issue is cashflow, sales, debt, partnership, customer acquisition, or stuck payment.
+
+Love / Relationship:
+Mention emotional connection/confusion/delay.
+Ask whether relationship is current, breakup phase, one-sided, long distance, or family pressure.
+
+Marriage:
+Mention marriage yog/delay/family influence.
+Ask whether it is love marriage, arranged marriage, family delay, compatibility issue, or partner search.
+
+Pregnancy / Child:
+Say this is spiritual guidance only.
+Mention emotional/spiritual indication.
+Ask whether concern is conception, pregnancy journey, baby health, scan, or stress.
+
+Health:
+Say this is spiritual guidance only.
+Mention stress/energy/planetary pressure.
+Ask whether issue is recent, recurring, stress-related, or already under treatment.
+
+Family:
+Mention emotional pressure or misunderstanding.
+Ask whether issue is parents, spouse, in-laws, siblings, or property.
+
+Property / Legal:
+Mention delay/conflict/pressure.
+Ask whether issue is paperwork, court case, family dispute, loan, or possession.
+
+Education / Studies:
+Mention focus, delay, or exam pressure.
+Ask whether issue is concentration, result, admission, exam, or subject confusion.
+
+Foreign / Abroad:
+Mention travel/settlement possibility with delay factor.
+Ask whether concern is visa, job, study, PR, or relocation.
+
+Remedy:
+Do not give full remedy immediately.
+First ask whether user wants simple daily remedy, mantra, puja, or gemstone guidance.
+
+CHAT STYLE:
 - Hinglish.
-- Simple words.
-- Human astrologer tone.
+- 2 to 3 short lines only.
+- Warm human astrologer tone.
+- No long paragraph.
 - No chatbot tone.
-- Never say "as an AI".
-- Never say ChatGPT or OpenAI.
-
-Safety:
-- Never guarantee future events.
-- For pregnancy, health, legal, financial investment topics, say it is spiritual guidance only and professional advice should also be taken.
+- Never say ChatGPT, OpenAI, or AI.
+- Never give medical/legal/financial certainty.
+- For serious health/pregnancy/legal/financial topics, say professional advice should also be taken.
 
 Previous conversation:
 ${history || "No previous messages."}
@@ -507,7 +633,8 @@ ${history || "No previous messages."}
 User message:
 ${userMessage}
 
-Reply naturally in 2 to 4 short lines only.
+Reply in 2 to 3 short lines only.
+End with exactly ONE relevant follow-up question.
 `;
 
   const res = await fetch("https://api.openai.com/v1/responses", {
@@ -519,8 +646,8 @@ Reply naturally in 2 to 4 short lines only.
     body: JSON.stringify({
       model: OPENAI_MODEL,
       input: prompt,
-      temperature: 0.3,
-      max_output_tokens: 180,
+      temperature: 0.45,
+      max_output_tokens: 170,
     }),
   });
 
@@ -531,10 +658,11 @@ Reply naturally in 2 to 4 short lines only.
     throw new Error(data.error?.message || "AI reply failed");
   }
 
-  return (
+  const rawReply =
     extractOpenAIText(data) ||
-    "Aapka prashna astrology ke perspective se dekha ja sakta hai. Kripya apni situation thodi detail mein batayein."
-  );
+    "Is prashna mein ek deeper point dikh raha hai.";
+
+  return ensureFollowUpQuestion(rawReply, userMessage);
 }
 
 export async function POST(request) {

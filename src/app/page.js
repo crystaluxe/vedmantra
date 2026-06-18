@@ -1,405 +1,714 @@
 import { prisma } from "@/lib/prisma";
-import AuthGuard from "@/components/AuthGuard";
-import HomeWalletBalance from "@/components/HomeWalletBalance";
-import PushNotificationRegister from "@/components/PushNotificationRegister";
+import { getFirebaseAdmin } from "@/lib/firebase-admin";
 
-const CATEGORIES = [
-  {
-    key: "money",
-    title: "Money",
-    subtitle: "Finance, wealth & debt",
-    emoji: "💰",
-  },
-  {
-    key: "career",
-    title: "Career",
-    subtitle: "Job, business & growth",
-    emoji: "🚀",
-  },
-  {
-    key: "love",
-    title: "Love",
-    subtitle: "Relationship & marriage",
-    emoji: "❤️",
-  },
-  {
-    key: "women",
-    title: "Women Only",
-    subtitle: "Family, pregnancy & emotions",
-    emoji: "🌸",
-  },
-];
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 
-function removeDuplicateAstrologers(astrologers) {
-  return Array.from(
-    new Map(
-      astrologers.map((astro) => [astro.name?.toLowerCase().trim(), astro])
-    ).values()
-  );
+const AI_ASTROLOGER_PROFILES = {
+  "guru vashisht": { gender: "male" },
+  "acharya dev": { gender: "male" },
+  "acharya gayatri": { gender: "female" },
+  "pandit somesh": { gender: "male" },
+  "acharya kavya": { gender: "female" },
+  "guru anand": { gender: "male" },
+};
+
+const AI_ASTROLOGER_NAMES = Object.keys(AI_ASTROLOGER_PROFILES);
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function filterAstrologersByCategory(astrologers, category) {
-  if (!category) return astrologers;
+function getHumanDelay(message) {
+  const length = message.length;
+  if (length < 50) return Math.floor(Math.random() * 1200) + 1200;
+  if (length < 150) return Math.floor(Math.random() * 1800) + 1800;
+  return Math.floor(Math.random() * 2500) + 2500;
+}
 
-  const categoryMap = {
-    money: ["money", "finance", "business", "wealth", "career", "financial"],
-    career: ["career", "job", "business", "education", "exam", "growth"],
-    love: ["love", "relationship", "marriage", "family", "compatibility"],
-    women: ["women", "pregnancy", "family", "relationship", "emotional", "love"],
+function normalizeText(text = "") {
+  return String(text).toLowerCase().trim();
+}
+
+function getAstrologerProfile(astrologerName = "") {
+  const key = normalizeText(astrologerName);
+  return AI_ASTROLOGER_PROFILES[key] || { gender: "male" };
+}
+
+function getGenderWords(gender = "male") {
+  if (gender === "female") {
+    return {
+      guidance: "guidance dungi",
+      canAnswer: "sakti hoon",
+      tell: "bataungi",
+      explore: "samajhungi",
+      give: "dungi",
+    };
+  }
+
+  return {
+    guidance: "guidance dunga",
+    canAnswer: "sakta hoon",
+    tell: "bataunga",
+    explore: "samajhunga",
+    give: "dunga",
   };
-
-  const keywords = categoryMap[category] || [];
-
-  return astrologers.filter((astro) => {
-    const text = `${astro.name || ""} ${astro.skills || ""}`.toLowerCase();
-    return keywords.some((keyword) => text.includes(keyword));
-  });
 }
 
-export default async function HomePage({ searchParams }) {
-  const resolvedSearchParams = await searchParams;
-  const selectedCategory = resolvedSearchParams?.category || "";
+function getAstrologyRefusal(gender = "male") {
+  const words = getGenderWords(gender);
 
-  const astrologersRaw = await prisma.astrologer.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
+  return `Main sirf astrology, kundli aur spiritual guidance se jude prashno ka uttar de ${words.canAnswer}. Kripya apna prashna janm kundli, career, business, marriage, health ya grah-dasha ke perspective se poochhein.`;
+}
+
+function extractOpenAIText(data) {
+  if (data.output_text) return data.output_text;
+
+  const texts = [];
+  for (const item of data.output || []) {
+    for (const content of item.content || []) {
+      if (content.text) texts.push(content.text);
+    }
+  }
+
+  return texts.join("\n").trim();
+}
+
+function isGreetingOnly(message) {
+  const text = normalizeText(message);
+
+  const greetings = [
+    "hi",
+    "hii",
+    "hello",
+    "hey",
+    "namaste",
+    "namaskar",
+    "pranam",
+    "radhe radhe",
+    "jai shree ram",
+    "jai shri ram",
+    "jai mata di",
+    "ram ram",
+  ];
+
+  return greetings.includes(text);
+}
+
+function isClearlyAstrologyRelated(message) {
+  const text = normalizeText(message);
+
+  const astrologyKeywords = [
+    "astrology",
+    "jyotish",
+    "kundli",
+    "kundali",
+    "horoscope",
+    "rashifal",
+    "rashi",
+    "lagna",
+    "nakshatra",
+    "grah",
+    "graha",
+    "dasha",
+    "mahadasha",
+    "antardasha",
+    "gochar",
+    "transit",
+    "shani",
+    "sade sati",
+    "mangal",
+    "rahu",
+    "ketu",
+    "guru",
+    "jupiter",
+    "venus",
+    "shukra",
+    "budh",
+    "mercury",
+    "surya",
+    "chandra",
+    "mars",
+    "saturn",
+    "remedy",
+    "upay",
+    "mantra",
+    "puja",
+    "pooja",
+    "yantra",
+    "gemstone",
+    "rudraksha",
+    "vastu",
+    "numerology",
+    "muhurat",
+    "vivah",
+    "marriage",
+    "love life",
+    "career astrology",
+    "business astrology",
+    "finance astrology",
+    "job astrology",
+    "health astrology",
+    "pregnancy astrology",
+    "child astrology",
+    "baby astrology",
+    "dob",
+    "date of birth",
+    "birth time",
+    "birth place",
+    "janam",
+    "janm",
+    "janam kundli",
+    "janm kundali",
+  ];
+
+  return astrologyKeywords.some((word) => text.includes(word));
+}
+
+function isLifeProblemAllowedForAstrology(message) {
+  const text = normalizeText(message);
+
+  const allowedLifeTopics = [
+    "business problem",
+    "business issue",
+    "business loss",
+    "business",
+    "career",
+    "job",
+    "money",
+    "finance",
+    "financial",
+    "loan",
+    "debt",
+    "marriage",
+    "relationship",
+    "love",
+    "breakup",
+    "divorce",
+    "family",
+    "health",
+    "pregnancy",
+    "child",
+    "baby",
+    "education",
+    "study",
+    "foreign",
+    "abroad",
+    "property",
+    "court case",
+    "legal problem",
+  ];
+
+  return allowedLifeTopics.some((word) => text.includes(word));
+}
+
+function isClearlyNonAstrologyQuestion(message) {
+  const text = normalizeText(message);
+
+  if (isGreetingOnly(text)) return false;
+  if (isClearlyAstrologyRelated(text)) return false;
+  if (isLifeProblemAllowedForAstrology(text)) return false;
+
+  const blockedKeywords = [
+    "9/11",
+    "911 attack",
+    "twin tower",
+    "world trade center",
+    "world war",
+    "history of",
+    "who is",
+    "what is",
+    "explain",
+    "news",
+    "latest news",
+    "president",
+    "prime minister",
+    "election",
+    "politics",
+    "cricket",
+    "football",
+    "score",
+    "stock price",
+    "share price",
+    "bitcoin",
+    "crypto",
+    "code",
+    "coding",
+    "javascript",
+    "react",
+    "next js",
+    "shopify code",
+    "html",
+    "css",
+    "seo",
+    "marketing strategy",
+    "facebook ads",
+    "meta ads",
+    "google ads",
+    "business strategy",
+    "sales strategy",
+    "write email",
+    "write caption",
+    "create image",
+    "make logo",
+    "translate",
+    "summarize",
+  ];
+
+  return blockedKeywords.some((word) => text.includes(word));
+}
+
+function extractConsultationData(messages = []) {
+  const userMessages = messages.filter((msg) => msg.sender === "USER");
+  const allText = userMessages.map((msg) => msg.message || "").join("\n");
+  const lowerText = normalizeText(allText);
+
+  const dobRegex =
+    /\b(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{1,2}\s+(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|sept|september|oct|october|nov|november|dec|december)\s+\d{2,4})\b/i;
+
+  const timeRegex = /\b(\d{1,2}:\d{2}\s?(am|pm)?|\d{1,2}\s?(am|pm))\b/i;
+
+  const placeIndicators = [
+    "birth place",
+    "birthplace",
+    "born in",
+    "place of birth",
+    "janm sthan",
+    "janam sthan",
+    "janm place",
+  ];
+
+  const nameIndicators = [
+    "my name is",
+    "name is",
+    "mera naam",
+    "mera name",
+    "naam hai",
+    "i am",
+    "main",
+  ];
+
+  const hasDob = dobRegex.test(allText);
+  const hasBirthTime = timeRegex.test(allText);
+
+  const hasBirthPlace =
+    placeIndicators.some((item) => lowerText.includes(item)) ||
+    userMessages.some((msg) => {
+      const text = normalizeText(msg.message || "");
+      return (
+        text.length >= 3 &&
+        text.length <= 40 &&
+        !dobRegex.test(text) &&
+        !timeRegex.test(text) &&
+        /^[a-zA-Z\s,.-]+$/.test(text) &&
+        userMessages.length >= 3
+      );
+    });
+
+  const hasName =
+    nameIndicators.some((item) => lowerText.includes(item)) ||
+    userMessages.some((msg, index) => {
+      const text = normalizeText(msg.message || "");
+      if (index > 2) return false;
+      if (isGreetingOnly(text)) return false;
+      if (dobRegex.test(text)) return false;
+      if (timeRegex.test(text)) return false;
+      if (isLifeProblemAllowedForAstrology(text)) return false;
+      if (isClearlyAstrologyRelated(text)) return false;
+      return (
+        text.length >= 2 && text.length <= 35 && /^[a-zA-Z\s.]+$/.test(text)
+      );
+    });
+
+  const hasQuestion = userMessages.some((msg) => {
+    const text = normalizeText(msg.message || "");
+    if (isGreetingOnly(text)) return false;
+    if (dobRegex.test(text)) return false;
+    if (timeRegex.test(text)) return false;
+
+    return (
+      isLifeProblemAllowedForAstrology(text) ||
+      text.includes("?") ||
+      text.includes("problem") ||
+      text.includes("issue") ||
+      text.includes("pareshan") ||
+      text.includes("dikkat") ||
+      text.includes("kab") ||
+      text.includes("kaise") ||
+      text.includes("kyu") ||
+      text.includes("future") ||
+      text.includes("shaadi") ||
+      text.includes("career") ||
+      text.includes("business") ||
+      text.includes("money") ||
+      text.includes("love")
+    );
   });
 
-  const uniqueAstrologers = removeDuplicateAstrologers(astrologersRaw);
-  const astrologers = filterAstrologersByCategory(
-    uniqueAstrologers,
-    selectedCategory
-  );
+  return {
+    hasName,
+    hasDob,
+    hasBirthTime,
+    hasBirthPlace,
+    hasQuestion,
+  };
+}
+
+function getNextRequiredQuestion({ consultationData, astrologerGender }) {
+  const words = getGenderWords(astrologerGender);
+
+  if (!consultationData.hasName) {
+    return "Namaste 🙏 Sabse pehle apna naam batayiye.";
+  }
+
+  if (!consultationData.hasDob) {
+    return "Kripya apni Date of Birth batayiye. Format: DD/MM/YYYY";
+  }
+
+  if (!consultationData.hasBirthTime) {
+    return "Kripya apna exact birth time batayiye, jaise 10:30 AM.";
+  }
+
+  if (!consultationData.hasBirthPlace) {
+    return "Kripya apna birth place batayiye, jaise Delhi, Mumbai ya Bangalore.";
+  }
+
+  if (!consultationData.hasQuestion) {
+    return `Ab apna main prashna batayiye. Main isse kundli ke deeper angle se ${words.explore}.`;
+  }
+
+  return null;
+}
+
+async function sendPushToUser({ session, message }) {
+  try {
+    if (!session?.userId) return;
+
+    const tokens = await prisma.userPushToken.findMany({
+      where: { userId: session.userId },
+    });
+
+    const admin = getFirebaseAdmin();
+
+    for (const tokenRow of tokens) {
+      try {
+        await admin.messaging().send({
+          token: tokenRow.token,
+          notification: {
+            title: `New message from ${session.astrologer?.name || "Astrologer"}`,
+            body: message.length > 100 ? message.slice(0, 100) + "..." : message,
+          },
+          webpush: {
+            notification: {
+              icon: "/favicon.ico",
+              badge: "/favicon.ico",
+            },
+          },
+        });
+
+        console.log("PUSH_SENT", session.userId);
+      } catch (pushError) {
+        console.error("PUSH_SEND_ERROR", pushError);
+      }
+    }
+  } catch (notificationError) {
+    console.error("NOTIFICATION_ERROR", notificationError);
+  }
+}
+
+async function generateAiAstrologyReply({
+  userMessage,
+  previousMessages,
+  astrologerName,
+  astrologerGender,
+  consultationData,
+}) {
+  const history = previousMessages
+    .slice(-14)
+    .map((msg) => `${msg.sender}: ${msg.message}`)
+    .join("\n");
+
+  const prompt = `
+You are "${astrologerName}" from Vedmantra.
+
+Astrologer gender: ${astrologerGender}
+
+Gender speaking rule:
+- If gender is male, always say: dunga, bataunga, dekhunga, karunga, sakta hoon.
+- If gender is female, always say: dungi, bataungi, dekhungi, karungi, sakti hoon.
+- Never write combined words like dunga/dungi, bataunga/bataungi, karunga/karungi, sakta/sakti.
+
+Structured consultation details collected:
+Name collected: ${consultationData.hasName ? "Yes" : "No"}
+DOB collected: ${consultationData.hasDob ? "Yes" : "No"}
+Birth time collected: ${consultationData.hasBirthTime ? "Yes" : "No"}
+Birth place collected: ${consultationData.hasBirthPlace ? "Yes" : "No"}
+Main question collected: ${consultationData.hasQuestion ? "Yes" : "No"}
+
+CRITICAL FLOW RULE:
+The system has already collected Name, DOB, Birth Time, Birth Place and Question.
+Do NOT ask for these again unless user clearly says something is wrong.
+Do NOT restart the onboarding flow.
+
+ABSOLUTE SCOPE RULE:
+You must answer ONLY astrology, horoscope, kundli, numerology, vastu, spiritual remedies, muhurat, dasha, graha, nakshatra and spiritual guidance related questions.
+
+VERY IMPORTANT:
+- If user asks about business, career, money, relationship, health, pregnancy, family, legal or life problems, answer ONLY from astrology/kundli/graha-dasha perspective.
+- Do NOT give marketing strategy.
+- Do NOT give business consulting.
+- Do NOT give startup advice.
+- Do NOT give medical advice.
+- Do NOT give legal advice.
+- Do NOT give investment advice.
+- Do NOT answer general knowledge, history, politics, science, coding, news, celebrities, sports or random questions.
+- If the question is outside astrology/spiritual guidance, politely refuse.
+
+NEVER ASK USER FOR:
+- Graha dasha
+- Mahadasha
+- Antardasha
+- Planetary positions
+- Ascendant
+- Houses
+- Kundli calculations
+
+These are astrologer's responsibility.
+
+NEVER SAY:
+- Main check kar raha hoon
+- Main dekh raha hoon
+- Main calculate kar raha hoon
+- Main kundli analyse kar raha hoon
+- Ek minute
+- Thodi der rukiyega
+- Kripya wait kariye
+
+CONSULTATION ENGAGEMENT RULE:
+You are conducting a live paid consultation, not giving a one-shot final answer.
+Your goal is to keep the consultation naturally flowing with curiosity and depth.
+
+For every user question:
+1. Give only a partial astrology insight first.
+2. Mention one positive sign OR one obstacle.
+3. Ask exactly one relevant follow-up question.
+4. Reveal deeper guidance gradually over multiple exchanges.
+5. Do NOT give complete final conclusion immediately.
+6. Do NOT give exact dates/timelines too early.
+7. Do NOT close the topic unless user asks for final answer or remedy.
+8. Make the user feel there is more to understand in their chart.
+
+Use curiosity naturally:
+- "Ek interesting baat yahan dikh rahi hai..."
+- "Isme ek hidden factor bhi nazar aa raha hai..."
+- "Yahan ek delay factor bhi dikh raha hai..."
+- "Isko confirm karne ke liye ek baat batayiye..."
+- "Iska deeper reason kundli mein nazar aa sakta hai..."
+
+CATEGORY RULES:
+Career/job/promotion:
+- First mention growth sign or delay factor.
+- Ask if issue is exam, manager approval, office politics, job change, or workload.
+
+Business/money:
+- First mention money flow, blockage, or recovery sign.
+- Ask if issue is sales, cashflow, debt, partnership, or customer acquisition.
+
+Love/relationship:
+- First mention emotional connection, confusion, delay, or family influence.
+- Ask if relationship is current, breakup phase, one-sided, or family-approved.
+
+Marriage:
+- First mention marriage yog or delay factor.
+- Ask if it is love marriage, arranged marriage, family delay, or compatibility issue.
+
+Pregnancy/child:
+- First mention spiritual guidance only.
+- Ask one gentle question like natural conception/treatment support/current concern.
+- Never give medical certainty.
+
+Family/property/legal:
+- First mention pressure/conflict/delay factor.
+- Ask one question about the exact nature of issue.
+
+MOST IMPORTANT CHAT STYLE:
+- Do NOT give long paragraphs.
+- Do NOT give remedies in every reply.
+- Do NOT explain everything at once.
+- Reply step by step.
+- Keep replies short: 2 to 3 lines maximum.
+- End with one relevant follow-up question whenever possible.
+- Sound human, warm and natural.
+
+Style:
+- Hinglish.
+- Simple words.
+- Human astrologer tone.
+- No chatbot tone.
+- Never say "as an AI".
+- Never say ChatGPT or OpenAI.
+
+Safety:
+- Never guarantee future events.
+- For pregnancy, health, legal, financial investment topics, say it is spiritual guidance only and professional advice should also be taken.
+
+Previous conversation:
+${history || "No previous messages."}
+
+User message:
+${userMessage}
+
+Reply naturally in 2 to 3 short lines only. End with one relevant follow-up question whenever possible.
+`;
+
+  const res = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      input: prompt,
+      temperature: 0.42,
+      max_output_tokens: 160,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error("OPENAI_ERROR:", data);
+    throw new Error(data.error?.message || "AI reply failed");
+  }
 
   return (
-    <AuthGuard>
-      <PushNotificationRegister />
-
-      <main
-        className="min-h-screen bg-[#ECE0D2] text-[#1F130D]"
-        style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
-      >
-        <div className="max-w-md mx-auto min-h-screen relative overflow-hidden bg-[#FAF6EF]">
-          <style>{`
-            @keyframes premiumFloat {
-              0%, 100% { transform: translateY(0px) scale(1); }
-              50% { transform: translateY(-8px) scale(1.02); }
-            }
-
-            @keyframes softShine {
-              0% { transform: translateX(-120%); opacity: 0; }
-              35% { opacity: 0.55; }
-              100% { transform: translateX(180%); opacity: 0; }
-            }
-
-            @keyframes cardGlow {
-              0%, 100% { box-shadow: 0 10px 30px rgba(43, 22, 14, 0.08); }
-              50% { box-shadow: 0 18px 44px rgba(43, 22, 14, 0.16); }
-            }
-
-            .hide-scrollbar {
-              -ms-overflow-style: none;
-              scrollbar-width: none;
-            }
-
-            .hide-scrollbar::-webkit-scrollbar {
-              display: none;
-            }
-
-            .premium-float {
-              animation: premiumFloat 4.5s ease-in-out infinite;
-            }
-
-            .premium-glow {
-              animation: cardGlow 4s ease-in-out infinite;
-            }
-
-            .shine-layer::after {
-              content: "";
-              position: absolute;
-              top: 0;
-              left: 0;
-              height: 100%;
-              width: 42%;
-              background: linear-gradient(110deg, transparent, rgba(255,255,255,0.28), transparent);
-              animation: softShine 4s ease-in-out infinite;
-            }
-          `}</style>
-
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#B68455]/20 rounded-full blur-3xl premium-float" />
-          <div className="absolute top-80 -left-28 w-72 h-72 bg-[#4E2617]/10 rounded-full blur-3xl premium-float" />
-
-          <header className="sticky top-0 z-50 px-4 pt-4 pb-4 bg-[#FFFDF9]/90 backdrop-blur-xl border-b border-[#E6D7C5]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.24em] text-[#8A5A35] font-bold">
-                  Divine Guidance
-                </p>
-
-                <h1 className="text-[28px] font-extrabold tracking-[-0.04em] text-[#24110A]">
-                  Vedmantra
-                </h1>
-              </div>
-
-              <HomeWalletBalance />
-            </div>
-
-            <nav className="grid grid-cols-4 gap-2 text-[12px] font-bold mt-4">
-              <a
-                href="/"
-                className="bg-[#2B1510] text-white rounded-full py-2.5 shadow-sm text-center"
-              >
-                Home
-              </a>
-
-              <a
-                href="/wallet"
-                className="bg-[#F4E9DC] border border-[#E5D5C2] text-[#6F452B] rounded-full py-2.5 text-center"
-              >
-                Wallet
-              </a>
-
-              <a
-                href="/chat"
-                className="bg-[#F4E9DC] border border-[#E5D5C2] text-[#6F452B] rounded-full py-2.5 text-center"
-              >
-                Chat
-              </a>
-
-              <a
-                href="/profile"
-                className="bg-[#F4E9DC] border border-[#E5D5C2] text-[#6F452B] rounded-full py-2.5 text-center"
-              >
-                Profile
-              </a>
-            </nav>
-          </header>
-
-          <section className="relative z-10 px-4 pt-5">
-            <div className="rounded-[30px] bg-[#2B160E] text-white p-5 shadow-xl overflow-hidden relative shine-layer premium-glow">
-              <div className="absolute -top-12 -right-10 w-40 h-40 rounded-full bg-[#D9A66B]/25 blur-2xl premium-float" />
-
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[#D8BFA8] font-bold">
-                Live Astrology
-              </p>
-
-              <h2 className="text-[29px] leading-[1.1] mt-3 font-extrabold tracking-[-0.035em]">
-                Get clarity from trusted astrologers
-              </h2>
-
-              <p className="text-[14px] text-[#E7D4C1] mt-3 leading-6 font-medium">
-                Instant guidance for money, career, love, marriage, kundli and
-                important life decisions.
-              </p>
-
-              <div className="grid grid-cols-3 gap-2 mt-5">
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-3">
-                  <p className="text-lg font-extrabold">24x7</p>
-                  <p className="text-[10px] text-[#D8BFA8] font-bold">
-                    Online
-                  </p>
-                </div>
-
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-3">
-                  <p className="text-lg font-extrabold">
-                    {uniqueAstrologers.length}+
-                  </p>
-                  <p className="text-[10px] text-[#D8BFA8] font-bold">
-                    Experts
-                  </p>
-                </div>
-
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-3">
-                  <p className="text-lg font-extrabold">₹5</p>
-                  <p className="text-[10px] text-[#D8BFA8] font-bold">
-                    Starting
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="relative z-10 px-4 mt-5">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
-                  Choose Concern
-                </p>
-                <h3 className="text-[22px] font-extrabold tracking-[-0.035em] text-[#24110A]">
-                  What do you need help with?
-                </h3>
-              </div>
-
-              {selectedCategory && (
-                <a
-                  href="/"
-                  className="text-[11px] font-bold text-[#7A4A2A] underline"
-                >
-                  Clear
-                </a>
-              )}
-            </div>
-
-            <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
-              {CATEGORIES.map((category, index) => {
-                const active = selectedCategory === category.key;
-
-                return (
-                  <a
-                    key={category.key}
-                    href={`/?category=${category.key}`}
-                    className={`min-w-[152px] rounded-[24px] p-4 border shadow-sm transition-all duration-300 active:scale-95 hover:-translate-y-1 relative overflow-hidden ${
-                      active
-                        ? "bg-[#2B160E] text-white border-[#2B160E] premium-glow"
-                        : "bg-[#FFFDF9] text-[#24110A] border-[#E8DCCB]"
-                    }`}
-                    style={{
-                      animation: `premiumFloat ${4.2 + index * 0.3}s ease-in-out infinite`,
-                    }}
-                  >
-                    <div className="absolute -top-8 -right-8 w-20 h-20 rounded-full bg-[#C99055]/15 blur-xl" />
-
-                    <div className="text-2xl mb-3">{category.emoji}</div>
-
-                    <p className="text-[16px] font-extrabold tracking-[-0.02em]">
-                      {category.title}
-                    </p>
-
-                    <p
-                      className={`text-[11px] mt-1 leading-4 font-semibold ${
-                        active ? "text-[#E7D4C1]" : "text-[#7B5A43]"
-                      }`}
-                    >
-                      {category.subtitle}
-                    </p>
-                  </a>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className="relative z-10 px-4 mt-5">
-            <div className="flex items-end justify-between mb-4">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
-                  Available Now
-                </p>
-
-                <h3 className="text-[24px] font-extrabold tracking-[-0.035em] text-[#24110A]">
-                  Astrologers
-                </h3>
-              </div>
-
-              <span className="text-[11px] bg-[#EAF7E9] text-green-700 px-3 py-1 rounded-full font-bold border border-green-200">
-                Live
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              {astrologers.length > 0 ? (
-                astrologers.map((astro, index) => (
-                  <div
-                    key={astro.id}
-                    className="bg-[#FFFDF9] rounded-[24px] p-3.5 shadow-sm border border-[#E8DCCB] transition-all duration-300 hover:-translate-y-1"
-                    style={{
-                      animation: `premiumFloat ${5 + index * 0.2}s ease-in-out infinite`,
-                    }}
-                  >
-                    <div className="flex gap-3">
-                      <img
-                        src={astro.image}
-                        alt={astro.name}
-                        referrerPolicy="no-referrer"
-                        className="w-16 h-16 rounded-2xl object-cover border border-[#E5D5C2]"
-                      />
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between gap-2">
-                          <div className="min-w-0">
-                            <h2 className="text-[16px] font-extrabold tracking-[-0.02em] truncate">
-                              {astro.name}
-                            </h2>
-
-                            <p className="text-[12px] text-[#7B5A43] mt-1 font-semibold line-clamp-1">
-                              {astro.skills}
-                            </p>
-                          </div>
-
-                          <span className="text-[#5A2A18] text-[13px] font-extrabold whitespace-nowrap">
-                            ₹{astro.price}/min
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between mt-2">
-                          <p
-                            className={`text-[12px] font-bold ${
-                              astro.online ? "text-green-600" : "text-red-500"
-                            }`}
-                          >
-                            {astro.online ? "● Online" : "● Offline"}
-                          </p>
-
-                          <p className="text-[12px] font-bold text-[#6F452B]">
-                            ★ {astro.rating}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <a
-                      href={`/astrologer/${astro.id}`}
-                      className="block w-full mt-3 bg-[#24110A] text-white rounded-xl py-2.5 font-bold text-center text-[14px]"
-                    >
-                      Chat Now
-                    </a>
-                  </div>
-                ))
-              ) : (
-                <div className="bg-[#FFFDF9] rounded-[24px] p-5 border border-[#E8DCCB] text-center">
-                  <p className="font-bold text-[#24110A]">
-                    No astrologers found for this concern.
-                  </p>
-                  <a
-                    href="/"
-                    className="inline-block mt-3 text-sm font-bold text-[#8A5A35] underline"
-                  >
-                    View all astrologers
-                  </a>
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section className="relative z-10 px-4 mt-6 pb-10">
-            <a
-              href="https://crystaluxe.in"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-[28px] bg-gradient-to-br from-[#FFFDF9] to-[#F1E2D0] border border-[#E5D5C2] p-5 shadow-sm overflow-hidden relative shine-layer premium-glow"
-            >
-              <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#C99055]/20 rounded-full blur-2xl premium-float" />
-
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
-                Crystaluxe Mall
-              </p>
-
-              <h3 className="text-[24px] leading-tight font-extrabold tracking-[-0.035em] text-[#24110A] mt-2">
-                Buy genuine spiritual items
-              </h3>
-
-              <p className="text-[14px] text-[#6F513F] mt-3 leading-6 font-medium">
-                Shop crystals, bracelets, yantras and spiritual products at
-                unbeatable prices from Crystaluxe.
-              </p>
-
-              <div className="mt-4 inline-flex items-center gap-2 bg-[#24110A] text-white rounded-full px-5 py-2.5 text-sm font-extrabold">
-                Visit Crystaluxe Mall →
-              </div>
-            </a>
-          </section>
-        </div>
-      </main>
-    </AuthGuard>
+    extractOpenAIText(data) ||
+    "Is prashna mein ek deeper point dikh raha hai. Aap apni situation thodi aur clear batayenge?"
   );
+}
+
+export async function POST(request) {
+  try {
+    const { chatSessionId, message, sender } = await request.json();
+
+    if (!chatSessionId || !message) {
+      return Response.json(
+        { success: false, error: "Chat session and message are required" },
+        { status: 400 }
+      );
+    }
+
+    const session = await prisma.chatSession.findUnique({
+      where: { id: Number(chatSessionId) },
+      include: {
+        astrologer: true,
+        messages: {
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
+
+    if (!session) {
+      return Response.json(
+        { success: false, error: "Chat session not found" },
+        { status: 404 }
+      );
+    }
+
+    const chatMessage = await prisma.chatMessage.create({
+      data: {
+        chatSessionId: Number(chatSessionId),
+        sender: sender || "USER",
+        message,
+      },
+    });
+
+    if (sender === "ADMIN") {
+      await sendPushToUser({ session, message });
+    }
+
+    const astrologerName = session.astrologer?.name || "";
+    const astrologerProfile = getAstrologerProfile(astrologerName);
+    const astrologerGender = astrologerProfile.gender || "male";
+
+    const isAiAstrologer = AI_ASTROLOGER_NAMES.includes(
+      astrologerName.toLowerCase().trim()
+    );
+
+    if (isAiAstrologer && (sender || "USER") === "USER") {
+      if (!OPENAI_API_KEY) {
+        return Response.json(
+          {
+            success: false,
+            error: "OPENAI_API_KEY is missing in Railway variables",
+          },
+          { status: 500 }
+        );
+      }
+
+      let aiReply;
+
+      const fullMessagesForMemory = [
+        ...(session.messages || []),
+        {
+          sender: "USER",
+          message,
+          createdAt: new Date(),
+        },
+      ];
+
+      if (isClearlyNonAstrologyQuestion(message)) {
+        aiReply = getAstrologyRefusal(astrologerGender);
+      } else {
+        const consultationData = extractConsultationData(fullMessagesForMemory);
+        const nextRequiredQuestion = getNextRequiredQuestion({
+          consultationData,
+          astrologerGender,
+        });
+
+        if (nextRequiredQuestion) {
+          aiReply = nextRequiredQuestion;
+        } else {
+          aiReply = await generateAiAstrologyReply({
+            userMessage: message,
+            previousMessages: fullMessagesForMemory,
+            astrologerName,
+            astrologerGender,
+            consultationData,
+          });
+        }
+      }
+
+      await sleep(getHumanDelay(aiReply));
+
+      const aiMessage = await prisma.chatMessage.create({
+        data: {
+          chatSessionId: Number(chatSessionId),
+          sender: "ADMIN",
+          message: aiReply,
+        },
+      });
+
+      await sendPushToUser({ session, message: aiReply });
+
+      return Response.json({
+        success: true,
+        message: chatMessage,
+        aiReply: aiMessage,
+      });
+    }
+
+    return Response.json({
+      success: true,
+      message: chatMessage,
+    });
+  } catch (error) {
+    console.error("SEND_MESSAGE_ERROR:", error);
+
+    return Response.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
 }

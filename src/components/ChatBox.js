@@ -6,7 +6,6 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
   const [messages, setMessages] = useState(initialMessages || []);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-
   const [walletBalance, setWalletBalance] = useState(0);
   const [showRechargePopup, setShowRechargePopup] = useState(false);
   const [deductedAmount, setDeductedAmount] = useState(null);
@@ -33,27 +32,31 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
     }
 
     const updateTimer = () => {
+      if (chatEnded) return;
+
       const elapsed = Math.floor(
         (Date.now() - new Date(startedAt).getTime()) / 1000
       );
+
       setSeconds(elapsed);
     };
 
     updateTimer();
+
+    if (chatEnded) return;
+
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [chatSessionId]);
+  }, [chatSessionId, chatEnded]);
 
   useEffect(() => {
     if ("Notification" in window) Notification.requestPermission();
-
     notificationSoundRef.current = new Audio("/notification.mp3");
     notificationSoundRef.current.preload = "auto";
   }, []);
 
   const safeJson = async (res) => {
     const text = await res.text();
-
     try {
       return JSON.parse(text);
     } catch {
@@ -63,7 +66,6 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
 
   const playSound = async () => {
     if (!soundEnabled) return;
-
     try {
       if (!notificationSoundRef.current) return;
       notificationSoundRef.current.currentTime = 0;
@@ -91,10 +93,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
     try {
       const res = await fetch("/api/wallet", { cache: "no-store" });
       const data = await safeJson(res);
-
-      if (data.success && data.wallet) {
-        setWalletBalance(data.wallet.balance);
-      }
+      if (data.success && data.wallet) setWalletBalance(data.wallet.balance);
     } catch (error) {
       console.error("FETCH_WALLET_ERROR", error);
     }
@@ -127,7 +126,10 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           if (alreadyHadMessages) {
             await playSound();
 
-            if ("Notification" in window && Notification.permission === "granted") {
+            if (
+              "Notification" in window &&
+              Notification.permission === "granted"
+            ) {
               new Notification("Vedmantra", {
                 body: "Your astrologer has replied.",
                 icon: "/favicon.ico",
@@ -279,7 +281,9 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
   const endChat = async () => {
     if (endingChat || !chatSessionId) return;
 
-    const confirmed = window.confirm("Are you sure you want to end this consultation?");
+    const confirmed = window.confirm(
+      "Are you sure you want to end this consultation?"
+    );
     if (!confirmed) return;
 
     try {
@@ -298,7 +302,6 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         return;
       }
 
-      localStorage.removeItem(`chat-started-at-${chatSessionId}`);
       setChatEnded(true);
       alert("Consultation ended successfully");
       window.location.href = "/";
@@ -324,7 +327,8 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
             <div className="h-8 px-3 rounded-full bg-[#F4E9DC] border border-[#E5D5C2] flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
               <span className="text-[11px] font-bold text-[#5D4031]">
-                {chatPaused ? "Recharge" : chatEnded ? "Ended" : "Live"} · {formatTime()}
+                {chatPaused ? "Recharge" : chatEnded ? "Ended" : "Live"} ·{" "}
+                {formatTime()}
               </span>
             </div>
 
@@ -469,7 +473,8 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
             </h2>
 
             <p className="text-[#6F5B49] text-center mt-2 text-sm leading-6">
-              Your wallet balance is exhausted. Recharge now to continue your consultation.
+              Your wallet balance is exhausted. Recharge now to continue your
+              consultation.
             </p>
 
             <div className="mt-4 rounded-2xl bg-[#F4E9DC] border border-[#E5D5C2] px-4 py-3 text-[#3A1D12] font-bold text-center text-sm">

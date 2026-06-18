@@ -3,7 +3,15 @@ import { getFirebaseAdmin } from "@/lib/firebase-admin";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
-const AI_ASTROLOGER_NAME = process.env.AI_ASTROLOGER_NAME || "AI Guru";
+
+const AI_ASTROLOGER_NAMES = [
+  "guru vashisht",
+  "acharya dev",
+  "acharya gayatri",
+  "pandit somesh",
+  "acharya kavya",
+  "guru anand",
+];
 
 const ASTROLOGY_REFUSAL =
   "Main sirf astrology, kundli aur spiritual guidance se jude prashno ka uttar de sakta/sakti hoon. Kripya apna prashna janm kundli, career, business, marriage, health ya grah-dasha ke perspective se poochhein.";
@@ -14,11 +22,9 @@ function sleep(ms) {
 
 function getHumanDelay(message) {
   const length = message.length;
-
   if (length < 50) return Math.floor(Math.random() * 1500) + 2000;
   if (length < 150) return Math.floor(Math.random() * 2500) + 3500;
   if (length < 300) return Math.floor(Math.random() * 3500) + 5000;
-
   return Math.floor(Math.random() * 4000) + 7000;
 }
 
@@ -66,20 +72,15 @@ function isClearlyAstrologyRelated(message) {
   const astrologyKeywords = [
     "astrology",
     "jyotish",
-    "jyotishya",
     "kundli",
     "kundali",
     "horoscope",
     "rashifal",
     "rashi",
     "lagna",
-    "ascendant",
-    "moon sign",
-    "sun sign",
     "nakshatra",
     "grah",
     "graha",
-    "planet",
     "dasha",
     "mahadasha",
     "antardasha",
@@ -88,7 +89,6 @@ function isClearlyAstrologyRelated(message) {
     "shani",
     "sade sati",
     "mangal",
-    "mangal dosh",
     "rahu",
     "ketu",
     "guru",
@@ -278,14 +278,18 @@ async function sendPushToUser({ session, message }) {
   }
 }
 
-async function generateAiAstrologyReply({ userMessage, previousMessages }) {
+async function generateAiAstrologyReply({
+  userMessage,
+  previousMessages,
+  astrologerName,
+}) {
   const history = previousMessages
     .slice(-12)
     .map((msg) => `${msg.sender}: ${msg.message}`)
     .join("\n");
 
   const prompt = `
-You are "AI Guru" from Vedmantra.
+You are "${astrologerName}" from Vedmantra.
 
 You are chatting live with the user like a real human astrologer on WhatsApp.
 
@@ -412,9 +416,9 @@ export async function POST(request) {
     }
 
     const astrologerName = session.astrologer?.name || "";
-    const isAiAstrologer =
-      astrologerName.toLowerCase() === AI_ASTROLOGER_NAME.toLowerCase() ||
-      astrologerName.toLowerCase().includes("ai");
+    const isAiAstrologer = AI_ASTROLOGER_NAMES.includes(
+      astrologerName.toLowerCase().trim()
+    );
 
     if (isAiAstrologer && (sender || "USER") === "USER") {
       if (!OPENAI_API_KEY) {
@@ -438,6 +442,7 @@ export async function POST(request) {
         aiReply = await generateAiAstrologyReply({
           userMessage: message,
           previousMessages: session.messages || [],
+          astrologerName,
         });
       }
 

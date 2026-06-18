@@ -70,9 +70,10 @@ export default async function LiveChatPage({ params }) {
         </header>
 
         <ChatBox
-          chatSessionId={chatSession.id}
-          initialMessages={chatSession.messages}
-        />
+  chatSessionId={chatSession.id}
+  initialMessages={chatSession.messages}
+  initialStatus={chatSession.status}
+/>
       </div>
     </main>
   );

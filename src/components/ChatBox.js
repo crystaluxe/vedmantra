@@ -2,7 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export default function ChatBox({ chatSessionId, initialMessages }) {
+function isEndedStatus(status) {
+  return ["ENDED", "CLOSED", "COMPLETED", "INACTIVE"].includes(
+    String(status || "").toUpperCase()
+  );
+}
+
+export default function ChatBox({
+  chatSessionId,
+  initialMessages,
+  initialStatus,
+}) {
   const [messages, setMessages] = useState(initialMessages || []);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -11,7 +21,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
   const [deductedAmount, setDeductedAmount] = useState(null);
   const [seconds, setSeconds] = useState(0);
   const [endingChat, setEndingChat] = useState(false);
-  const [chatEnded, setChatEnded] = useState(false);
+  const [chatEnded, setChatEnded] = useState(isEndedStatus(initialStatus));
   const [chatPaused, setChatPaused] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [typing, setTyping] = useState(false);
@@ -22,6 +32,24 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
 
   useEffect(() => {
     if (!chatSessionId) return;
+
+    if (isEndedStatus(initialStatus)) {
+      setChatEnded(true);
+
+      const first = messages?.[0]?.createdAt
+        ? new Date(messages[0].createdAt).getTime()
+        : null;
+
+      const last = messages?.length
+        ? new Date(messages[messages.length - 1].createdAt).getTime()
+        : null;
+
+      if (first && last && last >= first) {
+        setSeconds(Math.floor((last - first) / 1000));
+      }
+
+      return;
+    }
 
     const key = `chat-started-at-${chatSessionId}`;
     let startedAt = localStorage.getItem(key);
@@ -47,7 +75,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
 
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [chatSessionId, chatEnded]);
+  }, [chatSessionId, chatEnded, initialStatus]);
 
   useEffect(() => {
     if ("Notification" in window) Notification.requestPermission();
@@ -65,7 +93,8 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
   };
 
   const playSound = async () => {
-    if (!soundEnabled) return;
+    if (!soundEnabled || chatEnded) return;
+
     try {
       if (!notificationSoundRef.current) return;
       notificationSoundRef.current.currentTime = 0;
@@ -116,6 +145,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           newMessages.length > 0 ? newMessages[newMessages.length - 1] : null;
 
         if (
+          !chatEnded &&
           latestMessage &&
           latestMessage.sender === "ADMIN" &&
           latestMessage.id !== lastMessageIdRef.current
@@ -279,7 +309,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
   };
 
   const endChat = async () => {
-    if (endingChat || !chatSessionId) return;
+    if (endingChat || !chatSessionId || chatEnded) return;
 
     const confirmed = window.confirm(
       "Are you sure you want to end this consultation?"
@@ -325,14 +355,18 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="h-8 px-3 rounded-full bg-[#F4E9DC] border border-[#E5D5C2] flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  chatEnded ? "bg-red-500" : "bg-green-500"
+                }`}
+              ></span>
               <span className="text-[11px] font-bold text-[#5D4031]">
                 {chatPaused ? "Recharge" : chatEnded ? "Ended" : "Live"} ·{" "}
                 {formatTime()}
               </span>
             </div>
 
-            {deductedAmount && (
+            {deductedAmount && !chatEnded && (
               <span className="text-[11px] font-bold text-[#8B1E14]">
                 ₹{deductedAmount} deducted
               </span>
@@ -340,24 +374,28 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => {
-                const next = !soundEnabled;
-                setSoundEnabled(next);
-                if (next) unlockSound();
-              }}
-              className="h-8 w-8 rounded-full bg-[#F4E9DC] border border-[#E5D5C2] text-[13px]"
-            >
-              {soundEnabled ? "🔊" : "🔇"}
-            </button>
+            {!chatEnded && (
+              <button
+                onClick={() => {
+                  const next = !soundEnabled;
+                  setSoundEnabled(next);
+                  if (next) unlockSound();
+                }}
+                className="h-8 w-8 rounded-full bg-[#F4E9DC] border border-[#E5D5C2] text-[13px]"
+              >
+                {soundEnabled ? "🔊" : "🔇"}
+              </button>
+            )}
 
-            <button
-              onClick={endChat}
-              disabled={endingChat || chatEnded}
-              className="h-8 px-3 rounded-full bg-[#3A1D12] text-white text-[11px] font-bold disabled:opacity-50"
-            >
-              {chatEnded ? "Ended" : endingChat ? "Ending" : "End"}
-            </button>
+            {!chatEnded && (
+              <button
+                onClick={endChat}
+                disabled={endingChat}
+                className="h-8 px-3 rounded-full bg-[#3A1D12] text-white text-[11px] font-bold disabled:opacity-50"
+              >
+                {endingChat ? "Ending" : "End"}
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -375,7 +413,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           </div>
         </div>
 
-        {messages.length === 0 && (
+        {messages.length === 0 && !chatEnded && (
           <div className="flex justify-start">
             <div className="max-w-[76%] bg-white text-[#21150F] rounded-2xl rounded-tl-md px-3 py-2 shadow-sm border border-[#EFE7DD]">
               <p className="text-[13px] leading-5">
@@ -426,7 +464,7 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           );
         })}
 
-        {typing && (
+        {typing && !chatEnded && (
           <div className="flex justify-start">
             <div className="bg-white border border-[#EFE7DD] rounded-2xl px-3 py-2 shadow-sm">
               <div className="flex gap-1">
@@ -438,14 +476,13 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
           </div>
         )}
 
-        {chatPaused && (
+        {chatPaused && !chatEnded && (
           <div className="space-y-2 py-2">
             <div className="flex justify-center">
               <div className="bg-white border border-[#E3D5C4] text-[#3A1D12] px-3 py-1.5 rounded-full text-[10px] font-extrabold shadow-sm">
                 CHAT PAUSED
               </div>
             </div>
-
             <p className="text-center text-xs text-[#6F5B49] leading-5 px-6">
               Wallet balance is low. Please recharge to continue.
             </p>
@@ -453,8 +490,8 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         )}
 
         {chatEnded && (
-          <div className="flex justify-center">
-            <div className="bg-white border border-[#E3D5C4] text-red-600 px-3 py-1.5 rounded-full text-[10px] font-bold shadow-sm">
+          <div className="flex justify-center pt-2">
+            <div className="bg-white border border-red-200 text-red-600 px-4 py-2 rounded-full text-[11px] font-extrabold shadow-sm">
               Consultation ended
             </div>
           </div>
@@ -463,24 +500,20 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         <div ref={messagesEndRef} />
       </section>
 
-      {showRechargePopup && (
+      {showRechargePopup && !chatEnded && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-end justify-center">
           <div className="w-full max-w-md bg-[#FFFDF9] rounded-t-[26px] p-5 shadow-2xl">
             <div className="w-14 h-1 bg-[#D8C9B8] rounded-full mx-auto mb-4" />
-
             <h2 className="text-xl font-extrabold text-[#24110A] text-center">
               Continue This Chat
             </h2>
-
             <p className="text-[#6F5B49] text-center mt-2 text-sm leading-6">
               Your wallet balance is exhausted. Recharge now to continue your
               consultation.
             </p>
-
             <div className="mt-4 rounded-2xl bg-[#F4E9DC] border border-[#E5D5C2] px-4 py-3 text-[#3A1D12] font-bold text-center text-sm">
               🎁 Recharge ₹199 and Get ₹20 Extra
             </div>
-
             <button
               onClick={() => {
                 window.location.href = "/wallet";
@@ -493,36 +526,41 @@ export default function ChatBox({ chatSessionId, initialMessages }) {
         </div>
       )}
 
-      <footer className="shrink-0 bg-[#FFFDF9] border-t border-[#E9DDCF] px-3 py-2.5">
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={input}
-            disabled={chatEnded || chatPaused}
-            onChange={(e) => setInput(e.target.value)}
-            onFocus={unlockSound}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") sendMessage();
-            }}
-            placeholder={
-              chatPaused
-                ? "Recharge required"
-                : chatEnded
-                ? "Consultation ended"
-                : "Type your message..."
-            }
-            className="min-w-0 flex-1 h-11 rounded-full bg-[#F8F1E8] border border-[#E5D5C2] px-4 outline-none disabled:opacity-60 text-[13.5px] text-[#21150F] placeholder:text-[#9B8A7A]"
-          />
+      {!chatEnded ? (
+        <footer className="shrink-0 bg-[#FFFDF9] border-t border-[#E9DDCF] px-3 py-2.5">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={input}
+              disabled={chatPaused}
+              onChange={(e) => setInput(e.target.value)}
+              onFocus={unlockSound}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendMessage();
+              }}
+              placeholder={
+                chatPaused ? "Recharge required" : "Type your message..."
+              }
+              className="min-w-0 flex-1 h-11 rounded-full bg-[#F8F1E8] border border-[#E5D5C2] px-4 outline-none disabled:opacity-60 text-[13.5px] text-[#21150F] placeholder:text-[#9B8A7A]"
+            />
 
-          <button
-            onClick={sendMessage}
-            disabled={sending || !input.trim() || chatEnded || chatPaused}
-            className="shrink-0 w-11 h-11 rounded-full bg-[#3A1D12] text-white text-[15px] font-bold flex items-center justify-center shadow-md disabled:opacity-45"
-          >
-            {sending ? "…" : "➤"}
-          </button>
-        </div>
-      </footer>
+            <button
+              onClick={sendMessage}
+              disabled={sending || !input.trim() || chatPaused}
+              className="shrink-0 w-11 h-11 rounded-full bg-[#3A1D12] text-white text-[15px] font-bold flex items-center justify-center shadow-md disabled:opacity-45"
+            >
+              {sending ? "…" : "➤"}
+            </button>
+          </div>
+        </footer>
+      ) : (
+        <footer className="shrink-0 bg-[#FFFDF9] border-t border-[#E9DDCF] px-3 py-3">
+          <p className="text-center text-[12px] font-semibold text-[#8B735E]">
+            This consultation has ended. You can start a new chat from the
+            astrologer profile.
+          </p>
+        </footer>
+      )}
     </>
   );
 }

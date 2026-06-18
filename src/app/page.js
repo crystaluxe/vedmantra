@@ -81,8 +81,54 @@ export default async function HomePage({ searchParams }) {
         style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
       >
         <div className="max-w-md mx-auto min-h-screen relative overflow-hidden bg-[#FAF6EF]">
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#B68455]/20 rounded-full blur-3xl" />
-          <div className="absolute top-80 -left-28 w-72 h-72 bg-[#4E2617]/10 rounded-full blur-3xl" />
+          <style>{`
+            @keyframes premiumFloat {
+              0%, 100% { transform: translateY(0px) scale(1); }
+              50% { transform: translateY(-8px) scale(1.02); }
+            }
+
+            @keyframes softShine {
+              0% { transform: translateX(-120%); opacity: 0; }
+              35% { opacity: 0.55; }
+              100% { transform: translateX(180%); opacity: 0; }
+            }
+
+            @keyframes cardGlow {
+              0%, 100% { box-shadow: 0 10px 30px rgba(43, 22, 14, 0.08); }
+              50% { box-shadow: 0 18px 44px rgba(43, 22, 14, 0.16); }
+            }
+
+            .hide-scrollbar {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+
+            .hide-scrollbar::-webkit-scrollbar {
+              display: none;
+            }
+
+            .premium-float {
+              animation: premiumFloat 4.5s ease-in-out infinite;
+            }
+
+            .premium-glow {
+              animation: cardGlow 4s ease-in-out infinite;
+            }
+
+            .shine-layer::after {
+              content: "";
+              position: absolute;
+              top: 0;
+              left: 0;
+              height: 100%;
+              width: 42%;
+              background: linear-gradient(110deg, transparent, rgba(255,255,255,0.28), transparent);
+              animation: softShine 4s ease-in-out infinite;
+            }
+          `}</style>
+
+          <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#B68455]/20 rounded-full blur-3xl premium-float" />
+          <div className="absolute top-80 -left-28 w-72 h-72 bg-[#4E2617]/10 rounded-full blur-3xl premium-float" />
 
           <header className="sticky top-0 z-50 px-4 pt-4 pb-4 bg-[#FFFDF9]/90 backdrop-blur-xl border-b border-[#E6D7C5]">
             <div className="flex items-center justify-between">
@@ -131,8 +177,8 @@ export default async function HomePage({ searchParams }) {
           </header>
 
           <section className="relative z-10 px-4 pt-5">
-            <div className="rounded-[30px] bg-[#2B160E] text-white p-5 shadow-xl overflow-hidden relative">
-              <div className="absolute -top-12 -right-10 w-40 h-40 rounded-full bg-[#D9A66B]/25 blur-2xl animate-pulse" />
+            <div className="rounded-[30px] bg-[#2B160E] text-white p-5 shadow-xl overflow-hidden relative shine-layer premium-glow">
+              <div className="absolute -top-12 -right-10 w-40 h-40 rounded-full bg-[#D9A66B]/25 blur-2xl premium-float" />
 
               <p className="text-[11px] uppercase tracking-[0.22em] text-[#D8BFA8] font-bold">
                 Live Astrology
@@ -195,20 +241,25 @@ export default async function HomePage({ searchParams }) {
               )}
             </div>
 
-            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-              {CATEGORIES.map((category) => {
+            <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
+              {CATEGORIES.map((category, index) => {
                 const active = selectedCategory === category.key;
 
                 return (
                   <a
                     key={category.key}
                     href={`/?category=${category.key}`}
-                    className={`min-w-[152px] rounded-[24px] p-4 border shadow-sm transition-transform active:scale-95 ${
+                    className={`min-w-[152px] rounded-[24px] p-4 border shadow-sm transition-all duration-300 active:scale-95 hover:-translate-y-1 relative overflow-hidden ${
                       active
-                        ? "bg-[#2B160E] text-white border-[#2B160E]"
+                        ? "bg-[#2B160E] text-white border-[#2B160E] premium-glow"
                         : "bg-[#FFFDF9] text-[#24110A] border-[#E8DCCB]"
                     }`}
+                    style={{
+                      animation: `premiumFloat ${4.2 + index * 0.3}s ease-in-out infinite`,
+                    }}
                   >
+                    <div className="absolute -top-8 -right-8 w-20 h-20 rounded-full bg-[#C99055]/15 blur-xl" />
+
                     <div className="text-2xl mb-3">{category.emoji}</div>
 
                     <p className="text-[16px] font-extrabold tracking-[-0.02em]">
@@ -247,10 +298,13 @@ export default async function HomePage({ searchParams }) {
 
             <div className="space-y-3">
               {astrologers.length > 0 ? (
-                astrologers.map((astro) => (
+                astrologers.map((astro, index) => (
                   <div
                     key={astro.id}
-                    className="bg-[#FFFDF9] rounded-[24px] p-3.5 shadow-sm border border-[#E8DCCB]"
+                    className="bg-[#FFFDF9] rounded-[24px] p-3.5 shadow-sm border border-[#E8DCCB] transition-all duration-300 hover:-translate-y-1"
+                    style={{
+                      animation: `premiumFloat ${5 + index * 0.2}s ease-in-out infinite`,
+                    }}
                   >
                     <div className="flex gap-3">
                       <img
@@ -322,9 +376,9 @@ export default async function HomePage({ searchParams }) {
               href="https://crystaluxe.in"
               target="_blank"
               rel="noopener noreferrer"
-              className="block rounded-[28px] bg-gradient-to-br from-[#FFFDF9] to-[#F1E2D0] border border-[#E5D5C2] p-5 shadow-sm overflow-hidden relative"
+              className="block rounded-[28px] bg-gradient-to-br from-[#FFFDF9] to-[#F1E2D0] border border-[#E5D5C2] p-5 shadow-sm overflow-hidden relative shine-layer premium-glow"
             >
-              <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#C99055]/20 rounded-full blur-2xl" />
+              <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#C99055]/20 rounded-full blur-2xl premium-float" />
 
               <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
                 Crystaluxe Mall

@@ -197,6 +197,15 @@ function isLifeProblemAllowedForAstrology(message) {
     "property",
     "court case",
     "legal problem",
+    "promotion",
+    "increment",
+    "salary",
+    "transfer",
+    "government job",
+    "govt job",
+    "exam result",
+    "selection",
+    "result",
   ];
 
   return allowedLifeTopics.some((word) => text.includes(word));
@@ -316,6 +325,7 @@ function extractConsultationData(messages = []) {
       if (timeRegex.test(text)) return false;
       if (isLifeProblemAllowedForAstrology(text)) return false;
       if (isClearlyAstrologyRelated(text)) return false;
+
       return (
         text.length >= 2 && text.length <= 35 && /^[a-zA-Z\s.]+$/.test(text)
       );
@@ -342,7 +352,16 @@ function extractConsultationData(messages = []) {
       text.includes("career") ||
       text.includes("business") ||
       text.includes("money") ||
-      text.includes("love")
+      text.includes("love") ||
+      text.includes("promotion") ||
+      text.includes("increment") ||
+      text.includes("salary") ||
+      text.includes("transfer") ||
+      text.includes("govt job") ||
+      text.includes("government job") ||
+      text.includes("result") ||
+      text.includes("selection") ||
+      text.includes("exam")
     );
   });
 
@@ -375,27 +394,67 @@ function getNextRequiredQuestion({ consultationData, astrologerGender }) {
   }
 
   if (!consultationData.hasQuestion) {
-    return `Ab apna main prashna batayiye. Main isse kundli ke deeper angle se ${words.explore}.`;
+    return `Ab apna main prashna batayiye. Aap career, job, promotion, marriage, love, money ya family se related kuch bhi pooch sakte hain. Main kundli ke deeper angle se ${words.explore}.`;
   }
 
   return null;
 }
 
-function ensureFollowUpQuestion(reply, userMessage) {
+function ensureAstrologyFollowUp(reply, userMessage) {
   const text = String(reply || "").trim();
-  if (text.includes("?") || text.includes("batayiye") || text.includes("batayenge")) {
+  const userText = normalizeText(userMessage);
+
+  const hasQuestion =
+    text.includes("?") || text.includes("batayiye") || text.includes("batayenge");
+
+  const bannedGenericPhrases = [
+    "feedback",
+    "skills",
+    "skill",
+    "certification",
+    "time management",
+    "stress management",
+    "strategy",
+    "routine",
+    "mentor",
+    "seniors",
+    "workload manage",
+  ];
+
+  const containsGenericCoaching = bannedGenericPhrases.some((phrase) =>
+    normalizeText(text).includes(phrase)
+  );
+
+  if (hasQuestion && !containsGenericCoaching) {
     return text;
   }
 
-  const userText = normalizeText(userMessage);
+  let base = text
+    .replace(/.*feedback.*\?/gi, "")
+    .replace(/.*skills.*\?/gi, "")
+    .replace(/.*certification.*\?/gi, "")
+    .replace(/.*stress management.*\?/gi, "")
+    .trim();
+
+  if (!base) {
+    base = "Is prashna mein kundli ke hisaab se ek delay factor dikh raha hai.";
+  }
 
   if (
     userText.includes("exam") ||
     userText.includes("result") ||
-    userText.includes("selection") ||
-    userText.includes("promotion")
+    userText.includes("selection")
   ) {
-    return `${text}\n\nIs result ke baad interview/document verification bhi hoga ya direct selection hai?`;
+    return `${base}\n\nYeh result written exam ka hai ya final selection list ka?`;
+  }
+
+  if (
+    userText.includes("promotion") ||
+    userText.includes("increment") ||
+    userText.includes("salary") ||
+    userText.includes("transfer")
+  ) {
+    return `${base}\n\nYeh promotion departmental exam based hai, appraisal based hai ya manager approval based?`;
   }
 
   if (
@@ -404,7 +463,7 @@ function ensureFollowUpQuestion(reply, userMessage) {
     userText.includes("office") ||
     userText.includes("work")
   ) {
-    return `${text}\n\nYe issue manager approval, office politics, job change ya workload se related hai?`;
+    return `${base}\n\nYeh issue job change, promotion, appraisal ya office politics se related hai?`;
   }
 
   if (
@@ -414,7 +473,7 @@ function ensureFollowUpQuestion(reply, userMessage) {
     userText.includes("debt") ||
     userText.includes("loss")
   ) {
-    return `${text}\n\nAapki main problem cashflow, sales, debt ya partnership se related hai?`;
+    return `${base}\n\nAapki main concern cashflow, stuck payment, partnership ya business growth se related hai?`;
   }
 
   if (
@@ -422,7 +481,7 @@ function ensureFollowUpQuestion(reply, userMessage) {
     userText.includes("relationship") ||
     userText.includes("breakup")
   ) {
-    return `${text}\n\nYe relationship current chal raha hai, breakup phase mein hai ya one-sided situation hai?`;
+    return `${base}\n\nYeh relationship current chal raha hai, breakup phase mein hai ya family pressure hai?`;
   }
 
   if (
@@ -430,7 +489,7 @@ function ensureFollowUpQuestion(reply, userMessage) {
     userText.includes("shaadi") ||
     userText.includes("vivah")
   ) {
-    return `${text}\n\nYe love marriage ka case hai, arranged marriage ka ya family delay chal raha hai?`;
+    return `${base}\n\nYeh love marriage ka case hai, arranged marriage ka ya family delay chal raha hai?`;
   }
 
   if (
@@ -438,7 +497,7 @@ function ensureFollowUpQuestion(reply, userMessage) {
     userText.includes("baby") ||
     userText.includes("child")
   ) {
-    return `${text}\n\nAapki current concern pregnancy journey, baby health ya conception timing se related hai?`;
+    return `${base}\n\nAapki concern pregnancy journey, conception timing ya baby ke health astrology se related hai?`;
   }
 
   if (
@@ -447,7 +506,7 @@ function ensureFollowUpQuestion(reply, userMessage) {
     userText.includes("legal") ||
     userText.includes("court")
   ) {
-    return `${text}\n\nIs issue mein family pressure zyada hai, property matter hai ya legal delay chal raha hai?`;
+    return `${base}\n\nIs issue mein family dispute, property paperwork ya legal delay ka angle hai?`;
   }
 
   if (
@@ -455,10 +514,10 @@ function ensureFollowUpQuestion(reply, userMessage) {
     userText.includes("medical") ||
     userText.includes("bimari")
   ) {
-    return `${text}\n\nYe issue recent start hua hai ya kaafi time se chal raha hai?`;
+    return `${base}\n\nYeh health concern recent hai ya kaafi time se repeat ho raha hai?`;
   }
 
-  return `${text}\n\nIs point ko aur clearly samajhne ke liye aap apni situation thodi detail mein batayenge?`;
+  return `${base}\n\nIs problem ko astrology se aur clearly samajhne ke liye yeh issue kab se chal raha hai?`;
 }
 
 async function sendPushToUser({ session, message }) {
@@ -551,8 +610,29 @@ NEVER SAY:
 - Thodi der rukiyega
 - Kripya wait kariye
 
+STRICT ASTROLOGY-ONLY FOLLOW-UP RULE:
+Every follow-up question must stay related to astrology context, issue category, timing, dasha, delay, remedy, or consultation details.
+
+Allowed follow-up style:
+- Yeh promotion departmental exam based hai, appraisal based hai ya manager approval based?
+- Yeh result written exam ka hai ya final selection list ka?
+- Yeh problem kab se chal rahi hai?
+- Is period mein delay, conflict ya pressure zyada feel ho raha hai?
+- Aap timing detail samajhna chahenge ya remedy guidance chahenge?
+- Yeh issue love marriage, arranged marriage ya family delay se related hai?
+- Aapki concern cashflow, stuck payment, partnership ya business growth se related hai?
+
+Never ask generic coaching questions like:
+- Are you improving your skills?
+- Did you take feedback?
+- Are you doing certification?
+- Are you managing stress?
+- Are you managing time?
+- Are you working on strategy?
+- Did you talk to seniors or mentors?
+
 MANDATORY ENGAGEMENT RULE:
-Every astrology reply must end with exactly ONE relevant follow-up question.
+Every astrology reply must end with exactly ONE relevant astrology-context follow-up question.
 Never end with final reassurance like:
 - achha hoga
 - sab theek hoga
@@ -562,60 +642,62 @@ Never end with final reassurance like:
 - chances acche hain
 
 Do not satisfy the user fully in one answer.
-Give partial insight + one hidden factor + one follow-up question.
+Give partial astrology insight + one hidden factor + one astrology-context follow-up question.
 Reveal final conclusion slowly over multiple exchanges.
 
 QUERY-SPECIFIC HOOK RULES:
 
 Exam / Result / Selection:
 Mention supportive yog + one risk/delay factor.
-Ask about interview, document verification, direct selection, exam confidence, or result process.
+Ask only about written result, final list, interview, document verification, direct selection, or result process.
 
 Career / Job / Promotion:
-Mention growth possibility + obstacle.
-Ask whether issue is manager approval, office politics, workload, job change, exam, or appraisal.
+Mention only astrology factors like 10th house, 11th house, Sun, Saturn, Mars, Mercury, Jupiter, dasha, delay yog, promotion yog.
+Ask only whether issue is departmental exam, appraisal, manager approval, office politics, job change, transfer, or result-based.
+Do NOT ask about skills, feedback, certifications, time management, strategy or stress management.
 
 Business / Finance / Money:
-Mention money flow/recovery/blockage.
-Ask whether issue is cashflow, sales, debt, partnership, customer acquisition, or stuck payment.
+Mention 2nd house, 10th house, 11th house, Mercury, Jupiter, Saturn, Rahu, cashflow yog, blockage yog, debt pressure.
+Ask only whether issue is cashflow, stuck payment, partnership, business growth, debt, or customer flow.
+Do NOT give business strategy.
 
 Love / Relationship:
-Mention emotional connection/confusion/delay.
-Ask whether relationship is current, breakup phase, one-sided, long distance, or family pressure.
+Mention Venus, Moon, 5th house, 7th house, Rahu/Ketu confusion, family influence, delay yog.
+Ask only whether relationship is current, breakup phase, one-sided, long distance, family pressure, or marriage discussion.
 
 Marriage:
-Mention marriage yog/delay/family influence.
-Ask whether it is love marriage, arranged marriage, family delay, compatibility issue, or partner search.
+Mention 7th house, Venus/Jupiter, family delay, compatibility, mangal influence, dasha timing.
+Ask only whether it is love marriage, arranged marriage, family delay, partner search, or compatibility issue.
 
 Pregnancy / Child:
 Say this is spiritual guidance only.
-Mention emotional/spiritual indication.
-Ask whether concern is conception, pregnancy journey, baby health, scan, or stress.
+Mention 5th house, Jupiter, Moon, emotional/spiritual indication.
+Ask only whether concern is conception, pregnancy journey, scan anxiety, baby health astrology, or timing.
 
 Health:
-Say this is spiritual guidance only.
-Mention stress/energy/planetary pressure.
-Ask whether issue is recent, recurring, stress-related, or already under treatment.
+Say this is spiritual guidance only and professional advice should be taken.
+Mention Moon, Saturn, Mars, 6th house, stress/energy imbalance.
+Ask only whether issue is recent, recurring, stress-related, or already under treatment.
 
 Family:
-Mention emotional pressure or misunderstanding.
-Ask whether issue is parents, spouse, in-laws, siblings, or property.
+Mention Moon, 4th house, Saturn, Rahu/Ketu, emotional pressure or misunderstanding.
+Ask only whether issue is parents, spouse, in-laws, siblings, property, or family pressure.
 
 Property / Legal:
-Mention delay/conflict/pressure.
-Ask whether issue is paperwork, court case, family dispute, loan, or possession.
+Mention Mars, Saturn, 4th house, 6th house, delay/conflict/pressure.
+Ask only whether issue is paperwork, court case, family dispute, loan, possession, or delay.
 
 Education / Studies:
-Mention focus, delay, or exam pressure.
-Ask whether issue is concentration, result, admission, exam, or subject confusion.
+Mention Mercury, Jupiter, 5th house, focus, delay, exam pressure.
+Ask only whether issue is concentration, result, admission, exam, or subject confusion.
 
 Foreign / Abroad:
-Mention travel/settlement possibility with delay factor.
-Ask whether concern is visa, job, study, PR, or relocation.
+Mention Rahu, 9th house, 12th house, travel/settlement possibility with delay factor.
+Ask only whether concern is visa, job, study, PR, relocation, or foreign settlement timing.
 
 Remedy:
 Do not give full remedy immediately.
-First ask whether user wants simple daily remedy, mantra, puja, or gemstone guidance.
+Ask whether user wants simple daily remedy, mantra, puja, or gemstone guidance.
 
 CHAT STYLE:
 - Hinglish.
@@ -634,7 +716,7 @@ User message:
 ${userMessage}
 
 Reply in 2 to 3 short lines only.
-End with exactly ONE relevant follow-up question.
+End with exactly ONE relevant astrology-context follow-up question.
 `;
 
   const res = await fetch("https://api.openai.com/v1/responses", {
@@ -646,7 +728,7 @@ End with exactly ONE relevant follow-up question.
     body: JSON.stringify({
       model: OPENAI_MODEL,
       input: prompt,
-      temperature: 0.45,
+      temperature: 0.35,
       max_output_tokens: 170,
     }),
   });
@@ -660,9 +742,9 @@ End with exactly ONE relevant follow-up question.
 
   const rawReply =
     extractOpenAIText(data) ||
-    "Is prashna mein ek deeper point dikh raha hai.";
+    "Is prashna mein kundli ke hisaab se ek delay factor dikh raha hai.";
 
-  return ensureFollowUpQuestion(rawReply, userMessage);
+  return ensureAstrologyFollowUp(rawReply, userMessage);
 }
 
 export async function POST(request) {

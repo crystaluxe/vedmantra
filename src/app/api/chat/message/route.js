@@ -4,14 +4,16 @@ import { getFirebaseAdmin } from "@/lib/firebase-admin";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 
-const AI_ASTROLOGER_NAMES = [
-  "guru vashisht",
-  "acharya dev",
-  "acharya gayatri",
-  "pandit somesh",
-  "acharya kavya",
-  "guru anand",
-];
+const AI_ASTROLOGER_PROFILES = {
+  "guru vashisht": { gender: "male" },
+  "acharya dev": { gender: "male" },
+  "acharya gayatri": { gender: "female" },
+  "pandit somesh": { gender: "male" },
+  "acharya kavya": { gender: "female" },
+  "guru anand": { gender: "male" },
+};
+
+const AI_ASTROLOGER_NAMES = Object.keys(AI_ASTROLOGER_PROFILES);
 
 const ASTROLOGY_REFUSAL =
   "Main sirf astrology, kundli aur spiritual guidance se jude prashno ka uttar de sakta/sakti hoon. Kripya apna prashna janm kundli, career, business, marriage, health ya grah-dasha ke perspective se poochhein.";
@@ -43,6 +45,35 @@ function extractOpenAIText(data) {
 
 function normalizeText(text = "") {
   return String(text).toLowerCase().trim();
+}
+
+function getAstrologerProfile(astrologerName = "") {
+  const key = normalizeText(astrologerName);
+  return AI_ASTROLOGER_PROFILES[key] || { gender: "male" };
+}
+
+function getGenderWords(gender = "male") {
+  if (gender === "female") {
+    return {
+      guidance: "guidance dungi",
+      check: "dekhungi",
+      tell: "bataungi",
+      canAnswer: "sakti hoon",
+    };
+  }
+
+  return {
+    guidance: "guidance dunga",
+    check: "dekhunga",
+    tell: "bataunga",
+    canAnswer: "sakta hoon",
+  };
+}
+
+function getAstrologyRefusal(gender = "male") {
+  const words = getGenderWords(gender);
+
+  return `Main sirf astrology, kundli aur spiritual guidance se jude prashno ka uttar de ${words.canAnswer}. Kripya apna prashna janm kundli, career, business, marriage, health ya grah-dasha ke perspective se poochhein.`;
 }
 
 function isGreetingOnly(message) {
@@ -282,6 +313,7 @@ async function generateAiAstrologyReply({
   userMessage,
   previousMessages,
   astrologerName,
+  astrologerGender,
 }) {
   const history = previousMessages
     .slice(-12)
@@ -290,6 +322,13 @@ async function generateAiAstrologyReply({
 
   const prompt = `
 You are "${astrologerName}" from Vedmantra.
+
+Astrologer gender: ${astrologerGender}
+
+Gender speaking rule:
+- If gender is male, always say: dunga, bataunga, dekhunga, karunga, sakta hoon.
+- If gender is female, always say: dungi, bataungi, dekhungi, karungi, sakti hoon.
+- Never write combined words like dunga/dungi, bataunga/bataungi, karunga/karungi, sakta/sakti.
 
 You are chatting live with the user like a real human astrologer on WhatsApp.
 
@@ -305,8 +344,7 @@ VERY IMPORTANT:
 - Do NOT give legal advice.
 - Do NOT give investment advice.
 - Do NOT answer general knowledge, history, politics, science, coding, news, celebrities, sports or random questions.
-- If the question is outside astrology/spiritual guidance, politely refuse using this exact meaning:
-"${ASTROLOGY_REFUSAL}"
+- If the question is outside astrology/spiritual guidance, politely refuse.
 
 MOST IMPORTANT CHAT STYLE:
 - Do NOT give long paragraphs.
@@ -360,7 +398,7 @@ Reply naturally in 1 to 3 short lines only.
     body: JSON.stringify({
       model: OPENAI_MODEL,
       input: prompt,
-      temperature: 0.45,
+      temperature: 0.35,
       max_output_tokens: 120,
     }),
   });
@@ -416,6 +454,9 @@ export async function POST(request) {
     }
 
     const astrologerName = session.astrologer?.name || "";
+    const astrologerProfile = getAstrologerProfile(astrologerName);
+    const astrologerGender = astrologerProfile.gender || "male";
+
     const isAiAstrologer = AI_ASTROLOGER_NAMES.includes(
       astrologerName.toLowerCase().trim()
     );
@@ -434,15 +475,17 @@ export async function POST(request) {
       let aiReply;
 
       if (isClearlyNonAstrologyQuestion(message)) {
-        aiReply = ASTROLOGY_REFUSAL;
+        aiReply = getAstrologyRefusal(astrologerGender);
       } else if (needsAstrologyFraming(message)) {
-        aiReply =
-          "Is problem ko astrology ke perspective se dekhne ke liye pehle apni DOB batayein. Main kundli, grah-dasha aur business/career yog ke basis par guidance dunga/dungi.";
+        const words = getGenderWords(astrologerGender);
+
+        aiReply = `Is problem ko astrology ke perspective se dekhne ke liye pehle apni DOB batayein. Main kundli, grah-dasha aur business/career yog ke basis par ${words.guidance}.`;
       } else {
         aiReply = await generateAiAstrologyReply({
           userMessage: message,
           previousMessages: session.messages || [],
           astrologerName,
+          astrologerGender,
         });
       }
 

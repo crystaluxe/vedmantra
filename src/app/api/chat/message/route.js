@@ -15,32 +15,15 @@ const AI_ASTROLOGER_PROFILES = {
 
 const AI_ASTROLOGER_NAMES = Object.keys(AI_ASTROLOGER_PROFILES);
 
-const ASTROLOGY_REFUSAL =
-  "Main sirf astrology, kundli aur spiritual guidance se jude prashno ka uttar de sakta/sakti hoon. Kripya apna prashna janm kundli, career, business, marriage, health ya grah-dasha ke perspective se poochhein.";
-
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function getHumanDelay(message) {
   const length = message.length;
-  if (length < 50) return Math.floor(Math.random() * 1500) + 2000;
-  if (length < 150) return Math.floor(Math.random() * 2500) + 3500;
-  if (length < 300) return Math.floor(Math.random() * 3500) + 5000;
-  return Math.floor(Math.random() * 4000) + 7000;
-}
-
-function extractOpenAIText(data) {
-  if (data.output_text) return data.output_text;
-
-  const texts = [];
-  for (const item of data.output || []) {
-    for (const content of item.content || []) {
-      if (content.text) texts.push(content.text);
-    }
-  }
-
-  return texts.join("\n").trim();
+  if (length < 50) return Math.floor(Math.random() * 1200) + 1200;
+  if (length < 150) return Math.floor(Math.random() * 1800) + 1800;
+  return Math.floor(Math.random() * 2500) + 2500;
 }
 
 function normalizeText(text = "") {
@@ -56,17 +39,15 @@ function getGenderWords(gender = "male") {
   if (gender === "female") {
     return {
       guidance: "guidance dungi",
-      check: "dekhungi",
-      tell: "bataungi",
       canAnswer: "sakti hoon",
+      tell: "bataungi",
     };
   }
 
   return {
     guidance: "guidance dunga",
-    check: "dekhunga",
-    tell: "bataunga",
     canAnswer: "sakta hoon",
+    tell: "bataunga",
   };
 }
 
@@ -74,6 +55,19 @@ function getAstrologyRefusal(gender = "male") {
   const words = getGenderWords(gender);
 
   return `Main sirf astrology, kundli aur spiritual guidance se jude prashno ka uttar de ${words.canAnswer}. Kripya apna prashna janm kundli, career, business, marriage, health ya grah-dasha ke perspective se poochhein.`;
+}
+
+function extractOpenAIText(data) {
+  if (data.output_text) return data.output_text;
+
+  const texts = [];
+  for (const item of data.output || []) {
+    for (const content of item.content || []) {
+      if (content.text) texts.push(content.text);
+    }
+  }
+
+  return texts.join("\n").trim();
 }
 
 function isGreetingOnly(message) {
@@ -260,17 +254,125 @@ function isClearlyNonAstrologyQuestion(message) {
   return blockedKeywords.some((word) => text.includes(word));
 }
 
-function needsAstrologyFraming(message) {
-  const text = normalizeText(message);
+function extractConsultationData(messages = []) {
+  const userMessages = messages.filter((msg) => msg.sender === "USER");
+  const allText = userMessages.map((msg) => msg.message || "").join("\n");
+  const lowerText = normalizeText(allText);
 
-  return (
-    isLifeProblemAllowedForAstrology(text) &&
-    !isClearlyAstrologyRelated(text) &&
-    !text.includes("dob") &&
-    !text.includes("date of birth") &&
-    !text.includes("birth time") &&
-    !text.includes("birth place")
-  );
+  const dobRegex =
+    /\b(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{1,2}\s+(jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|sept|september|oct|october|nov|november|dec|december)\s+\d{2,4})\b/i;
+
+  const timeRegex =
+    /\b(\d{1,2}:\d{2}\s?(am|pm)?|\d{1,2}\s?(am|pm))\b/i;
+
+  const placeIndicators = [
+    "birth place",
+    "birthplace",
+    "born in",
+    "place of birth",
+    "janm sthan",
+    "janam sthan",
+    "janm place",
+  ];
+
+  const nameIndicators = [
+    "my name is",
+    "name is",
+    "mera naam",
+    "mera name",
+    "naam hai",
+    "i am",
+    "main",
+  ];
+
+  const hasDob = dobRegex.test(allText);
+  const hasBirthTime = timeRegex.test(allText);
+
+  const hasBirthPlace =
+    placeIndicators.some((item) => lowerText.includes(item)) ||
+    userMessages.some((msg) => {
+      const text = normalizeText(msg.message || "");
+      return (
+        text.length >= 3 &&
+        text.length <= 40 &&
+        !dobRegex.test(text) &&
+        !timeRegex.test(text) &&
+        /^[a-zA-Z\s,.-]+$/.test(text) &&
+        userMessages.length >= 3
+      );
+    });
+
+  const hasName =
+    nameIndicators.some((item) => lowerText.includes(item)) ||
+    userMessages.some((msg, index) => {
+      const text = normalizeText(msg.message || "");
+      if (index > 2) return false;
+      if (isGreetingOnly(text)) return false;
+      if (dobRegex.test(text)) return false;
+      if (timeRegex.test(text)) return false;
+      if (isLifeProblemAllowedForAstrology(text)) return false;
+      if (isClearlyAstrologyRelated(text)) return false;
+      return text.length >= 2 && text.length <= 35 && /^[a-zA-Z\s.]+$/.test(text);
+    });
+
+  const hasQuestion = userMessages.some((msg) => {
+    const text = normalizeText(msg.message || "");
+    if (isGreetingOnly(text)) return false;
+    if (dobRegex.test(text)) return false;
+    if (timeRegex.test(text)) return false;
+
+    return (
+      isLifeProblemAllowedForAstrology(text) ||
+      text.includes("?") ||
+      text.includes("problem") ||
+      text.includes("issue") ||
+      text.includes("pareshan") ||
+      text.includes("dikkat") ||
+      text.includes("kab") ||
+      text.includes("kaise") ||
+      text.includes("kyu") ||
+      text.includes("future") ||
+      text.includes("shaadi") ||
+      text.includes("career") ||
+      text.includes("business") ||
+      text.includes("money") ||
+      text.includes("love")
+    );
+  });
+
+  return {
+    hasName,
+    hasDob,
+    hasBirthTime,
+    hasBirthPlace,
+    hasQuestion,
+  };
+}
+
+function getNextRequiredQuestion({ consultationData, astrologerGender }) {
+  const words = getGenderWords(astrologerGender);
+
+  if (!consultationData.hasName) {
+    return "Namaste 🙏 Sabse pehle apna naam batayiye.";
+  }
+
+  if (!consultationData.hasDob) {
+    return "Kripya apni Date of Birth batayiye. Format: DD/MM/YYYY";
+  }
+
+  if (!consultationData.hasBirthTime) {
+    return "Kripya apna exact birth time batayiye, jaise 10:30 AM.";
+  }
+
+  if (!consultationData.hasBirthPlace) {
+    return "Kripya apna birth place batayiye, jaise Delhi, Mumbai ya Bangalore.";
+  }
+
+  if (!consultationData.hasQuestion) {
+    return `Ab apna main prashna batayiye, main kundli ke basis par ${words.guidance}.`;
+  }
+
+  return null;
 }
 
 async function sendPushToUser({ session, message }) {
@@ -314,9 +416,10 @@ async function generateAiAstrologyReply({
   previousMessages,
   astrologerName,
   astrologerGender,
+  consultationData,
 }) {
   const history = previousMessages
-    .slice(-12)
+    .slice(-14)
     .map((msg) => `${msg.sender}: ${msg.message}`)
     .join("\n");
 
@@ -330,7 +433,17 @@ Gender speaking rule:
 - If gender is female, always say: dungi, bataungi, dekhungi, karungi, sakti hoon.
 - Never write combined words like dunga/dungi, bataunga/bataungi, karunga/karungi, sakta/sakti.
 
-You are chatting live with the user like a real human astrologer on WhatsApp.
+Structured consultation details collected:
+Name collected: ${consultationData.hasName ? "Yes" : "No"}
+DOB collected: ${consultationData.hasDob ? "Yes" : "No"}
+Birth time collected: ${consultationData.hasBirthTime ? "Yes" : "No"}
+Birth place collected: ${consultationData.hasBirthPlace ? "Yes" : "No"}
+Main question collected: ${consultationData.hasQuestion ? "Yes" : "No"}
+
+CRITICAL FLOW RULE:
+The system has already collected Name, DOB, Birth Time, Birth Place and Question.
+Do NOT ask for these again unless user clearly says something is wrong.
+Do NOT restart the onboarding flow.
 
 ABSOLUTE SCOPE RULE:
 You must answer ONLY astrology, horoscope, kundli, numerology, vastu, spiritual remedies, muhurat, dasha, graha, nakshatra and spiritual guidance related questions.
@@ -346,27 +459,35 @@ VERY IMPORTANT:
 - Do NOT answer general knowledge, history, politics, science, coding, news, celebrities, sports or random questions.
 - If the question is outside astrology/spiritual guidance, politely refuse.
 
+NEVER ASK USER FOR:
+- Graha dasha
+- Mahadasha
+- Antardasha
+- Planetary positions
+- Ascendant
+- Houses
+- Kundli calculations
+
+These are astrologer's responsibility.
+
+NEVER SAY:
+- Main check kar raha hoon
+- Main dekh raha hoon
+- Main calculate kar raha hoon
+- Main kundli analyse kar raha hoon
+- Ek minute
+- Thodi der rukiyega
+- Kripya wait kariye
+
+You must immediately give a useful short response.
+
 MOST IMPORTANT CHAT STYLE:
 - Do NOT give long paragraphs.
 - Do NOT give remedies in every reply.
 - Do NOT explain everything at once.
 - Reply step by step.
-- Ask only ONE question at a time.
-- Keep replies short: 1 to 3 lines maximum.
+- Keep replies short: 2 to 4 lines maximum.
 - Sound human, warm and natural.
-
-Conversation behaviour:
-- If user says hi, hello, hey, namaste, greet them and ask what problem they want astrology guidance on.
-- If user shares a problem but no birth details, first ask for DOB only.
-- After DOB is given, ask for birth time only.
-- After birth time is given, ask for birth place only.
-- After all details are complete, give a short astrology-style insight.
-- Give remedy only when user asks for solution/remedy or after enough context is collected.
-- Do not dump a full reading in one message.
-
-Business/career rule:
-- If user says "I have business problem", do NOT give business strategy.
-- Ask for DOB first and say you will check business through kundli, 10th house, 11th house, Mercury, Saturn, Jupiter and current dasha.
 
 Style:
 - Hinglish.
@@ -386,7 +507,7 @@ ${history || "No previous messages."}
 User message:
 ${userMessage}
 
-Reply naturally in 1 to 3 short lines only.
+Reply naturally in 2 to 4 short lines only.
 `;
 
   const res = await fetch("https://api.openai.com/v1/responses", {
@@ -398,8 +519,8 @@ Reply naturally in 1 to 3 short lines only.
     body: JSON.stringify({
       model: OPENAI_MODEL,
       input: prompt,
-      temperature: 0.35,
-      max_output_tokens: 120,
+      temperature: 0.3,
+      max_output_tokens: 180,
     }),
   });
 
@@ -410,7 +531,10 @@ Reply naturally in 1 to 3 short lines only.
     throw new Error(data.error?.message || "AI reply failed");
   }
 
-  return extractOpenAIText(data) || "Namaste 🙏 Batayein, kis baat par astrology guidance chahiye?";
+  return (
+    extractOpenAIText(data) ||
+    "Aapka prashna astrology ke perspective se dekha ja sakta hai. Kripya apni situation thodi detail mein batayein."
+  );
 }
 
 export async function POST(request) {
@@ -474,19 +598,35 @@ export async function POST(request) {
 
       let aiReply;
 
+      const fullMessagesForMemory = [
+        ...(session.messages || []),
+        {
+          sender: "USER",
+          message,
+          createdAt: new Date(),
+        },
+      ];
+
       if (isClearlyNonAstrologyQuestion(message)) {
         aiReply = getAstrologyRefusal(astrologerGender);
-      } else if (needsAstrologyFraming(message)) {
-        const words = getGenderWords(astrologerGender);
-
-        aiReply = `Is problem ko astrology ke perspective se dekhne ke liye pehle apni DOB batayein. Main kundli, grah-dasha aur business/career yog ke basis par ${words.guidance}.`;
       } else {
-        aiReply = await generateAiAstrologyReply({
-          userMessage: message,
-          previousMessages: session.messages || [],
-          astrologerName,
+        const consultationData = extractConsultationData(fullMessagesForMemory);
+        const nextRequiredQuestion = getNextRequiredQuestion({
+          consultationData,
           astrologerGender,
         });
+
+        if (nextRequiredQuestion) {
+          aiReply = nextRequiredQuestion;
+        } else {
+          aiReply = await generateAiAstrologyReply({
+            userMessage: message,
+            previousMessages: fullMessagesForMemory,
+            astrologerName,
+            astrologerGender,
+            consultationData,
+          });
+        }
       }
 
       await sleep(getHumanDelay(aiReply));

@@ -6,40 +6,34 @@ export default async function LiveChatPage({ params }) {
   const chatSessionId = Number(resolvedParams.id);
 
   const chatSession = await prisma.chatSession.findUnique({
-    where: {
-      id: chatSessionId,
-    },
+    where: { id: chatSessionId },
     include: {
       astrologer: true,
-      messages: {
-        orderBy: {
-          createdAt: "asc",
-        },
-      },
-      user: {
-        include: {
-          wallet: true,
-        },
-      },
+      messages: { orderBy: { createdAt: "asc" } },
+      user: { include: { wallet: true } },
     },
   });
 
   if (!chatSession) {
-    return <div>Chat session not found</div>;
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[#FAF7F2] text-[#1F130D]">
+        <p className="text-sm font-semibold">Chat session not found</p>
+      </main>
+    );
   }
 
   const astrologer = chatSession.astrologer;
   const walletBalance = chatSession.user?.wallet?.balance || 0;
 
   return (
-    <main className="min-h-screen bg-[#F7EFE4] text-[#1F130D]">
-      <div className="max-w-md mx-auto min-h-screen bg-gradient-to-br from-[#FFF8EF] via-[#F7E9D9] to-[#EED8BE] flex flex-col">
-        <header className="sticky top-0 z-50 bg-white/45 backdrop-blur-2xl border-b border-white/60 px-4 py-4 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
+    <main className="min-h-[100dvh] bg-[#EEE3D6] text-[#1F130D]">
+      <div className="max-w-md mx-auto h-[100dvh] bg-[#FAF7F2] flex flex-col overflow-hidden shadow-2xl">
+        <header className="shrink-0 z-40 bg-[#FFFDF9]/92 backdrop-blur-xl border-b border-[#E7D9C7] px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
               <a
                 href="/chat"
-                className="w-11 h-11 rounded-full bg-white/70 border border-white/70 flex items-center justify-center shadow-md text-lg font-bold shrink-0"
+                className="w-8 h-8 rounded-full bg-[#F3E8DA] border border-[#E6D8C5] flex items-center justify-center text-[17px] font-bold shrink-0"
               >
                 ←
               </a>
@@ -47,30 +41,28 @@ export default async function LiveChatPage({ params }) {
               <img
                 src={astrologer.image}
                 alt={astrologer.name}
-                className="w-13 h-13 rounded-2xl object-cover shadow-md shrink-0"
+                className="w-10 h-10 rounded-full object-cover border border-[#E1CFB8] shrink-0"
               />
 
               <div className="min-w-0">
-                <h1 className="font-black tracking-[-0.03em] text-[17px] leading-tight truncate">
+                <h1 className="font-bold tracking-[-0.02em] text-[15px] leading-tight truncate">
                   {astrologer.name}
                 </h1>
 
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-
-                  <span className="text-sm text-green-600 font-bold">
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                  <span className="text-[11px] text-[#287A3E] font-semibold">
                     Online
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-[#24110A] text-white px-4 py-3 rounded-[22px] shadow-xl shrink-0">
-              <p className="text-[10px] text-[#D8C2B2] font-bold leading-none">
+            <div className="shrink-0 text-right">
+              <p className="text-[10px] text-[#8B735E] font-semibold leading-none">
                 Wallet
               </p>
-
-              <p className="text-lg font-black leading-tight mt-1">
+              <p className="text-[15px] font-extrabold text-[#2B160E] leading-tight mt-0.5">
                 ₹{walletBalance}
               </p>
             </div>

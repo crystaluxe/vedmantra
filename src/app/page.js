@@ -3,20 +3,73 @@ import AuthGuard from "@/components/AuthGuard";
 import HomeWalletBalance from "@/components/HomeWalletBalance";
 import PushNotificationRegister from "@/components/PushNotificationRegister";
 
-export default async function HomePage() {
+const CATEGORIES = [
+  {
+    key: "money",
+    title: "Money",
+    subtitle: "Finance, wealth & debt",
+    emoji: "💰",
+  },
+  {
+    key: "career",
+    title: "Career",
+    subtitle: "Job, business & growth",
+    emoji: "🚀",
+  },
+  {
+    key: "love",
+    title: "Love",
+    subtitle: "Relationship & marriage",
+    emoji: "❤️",
+  },
+  {
+    key: "women",
+    title: "Women Only",
+    subtitle: "Family, pregnancy & emotions",
+    emoji: "🌸",
+  },
+];
+
+function removeDuplicateAstrologers(astrologers) {
+  return Array.from(
+    new Map(
+      astrologers.map((astro) => [astro.name?.toLowerCase().trim(), astro])
+    ).values()
+  );
+}
+
+function filterAstrologersByCategory(astrologers, category) {
+  if (!category) return astrologers;
+
+  const categoryMap = {
+    money: ["money", "finance", "business", "wealth", "career", "financial"],
+    career: ["career", "job", "business", "education", "exam", "growth"],
+    love: ["love", "relationship", "marriage", "family", "compatibility"],
+    women: ["women", "pregnancy", "family", "relationship", "emotional", "love"],
+  };
+
+  const keywords = categoryMap[category] || [];
+
+  return astrologers.filter((astro) => {
+    const text = `${astro.name || ""} ${astro.skills || ""}`.toLowerCase();
+    return keywords.some((keyword) => text.includes(keyword));
+  });
+}
+
+export default async function HomePage({ searchParams }) {
+  const resolvedSearchParams = await searchParams;
+  const selectedCategory = resolvedSearchParams?.category || "";
+
   const astrologersRaw = await prisma.astrologer.findMany({
     orderBy: {
       createdAt: "desc",
     },
   });
 
-  const astrologers = Array.from(
-    new Map(
-      astrologersRaw.map((astro) => [
-        astro.name?.toLowerCase().trim(),
-        astro,
-      ])
-    ).values()
+  const uniqueAstrologers = removeDuplicateAstrologers(astrologersRaw);
+  const astrologers = filterAstrologersByCategory(
+    uniqueAstrologers,
+    selectedCategory
   );
 
   return (
@@ -27,11 +80,11 @@ export default async function HomePage() {
         className="min-h-screen bg-[#ECE0D2] text-[#1F130D]"
         style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
       >
-        <div className="max-w-md mx-auto min-h-screen relative overflow-hidden bg-[#FAF6EF] pb-24">
+        <div className="max-w-md mx-auto min-h-screen relative overflow-hidden bg-[#FAF6EF]">
           <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#B68455]/20 rounded-full blur-3xl" />
           <div className="absolute top-80 -left-28 w-72 h-72 bg-[#4E2617]/10 rounded-full blur-3xl" />
 
-          <header className="sticky top-0 z-50 px-4 pt-4 pb-3 bg-[#FFFDF9]/90 backdrop-blur-xl border-b border-[#E6D7C5]">
+          <header className="sticky top-0 z-50 px-4 pt-4 pb-4 bg-[#FFFDF9]/90 backdrop-blur-xl border-b border-[#E6D7C5]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.24em] text-[#8A5A35] font-bold">
@@ -45,23 +98,53 @@ export default async function HomePage() {
 
               <HomeWalletBalance />
             </div>
+
+            <nav className="grid grid-cols-4 gap-2 text-[12px] font-bold mt-4">
+              <a
+                href="/"
+                className="bg-[#2B1510] text-white rounded-full py-2.5 shadow-sm text-center"
+              >
+                Home
+              </a>
+
+              <a
+                href="/wallet"
+                className="bg-[#F4E9DC] border border-[#E5D5C2] text-[#6F452B] rounded-full py-2.5 text-center"
+              >
+                Wallet
+              </a>
+
+              <a
+                href="/chat"
+                className="bg-[#F4E9DC] border border-[#E5D5C2] text-[#6F452B] rounded-full py-2.5 text-center"
+              >
+                Chat
+              </a>
+
+              <a
+                href="/profile"
+                className="bg-[#F4E9DC] border border-[#E5D5C2] text-[#6F452B] rounded-full py-2.5 text-center"
+              >
+                Profile
+              </a>
+            </nav>
           </header>
 
           <section className="relative z-10 px-4 pt-5">
-            <div className="rounded-[28px] bg-[#2B160E] text-white p-5 shadow-xl overflow-hidden relative">
-              <div className="absolute -top-12 -right-10 w-40 h-40 rounded-full bg-[#D9A66B]/20 blur-2xl" />
+            <div className="rounded-[30px] bg-[#2B160E] text-white p-5 shadow-xl overflow-hidden relative">
+              <div className="absolute -top-12 -right-10 w-40 h-40 rounded-full bg-[#D9A66B]/25 blur-2xl animate-pulse" />
 
               <p className="text-[11px] uppercase tracking-[0.22em] text-[#D8BFA8] font-bold">
                 Live Astrology
               </p>
 
-              <h2 className="text-[28px] leading-[1.12] mt-3 font-extrabold tracking-[-0.035em]">
-                Talk to trusted astrologers instantly
+              <h2 className="text-[29px] leading-[1.1] mt-3 font-extrabold tracking-[-0.035em]">
+                Get clarity from trusted astrologers
               </h2>
 
               <p className="text-[14px] text-[#E7D4C1] mt-3 leading-6 font-medium">
-                Get guidance for career, love, marriage, kundli, money and life
-                decisions.
+                Instant guidance for money, career, love, marriage, kundli and
+                important life decisions.
               </p>
 
               <div className="grid grid-cols-3 gap-2 mt-5">
@@ -74,7 +157,7 @@ export default async function HomePage() {
 
                 <div className="bg-white/10 border border-white/10 rounded-2xl p-3">
                   <p className="text-lg font-extrabold">
-                    {astrologers.length}+
+                    {uniqueAstrologers.length}+
                   </p>
                   <p className="text-[10px] text-[#D8BFA8] font-bold">
                     Experts
@@ -82,7 +165,7 @@ export default async function HomePage() {
                 </div>
 
                 <div className="bg-white/10 border border-white/10 rounded-2xl p-3">
-                  <p className="text-lg font-extrabold">₹19</p>
+                  <p className="text-lg font-extrabold">₹5</p>
                   <p className="text-[10px] text-[#D8BFA8] font-bold">
                     Starting
                   </p>
@@ -91,7 +174,61 @@ export default async function HomePage() {
             </div>
           </section>
 
-          <section className="relative z-10 px-4 mt-6">
+          <section className="relative z-10 px-4 mt-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
+                  Choose Concern
+                </p>
+                <h3 className="text-[22px] font-extrabold tracking-[-0.035em] text-[#24110A]">
+                  What do you need help with?
+                </h3>
+              </div>
+
+              {selectedCategory && (
+                <a
+                  href="/"
+                  className="text-[11px] font-bold text-[#7A4A2A] underline"
+                >
+                  Clear
+                </a>
+              )}
+            </div>
+
+            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+              {CATEGORIES.map((category) => {
+                const active = selectedCategory === category.key;
+
+                return (
+                  <a
+                    key={category.key}
+                    href={`/?category=${category.key}`}
+                    className={`min-w-[152px] rounded-[24px] p-4 border shadow-sm transition-transform active:scale-95 ${
+                      active
+                        ? "bg-[#2B160E] text-white border-[#2B160E]"
+                        : "bg-[#FFFDF9] text-[#24110A] border-[#E8DCCB]"
+                    }`}
+                  >
+                    <div className="text-2xl mb-3">{category.emoji}</div>
+
+                    <p className="text-[16px] font-extrabold tracking-[-0.02em]">
+                      {category.title}
+                    </p>
+
+                    <p
+                      className={`text-[11px] mt-1 leading-4 font-semibold ${
+                        active ? "text-[#E7D4C1]" : "text-[#7B5A43]"
+                      }`}
+                    >
+                      {category.subtitle}
+                    </p>
+                  </a>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="relative z-10 px-4 mt-5">
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
@@ -109,82 +246,104 @@ export default async function HomePage() {
             </div>
 
             <div className="space-y-3">
-              {astrologers.map((astro) => (
-                <div
-                  key={astro.id}
-                  className="bg-[#FFFDF9] rounded-[24px] p-3.5 shadow-sm border border-[#E8DCCB]"
-                >
-                  <div className="flex gap-3">
-                    <img
-                      src={astro.image}
-                      alt={astro.name}
-                      referrerPolicy="no-referrer"
-                      className="w-16 h-16 rounded-2xl object-cover border border-[#E5D5C2]"
-                    />
+              {astrologers.length > 0 ? (
+                astrologers.map((astro) => (
+                  <div
+                    key={astro.id}
+                    className="bg-[#FFFDF9] rounded-[24px] p-3.5 shadow-sm border border-[#E8DCCB]"
+                  >
+                    <div className="flex gap-3">
+                      <img
+                        src={astro.image}
+                        alt={astro.name}
+                        referrerPolicy="no-referrer"
+                        className="w-16 h-16 rounded-2xl object-cover border border-[#E5D5C2]"
+                      />
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between gap-2">
-                        <div className="min-w-0">
-                          <h2 className="text-[16px] font-extrabold tracking-[-0.02em] truncate">
-                            {astro.name}
-                          </h2>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between gap-2">
+                          <div className="min-w-0">
+                            <h2 className="text-[16px] font-extrabold tracking-[-0.02em] truncate">
+                              {astro.name}
+                            </h2>
 
-                          <p className="text-[12px] text-[#7B5A43] mt-1 font-semibold line-clamp-1">
-                            {astro.skills}
-                          </p>
+                            <p className="text-[12px] text-[#7B5A43] mt-1 font-semibold line-clamp-1">
+                              {astro.skills}
+                            </p>
+                          </div>
+
+                          <span className="text-[#5A2A18] text-[13px] font-extrabold whitespace-nowrap">
+                            ₹{astro.price}/min
+                          </span>
                         </div>
 
-                        <span className="text-[#5A2A18] text-[13px] font-extrabold whitespace-nowrap">
-                          ₹{astro.price}/min
-                        </span>
-                      </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <p
+                            className={`text-[12px] font-bold ${
+                              astro.online ? "text-green-600" : "text-red-500"
+                            }`}
+                          >
+                            {astro.online ? "● Online" : "● Offline"}
+                          </p>
 
-                      <div className="flex items-center justify-between mt-2">
-                        <p
-                          className={`text-[12px] font-bold ${
-                            astro.online ? "text-green-600" : "text-red-500"
-                          }`}
-                        >
-                          {astro.online ? "● Online" : "● Offline"}
-                        </p>
-
-                        <p className="text-[12px] font-bold text-[#6F452B]">
-                          ★ {astro.rating}
-                        </p>
+                          <p className="text-[12px] font-bold text-[#6F452B]">
+                            ★ {astro.rating}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
+                    <a
+                      href={`/astrologer/${astro.id}`}
+                      className="block w-full mt-3 bg-[#24110A] text-white rounded-xl py-2.5 font-bold text-center text-[14px]"
+                    >
+                      Chat Now
+                    </a>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-[#FFFDF9] rounded-[24px] p-5 border border-[#E8DCCB] text-center">
+                  <p className="font-bold text-[#24110A]">
+                    No astrologers found for this concern.
+                  </p>
                   <a
-                    href={`/astrologer/${astro.id}`}
-                    className="block w-full mt-3 bg-[#24110A] text-white rounded-xl py-2.5 font-bold text-center text-[14px]"
+                    href="/"
+                    className="inline-block mt-3 text-sm font-bold text-[#8A5A35] underline"
                   >
-                    Chat Now
+                    View all astrologers
                   </a>
                 </div>
-              ))}
+              )}
             </div>
           </section>
 
-          <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50 w-full max-w-md bg-[#FFFDF9]/95 backdrop-blur-xl border-t border-[#E6D7C5] px-4 py-2.5">
-            <div className="grid grid-cols-2 gap-3">
-              <a
-                href="/"
-                className="h-11 rounded-2xl bg-[#24110A] text-white flex items-center justify-center text-sm font-extrabold"
-              >
-                Home
-              </a>
+          <section className="relative z-10 px-4 mt-6 pb-10">
+            <a
+              href="https://crystaluxe.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block rounded-[28px] bg-gradient-to-br from-[#FFFDF9] to-[#F1E2D0] border border-[#E5D5C2] p-5 shadow-sm overflow-hidden relative"
+            >
+              <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#C99055]/20 rounded-full blur-2xl" />
 
-              <a
-                href="https://crystaluxe.in"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-11 rounded-2xl bg-[#F4E9DC] border border-[#E5D5C2] text-[#3A1D12] flex items-center justify-center text-sm font-extrabold"
-              >
+              <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
                 Crystaluxe Mall
-              </a>
-            </div>
-          </nav>
+              </p>
+
+              <h3 className="text-[24px] leading-tight font-extrabold tracking-[-0.035em] text-[#24110A] mt-2">
+                Buy genuine spiritual items
+              </h3>
+
+              <p className="text-[14px] text-[#6F513F] mt-3 leading-6 font-medium">
+                Shop crystals, bracelets, yantras and spiritual products at
+                unbeatable prices from Crystaluxe.
+              </p>
+
+              <div className="mt-4 inline-flex items-center gap-2 bg-[#24110A] text-white rounded-full px-5 py-2.5 text-sm font-extrabold">
+                Visit Crystaluxe Mall →
+              </div>
+            </a>
+          </section>
         </div>
       </main>
     </AuthGuard>

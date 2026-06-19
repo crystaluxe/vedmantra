@@ -30,10 +30,27 @@ const CATEGORIES = [
   },
 ];
 
+const AI_ASTROLOGER_NAMES = new Set([
+  "guru vashisht",
+  "acharya dev",
+  "acharya gayatri",
+  "pandit somesh",
+  "acharya kavya",
+  "guru anand",
+]);
+
+function normalizeAstrologerName(name = "") {
+  return String(name).toLowerCase().trim();
+}
+
+function isAiAstrologer(astrologer) {
+  return AI_ASTROLOGER_NAMES.has(normalizeAstrologerName(astrologer.name));
+}
+
 function removeDuplicateAstrologers(astrologers) {
   return Array.from(
     new Map(
-      astrologers.map((astro) => [astro.name?.toLowerCase().trim(), astro])
+      astrologers.map((astro) => [normalizeAstrologerName(astro.name), astro])
     ).values()
   );
 }
@@ -56,6 +73,69 @@ function filterAstrologersByCategory(astrologers, category) {
   });
 }
 
+function AstrologerCard({ astro, index, carousel = false }) {
+  return (
+    <div
+      className={`bg-[#FFFDF9] rounded-[24px] p-3.5 shadow-sm border border-[#E8DCCB] transition-all duration-300 relative overflow-hidden ${
+        carousel ? "min-w-[82%] snap-start" : ""
+      }`}
+      style={{
+        animation: `premiumFloat ${5 + index * 0.18}s ease-in-out infinite`,
+      }}
+    >
+      <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-[#C99055]/10 blur-xl" />
+
+      <div className="flex gap-3 relative z-10">
+        <img
+          src={astro.image}
+          alt={astro.name}
+          referrerPolicy="no-referrer"
+          className="w-16 h-16 rounded-2xl object-cover border border-[#E5D5C2]"
+        />
+
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between gap-2">
+            <div className="min-w-0">
+              <h2 className="text-[16px] font-extrabold tracking-[-0.02em] truncate">
+                {astro.name}
+              </h2>
+
+              <p className="text-[12px] text-[#7B5A43] mt-1 font-semibold line-clamp-1">
+                {astro.skills}
+              </p>
+            </div>
+
+            <span className="text-[#5A2A18] text-[13px] font-extrabold whitespace-nowrap">
+              ₹{astro.price}/min
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between mt-2">
+            <p
+              className={`text-[12px] font-bold ${
+                astro.online ? "text-green-600" : "text-red-500"
+              }`}
+            >
+              {astro.online ? "● Online" : "● Offline"}
+            </p>
+
+            <p className="text-[12px] font-bold text-[#6F452B]">
+              ★ {astro.rating}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <a
+        href={`/astrologer/${astro.id}`}
+        className="relative z-10 block w-full mt-3 bg-[#24110A] text-white rounded-xl py-2.5 font-bold text-center text-[14px]"
+      >
+        Chat Now
+      </a>
+    </div>
+  );
+}
+
 export default async function HomePage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
   const selectedCategory = resolvedSearchParams?.category || "";
@@ -71,6 +151,8 @@ export default async function HomePage({ searchParams }) {
     uniqueAstrologers,
     selectedCategory
   );
+  const aiAstrologers = astrologers.filter(isAiAstrologer);
+  const humanAstrologers = astrologers.filter((astro) => !isAiAstrologer(astro));
 
   return (
     <AuthGuard>
@@ -289,70 +371,31 @@ export default async function HomePage({ searchParams }) {
               </span>
             </div>
 
+            {aiAstrologers.length > 0 && (
+              <div className="mb-5">
+                <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4">
+                  {aiAstrologers.map((astro, index) => (
+                    <AstrologerCard
+                      key={astro.id}
+                      astro={astro}
+                      index={index}
+                      carousel
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-3">
-              {astrologers.length > 0 ? (
-                astrologers.map((astro, index) => (
-                  <div
+              {humanAstrologers.length > 0 ? (
+                humanAstrologers.map((astro, index) => (
+                  <AstrologerCard
                     key={astro.id}
-                    className="bg-[#FFFDF9] rounded-[24px] p-3.5 shadow-sm border border-[#E8DCCB] transition-all duration-300 relative overflow-hidden"
-                    style={{
-                      animation: `premiumFloat ${
-                        5 + index * 0.18
-                      }s ease-in-out infinite`,
-                    }}
-                  >
-                    <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-[#C99055]/10 blur-xl" />
-
-                    <div className="flex gap-3 relative z-10">
-                      <img
-                        src={astro.image}
-                        alt={astro.name}
-                        referrerPolicy="no-referrer"
-                        className="w-16 h-16 rounded-2xl object-cover border border-[#E5D5C2]"
-                      />
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between gap-2">
-                          <div className="min-w-0">
-                            <h2 className="text-[16px] font-extrabold tracking-[-0.02em] truncate">
-                              {astro.name}
-                            </h2>
-
-                            <p className="text-[12px] text-[#7B5A43] mt-1 font-semibold line-clamp-1">
-                              {astro.skills}
-                            </p>
-                          </div>
-
-                          <span className="text-[#5A2A18] text-[13px] font-extrabold whitespace-nowrap">
-                            ₹{astro.price}/min
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between mt-2">
-                          <p
-                            className={`text-[12px] font-bold ${
-                              astro.online ? "text-green-600" : "text-red-500"
-                            }`}
-                          >
-                            {astro.online ? "● Online" : "● Offline"}
-                          </p>
-
-                          <p className="text-[12px] font-bold text-[#6F452B]">
-                            ★ {astro.rating}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <a
-                      href={`/astrologer/${astro.id}`}
-                      className="relative z-10 block w-full mt-3 bg-[#24110A] text-white rounded-xl py-2.5 font-bold text-center text-[14px]"
-                    >
-                      Chat Now
-                    </a>
-                  </div>
+                    astro={astro}
+                    index={index}
+                  />
                 ))
-              ) : (
+              ) : astrologers.length === 0 ? (
                 <div className="bg-[#FFFDF9] rounded-[24px] p-5 border border-[#E8DCCB] text-center">
                   <p className="font-bold text-[#24110A]">
                     No astrologers found for this concern.
@@ -364,7 +407,7 @@ export default async function HomePage({ searchParams }) {
                     View all astrologers
                   </a>
                 </div>
-              )}
+              ) : null}
             </div>
           </section>
 

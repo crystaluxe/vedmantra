@@ -73,7 +73,7 @@ function filterAstrologersByCategory(astrologers, category) {
   });
 }
 
-function AstrologerCard({ astro, index, carousel = false }) {
+function AstrologerCard({ astro, index, carousel = false, tag = "" }) {
   return (
     <div
       className={`bg-[#FFFDF9] rounded-[24px] p-3.5 shadow-sm border border-[#E8DCCB] transition-all duration-300 relative overflow-hidden ${
@@ -96,9 +96,17 @@ function AstrologerCard({ astro, index, carousel = false }) {
         <div className="flex-1 min-w-0">
           <div className="flex justify-between gap-2">
             <div className="min-w-0">
-              <h2 className="text-[16px] font-extrabold tracking-[-0.02em] truncate">
-                {astro.name}
-              </h2>
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-[16px] font-extrabold tracking-[-0.02em] truncate">
+                  {astro.name}
+                </h2>
+
+                {tag && (
+                  <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] bg-[#F4E9DC] text-[#6F452B] border border-[#E5D5C2] rounded-full px-2 py-0.5 font-extrabold">
+                    {tag}
+                  </span>
+                )}
+              </div>
 
               <p className="text-[12px] text-[#7B5A43] mt-1 font-semibold line-clamp-1">
                 {astro.skills}
@@ -153,6 +161,13 @@ export default async function HomePage({ searchParams }) {
   );
   const aiAstrologers = astrologers.filter(isAiAstrologer);
   const humanAstrologers = astrologers.filter((astro) => !isAiAstrologer(astro));
+  const eliteAstrologerIds = new Set(
+    humanAstrologers.slice(0, 3).map((astro) => astro.id)
+  );
+  const sortedHumanAstrologers = [
+    ...humanAstrologers.filter((astro) => eliteAstrologerIds.has(astro.id)),
+    ...humanAstrologers.filter((astro) => !eliteAstrologerIds.has(astro.id)),
+  ];
 
   return (
     <AuthGuard>
@@ -373,12 +388,23 @@ export default async function HomePage({ searchParams }) {
 
             {aiAstrologers.length > 0 && (
               <div className="mb-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-[18px] font-extrabold tracking-[-0.03em] text-[#24110A]">
+                    AI Astrologers
+                  </h4>
+
+                  <span className="text-[10px] uppercase tracking-[0.14em] bg-[#F4E9DC] text-[#6F452B] px-3 py-1 rounded-full font-extrabold border border-[#E5D5C2]">
+                    AI
+                  </span>
+                </div>
+
                 <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4">
                   {aiAstrologers.map((astro, index) => (
                     <AstrologerCard
                       key={astro.id}
                       astro={astro}
                       index={index}
+                      tag="AI Astrologer"
                       carousel
                     />
                   ))}
@@ -387,12 +413,13 @@ export default async function HomePage({ searchParams }) {
             )}
 
             <div className="space-y-3">
-              {humanAstrologers.length > 0 ? (
-                humanAstrologers.map((astro, index) => (
+              {sortedHumanAstrologers.length > 0 ? (
+                sortedHumanAstrologers.map((astro, index) => (
                   <AstrologerCard
                     key={astro.id}
                     astro={astro}
                     index={index}
+                    tag={eliteAstrologerIds.has(astro.id) ? "Elite" : ""}
                   />
                 ))
               ) : astrologers.length === 0 ? (

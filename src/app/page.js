@@ -80,7 +80,9 @@ function AstrologerCard({ astro, index, carousel = false, tag = "" }) {
         carousel ? "min-w-[82%] snap-start" : ""
       }`}
       style={{
-        animation: `premiumFloat ${5 + index * 0.18}s ease-in-out infinite`,
+        animation: carousel
+          ? "none"
+          : `premiumFloat ${5 + index * 0.18}s ease-in-out infinite`,
       }}
     >
       <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-[#C99055]/10 blur-xl" />

@@ -111,26 +111,26 @@ function AstrologerCard({ astro, index, carousel = false, tag = "" }) {
           </div>
 
           <div className="flex items-center justify-between mt-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <p
-                className={`text-[12px] font-bold ${
-                  astro.online ? "text-green-600" : "text-red-500"
-                }`}
-              >
-                {astro.online ? "● Online" : "● Offline"}
-              </p>
-
-              {tag && (
-                <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] bg-[#F4E9DC] text-[#6F452B] border border-[#E5D5C2] rounded-full px-2 py-0.5 font-extrabold">
-                  {tag}
-                </span>
-              )}
-            </div>
+            <p
+              className={`text-[12px] font-bold ${
+                astro.online ? "text-green-600" : "text-red-500"
+              }`}
+            >
+              {astro.online ? "● Online" : "● Offline"}
+            </p>
 
             <p className="text-[12px] font-bold text-[#6F452B]">
               ★ {astro.rating}
             </p>
           </div>
+
+          {tag && (
+            <div className="mt-2">
+              <span className="inline-flex text-[9px] uppercase tracking-[0.12em] bg-[#F4E9DC] text-[#6F452B] border border-[#E5D5C2] rounded-full px-2 py-0.5 font-extrabold">
+                {tag}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -387,7 +387,7 @@ export default async function HomePage({ searchParams }) {
             </div>
 
             {aiAstrologers.length > 0 && (
-              <div className="mb-6 rounded-[28px] bg-[#2B160E] border border-[#4C2A1B] p-4 shadow-sm overflow-hidden relative">
+              <div className="mb-6 -mx-4 bg-[#2B160E] border-y border-[#4C2A1B] px-4 py-5 shadow-sm overflow-hidden relative">
                 <div className="absolute -right-12 -top-12 w-36 h-36 rounded-full bg-[#D9A66B]/20 blur-2xl" />
 
                 <div className="flex items-center justify-between mb-3">

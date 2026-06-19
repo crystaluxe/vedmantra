@@ -96,17 +96,9 @@ function AstrologerCard({ astro, index, carousel = false, tag = "" }) {
         <div className="flex-1 min-w-0">
           <div className="flex justify-between gap-2">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 min-w-0">
-                <h2 className="text-[16px] font-extrabold tracking-[-0.02em] truncate">
-                  {astro.name}
-                </h2>
-
-                {tag && (
-                  <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] bg-[#F4E9DC] text-[#6F452B] border border-[#E5D5C2] rounded-full px-2 py-0.5 font-extrabold">
-                    {tag}
-                  </span>
-                )}
-              </div>
+              <h2 className="text-[16px] font-extrabold tracking-[-0.02em] truncate">
+                {astro.name}
+              </h2>
 
               <p className="text-[12px] text-[#7B5A43] mt-1 font-semibold line-clamp-1">
                 {astro.skills}
@@ -119,13 +111,21 @@ function AstrologerCard({ astro, index, carousel = false, tag = "" }) {
           </div>
 
           <div className="flex items-center justify-between mt-2">
-            <p
-              className={`text-[12px] font-bold ${
-                astro.online ? "text-green-600" : "text-red-500"
-              }`}
-            >
-              {astro.online ? "● Online" : "● Offline"}
-            </p>
+            <div className="flex items-center gap-2 min-w-0">
+              <p
+                className={`text-[12px] font-bold ${
+                  astro.online ? "text-green-600" : "text-red-500"
+                }`}
+              >
+                {astro.online ? "● Online" : "● Offline"}
+              </p>
+
+              {tag && (
+                <span className="shrink-0 text-[9px] uppercase tracking-[0.12em] bg-[#F4E9DC] text-[#6F452B] border border-[#E5D5C2] rounded-full px-2 py-0.5 font-extrabold">
+                  {tag}
+                </span>
+              )}
+            </div>
 
             <p className="text-[12px] font-bold text-[#6F452B]">
               ★ {astro.rating}
@@ -387,18 +387,26 @@ export default async function HomePage({ searchParams }) {
             </div>
 
             {aiAstrologers.length > 0 && (
-              <div className="mb-5">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-[18px] font-extrabold tracking-[-0.03em] text-[#24110A]">
-                    AI Astrologers
-                  </h4>
+              <div className="mb-6 rounded-[28px] bg-[#2B160E] border border-[#4C2A1B] p-4 shadow-sm overflow-hidden relative">
+                <div className="absolute -right-12 -top-12 w-36 h-36 rounded-full bg-[#D9A66B]/20 blur-2xl" />
 
-                  <span className="text-[10px] uppercase tracking-[0.14em] bg-[#F4E9DC] text-[#6F452B] px-3 py-1 rounded-full font-extrabold border border-[#E5D5C2]">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.22em] text-[#D8BFA8] font-bold">
+                      Instant Guidance
+                    </p>
+
+                    <h4 className="text-[20px] font-extrabold tracking-[-0.035em] text-white">
+                      AI Astrologers
+                    </h4>
+                  </div>
+
+                  <span className="text-[10px] uppercase tracking-[0.14em] bg-white/10 text-[#F7D7B4] px-3 py-1 rounded-full font-extrabold border border-white/15">
                     AI
                   </span>
                 </div>
 
-                <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4">
+                <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-4 px-4 relative z-10">
                   {aiAstrologers.map((astro, index) => (
                     <AstrologerCard
                       key={astro.id}
@@ -408,6 +416,20 @@ export default async function HomePage({ searchParams }) {
                       carousel
                     />
                   ))}
+                </div>
+              </div>
+            )}
+
+            {sortedHumanAstrologers.length > 0 && (
+              <div className="flex items-end justify-between mb-3">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
+                    Verified Experts
+                  </p>
+
+                  <h4 className="text-[21px] font-extrabold tracking-[-0.035em] text-[#24110A]">
+                    Real & Top Astrologers
+                  </h4>
                 </div>
               </div>
             )}

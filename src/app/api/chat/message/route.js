@@ -775,6 +775,28 @@ export async function POST(request) {
       );
     }
 
+    if (session.status === "QUEUED") {
+      return Response.json(
+        {
+          success: false,
+          code: "CHAT_QUEUED",
+          error: "Astrologer will join this chat shortly.",
+        },
+        { status: 409 }
+      );
+    }
+
+    if (session.status !== "ACTIVE" && session.status !== "QUEUED") {
+      return Response.json(
+        {
+          success: false,
+          code: "CHAT_ENDED",
+          error: "This chat is not active.",
+        },
+        { status: 400 }
+      );
+    }
+
     const chatMessage = await prisma.chatMessage.create({
       data: {
         chatSessionId: Number(chatSessionId),

@@ -24,6 +24,7 @@ export default async function LiveChatPage({ params }) {
 
   const astrologer = chatSession.astrologer;
   const walletBalance = chatSession.user?.wallet?.balance || 0;
+  const isQueued = chatSession.status === "QUEUED";
 
   return (
     <main className="min-h-[100dvh] bg-[#EEE3D6] text-[#1F130D]">
@@ -50,9 +51,17 @@ export default async function LiveChatPage({ params }) {
                 </h1>
 
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                  <span className="text-[11px] text-[#287A3E] font-semibold">
-                    Online
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isQueued ? "bg-amber-500" : "bg-green-500"
+                    }`}
+                  ></span>
+                  <span
+                    className={`text-[11px] font-semibold ${
+                      isQueued ? "text-amber-700" : "text-[#287A3E]"
+                    }`}
+                  >
+                    {isQueued ? "Waiting" : "Online"}
                   </span>
                 </div>
               </div>
@@ -70,10 +79,10 @@ export default async function LiveChatPage({ params }) {
         </header>
 
         <ChatBox
-  chatSessionId={chatSession.id}
-  initialMessages={chatSession.messages}
-  initialStatus={chatSession.status}
-/>
+          chatSessionId={chatSession.id}
+          initialMessages={chatSession.messages}
+          initialStatus={chatSession.status}
+        />
       </div>
     </main>
   );

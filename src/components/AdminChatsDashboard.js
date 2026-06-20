@@ -185,6 +185,8 @@ export default function AdminChatsDashboard({ initialChats, selectedChatId }) {
                             className={`text-[11px] font-bold px-2 py-1 rounded-full ${
                               chat.status === "ACTIVE"
                                 ? "bg-green-100 text-green-700"
+                                : chat.status === "QUEUED"
+                                ? "bg-amber-100 text-amber-700"
                                 : "bg-gray-100 text-gray-500"
                             }`}
                           >

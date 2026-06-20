@@ -1,5 +1,22 @@
 import { prisma } from "@/lib/prisma";
 
+const AI_ASTROLOGER_NAMES = new Set([
+  "guru vashisht",
+  "acharya dev",
+  "acharya gayatri",
+  "pandit somesh",
+  "acharya kavya",
+  "guru anand",
+]);
+
+function isAiAstrologer(astrologer) {
+  return AI_ASTROLOGER_NAMES.has(
+    String(astrologer?.name || "")
+      .toLowerCase()
+      .trim()
+  );
+}
+
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -87,7 +104,7 @@ export async function POST(request) {
       data: {
         astrologerId: astrologer.id,
         userId: user.id,
-        status: "ACTIVE",
+        status: isAiAstrologer(astrologer) ? "ACTIVE" : "QUEUED",
         walletBalanceAtStart: currentBalance,
         freeMinutesRemaining: 0,
       },

@@ -28,6 +28,16 @@ export async function POST(request) {
       );
     }
 
+    if (chatSession.status === "QUEUED") {
+      return Response.json({
+        success: true,
+        code: "CHAT_QUEUED",
+        balance: chatSession.user?.wallet?.balance || 0,
+        deducted: 0,
+        waitingForAstrologer: true,
+      });
+    }
+
     if (chatSession.status !== "ACTIVE") {
       return Response.json({
         success: false,

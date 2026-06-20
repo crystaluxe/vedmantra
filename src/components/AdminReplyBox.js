@@ -7,6 +7,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [ending, setEnding] = useState(false);
+  const [joining, setJoining] = useState(false);
 
   const [chatMeta, setChatMeta] = useState(null);
   const [duration, setDuration] = useState("00:00");
@@ -158,7 +159,13 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
   const sendReply = async () => {
     const cleanMessage = message.trim();
 
-    if (!cleanMessage || sending || !chatId || chatMeta?.status === "ENDED") {
+    if (
+      !cleanMessage ||
+      sending ||
+      !chatId ||
+      chatMeta?.status === "ENDED" ||
+      chatMeta?.status === "QUEUED"
+    ) {
       return;
     }
 
@@ -204,6 +211,38 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
       alert("Something went wrong");
     } finally {
       setSending(false);
+    }
+  };
+
+  const joinChat = async () => {
+    if (joining || !chatId || chatMeta?.status !== "QUEUED") return;
+
+    try {
+      setJoining(true);
+
+      const res = await fetch("/api/admin/chat-join", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chatId: Number(chatId),
+        }),
+      });
+
+      const data = await safeJson(res);
+
+      if (!data.success) {
+        alert(data.error || "Unable to join chat");
+        return;
+      }
+
+      await fetchMeta();
+    } catch (error) {
+      console.error("ADMIN_JOIN_CHAT_ERROR", error);
+      alert("Unable to join chat");
+    } finally {
+      setJoining(false);
     }
   };
 
@@ -257,6 +296,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
   };
 
   const isChatEnded = chatMeta?.status === "ENDED";
+  const isChatQueued = chatMeta?.status === "QUEUED";
 
   return (
     <>
@@ -293,13 +333,27 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
             </p>
             <p
               className={`text-lg font-extrabold mt-1 ${
-                isChatEnded ? "text-red-200" : "text-green-200"
+                isChatEnded
+                  ? "text-red-200"
+                  : isChatQueued
+                  ? "text-amber-200"
+                  : "text-green-200"
               }`}
             >
               {chatMeta?.status || "..."}
             </p>
           </div>
         </div>
+
+        {isChatQueued && (
+          <button
+            onClick={joinChat}
+            disabled={joining}
+            className="mt-3 w-full h-11 rounded-2xl bg-[#25D366] text-[#073B30] text-sm font-extrabold disabled:opacity-50"
+          >
+            {joining ? "Joining..." : "Join Chat"}
+          </button>
+        )}
 
         <button
           onClick={endChat}
@@ -396,13 +450,25 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
           </div>
         )}
 
+        {isChatQueued && (
+          <div className="mb-3 rounded-2xl bg-amber-50 border border-amber-100 text-amber-700 px-4 py-3 text-sm font-bold text-center">
+            Join this chat before replying.
+          </div>
+        )}
+
         <div className="flex items-center gap-2 md:gap-3">
           <input
             type="text"
             value={message}
-            disabled={isChatEnded}
+            disabled={isChatEnded || isChatQueued}
             onChange={(e) => handleTyping(e.target.value)}
-            placeholder={isChatEnded ? "Chat ended" : "Type a message"}
+            placeholder={
+              isChatEnded
+                ? "Chat ended"
+                : isChatQueued
+                ? "Join chat to reply"
+                : "Type a message"
+            }
             className="min-w-0 flex-1 h-12 rounded-full border border-transparent px-5 outline-none bg-white disabled:opacity-60 text-sm shadow-sm"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -413,7 +479,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
 
           <button
             onClick={sendReply}
-            disabled={sending || !message.trim() || isChatEnded}
+            disabled={sending || !message.trim() || isChatEnded || isChatQueued}
             className="shrink-0 w-12 h-12 rounded-full bg-[#25D366] text-white text-lg font-bold flex items-center justify-center shadow-md disabled:opacity-50"
           >
             {sending ? "…" : "➤"}

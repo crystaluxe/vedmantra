@@ -21,6 +21,7 @@ export default function ChatBox({
   const [deductedAmount, setDeductedAmount] = useState(null);
   const [seconds, setSeconds] = useState(0);
   const [endingChat, setEndingChat] = useState(false);
+  const [chatStatus, setChatStatus] = useState(initialStatus || "ACTIVE");
   const [chatEnded, setChatEnded] = useState(isEndedStatus(initialStatus));
   const [chatPaused, setChatPaused] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -30,10 +31,12 @@ export default function ChatBox({
   const lastMessageIdRef = useRef(null);
   const notificationSoundRef = useRef(null);
 
+  const chatQueued = String(chatStatus || "").toUpperCase() === "QUEUED";
+
   useEffect(() => {
     if (!chatSessionId) return;
 
-    if (isEndedStatus(initialStatus)) {
+    if (isEndedStatus(chatStatus)) {
       setChatEnded(true);
 
       const first = messages?.[0]?.createdAt
@@ -48,6 +51,11 @@ export default function ChatBox({
         setSeconds(Math.floor((last - first) / 1000));
       }
 
+      return;
+    }
+
+    if (chatQueued) {
+      setSeconds(0);
       return;
     }
 
@@ -75,7 +83,7 @@ export default function ChatBox({
 
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [chatSessionId, chatEnded, initialStatus]);
+  }, [chatSessionId, chatEnded, chatQueued, chatStatus]);
 
   useEffect(() => {
     if ("Notification" in window) Notification.requestPermission();
@@ -175,15 +183,54 @@ export default function ChatBox({
     }
   };
 
+  const fetchStatus = async () => {
+    if (!chatSessionId) return;
+
+    try {
+      const res = await fetch(
+        `/api/chat/status?chatSessionId=${chatSessionId}`,
+        { cache: "no-store" }
+      );
+
+      const data = await safeJson(res);
+
+      if (!data.success || !data.chat?.status) return;
+
+      const nextStatus = data.chat.status;
+
+      setChatStatus((currentStatus) => {
+        if (
+          String(currentStatus || "").toUpperCase() === "QUEUED" &&
+          String(nextStatus || "").toUpperCase() === "ACTIVE"
+        ) {
+          localStorage.setItem(
+            `chat-started-at-${chatSessionId}`,
+            new Date().toISOString()
+          );
+        }
+
+        return nextStatus;
+      });
+
+      if (isEndedStatus(nextStatus)) {
+        setChatEnded(true);
+      }
+    } catch (error) {
+      console.error("FETCH_CHAT_STATUS_ERROR", error);
+    }
+  };
+
   useEffect(() => {
     fetchMessages();
     fetchWallet();
+    fetchStatus();
 
     const messageInterval = setInterval(fetchMessages, 2000);
     const walletInterval = setInterval(fetchWallet, 5000);
+    const statusInterval = setInterval(fetchStatus, 3000);
 
     const deductionInterval = setInterval(async () => {
-      if (!chatSessionId || chatEnded || chatPaused) return;
+      if (!chatSessionId || chatEnded || chatPaused || chatQueued) return;
 
       try {
         const res = await fetch("/api/chat/deduct", {
@@ -224,9 +271,10 @@ export default function ChatBox({
     return () => {
       clearInterval(messageInterval);
       clearInterval(walletInterval);
+      clearInterval(statusInterval);
       clearInterval(deductionInterval);
     };
-  }, [chatSessionId, chatEnded, chatPaused, soundEnabled]);
+  }, [chatSessionId, chatEnded, chatPaused, chatQueued, soundEnabled]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -264,7 +312,14 @@ export default function ChatBox({
   const sendMessage = async () => {
     const cleanMessage = input.trim();
 
-    if (!cleanMessage || sending || !chatSessionId || chatEnded || chatPaused) {
+    if (
+      !cleanMessage ||
+      sending ||
+      !chatSessionId ||
+      chatEnded ||
+      chatPaused ||
+      chatQueued
+    ) {
       return;
     }
 
@@ -361,7 +416,14 @@ export default function ChatBox({
                 }`}
               ></span>
               <span className="text-[11px] font-bold text-[#5D4031]">
-                {chatPaused ? "Recharge" : chatEnded ? "Ended" : "Live"} ·{" "}
+                {chatPaused
+                  ? "Recharge"
+                  : chatEnded
+                  ? "Ended"
+                  : chatQueued
+                  ? "Waiting"
+                  : "Live"}{" "}
+                ·{" "}
                 {formatTime()}
               </span>
             </div>
@@ -417,11 +479,21 @@ export default function ChatBox({
           <div className="flex justify-start">
             <div className="max-w-[76%] bg-white text-[#21150F] rounded-2xl rounded-tl-md px-3 py-2 shadow-sm border border-[#EFE7DD]">
               <p className="text-[13px] leading-5">
-                Namaste 🙏 Batayein, kis baat par guidance chahiye?
+                {chatQueued
+                  ? "Astrologer will join this chat shortly."
+                  : "Namaste 🙏 Batayein, kis baat par guidance chahiye?"}
               </p>
               <p className="text-[9px] text-[#9B8A7A] mt-1 text-right">
                 Just now
               </p>
+            </div>
+          </div>
+        )}
+
+        {chatQueued && !chatEnded && messages.length > 0 && (
+          <div className="flex justify-center py-2">
+            <div className="bg-white border border-[#E3D5C4] text-[#3A1D12] px-4 py-2 rounded-full text-[11px] font-extrabold shadow-sm">
+              Astrologer will join this chat shortly
             </div>
           </div>
         )}
@@ -532,21 +604,25 @@ export default function ChatBox({
             <input
               type="text"
               value={input}
-              disabled={chatPaused}
+              disabled={chatPaused || chatQueued}
               onChange={(e) => setInput(e.target.value)}
               onFocus={unlockSound}
               onKeyDown={(e) => {
                 if (e.key === "Enter") sendMessage();
               }}
               placeholder={
-                chatPaused ? "Recharge required" : "Type your message..."
+                chatPaused
+                  ? "Recharge required"
+                  : chatQueued
+                  ? "Waiting for astrologer..."
+                  : "Type your message..."
               }
               className="min-w-0 flex-1 h-11 rounded-full bg-[#F8F1E8] border border-[#E5D5C2] px-4 outline-none disabled:opacity-60 text-[13.5px] text-[#21150F] placeholder:text-[#9B8A7A]"
             />
 
             <button
               onClick={sendMessage}
-              disabled={sending || !input.trim() || chatPaused}
+              disabled={sending || !input.trim() || chatPaused || chatQueued}
               className="shrink-0 w-11 h-11 rounded-full bg-[#3A1D12] text-white text-[15px] font-bold flex items-center justify-center shadow-md disabled:opacity-45"
             >
               {sending ? "…" : "➤"}

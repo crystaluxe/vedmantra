@@ -430,7 +430,7 @@ export default async function HomePage({ searchParams }) {
                   </p>
 
                   <h4 className="text-[21px] font-extrabold tracking-[-0.035em] text-[#24110A]">
-                    Real & Top Astrologers
+                    Top Astrologers
                   </h4>
                 </div>
               </div>

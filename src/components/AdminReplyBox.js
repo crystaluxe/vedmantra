@@ -237,6 +237,15 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
         return;
       }
 
+      if (data.chat) {
+        setChatMeta((currentMeta) => ({
+          ...(currentMeta || {}),
+          status: data.chat.status,
+          startedAt: data.chat.startedAt,
+          endedAt: data.chat.endedAt,
+        }));
+      }
+
       await fetchMeta();
     } catch (error) {
       console.error("ADMIN_JOIN_CHAT_ERROR", error);

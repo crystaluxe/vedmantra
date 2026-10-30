@@ -1,26 +1,31 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
+@import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6efe5;
+  --foreground: #302321;
+  --vm-maroon: #650d26;
+  --vm-maroon-dark: #390a1b;
+  --vm-beige: #f6efe5;
+  --vm-cream: #fff9f0;
+  --vm-gold: #c6a15b;
+  --vm-white: #ffffff;
 }
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "DM Sans", sans-serif;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: "DM Sans", sans-serif; }
+h1, h2, h3 { text-wrap: balance; }
+.vm-serif { font-family: "Playfair Display", Georgia, serif; }
+.vm-surface { background: #fff; border: 1px solid #eadbc7; border-radius: 24px; box-shadow: 0 12px 40px rgba(57,10,27,.05); }
+.vm-primary-button { background: var(--vm-maroon); color: white; border-radius: 999px; padding: 12px 24px; font-weight: 700; transition: background .2s, transform .2s; }
+.vm-primary-button:hover { background: var(--vm-maroon-dark); transform: translateY(-1px); }
+.vm-page { min-height: 100dvh; background: var(--vm-beige); color: var(--vm-maroon-dark); }
+.vm-container { width: min(100% - 32px, 1200px); margin-inline: auto; }
+@media (max-width: 640px) {
+  .vm-container { width: min(100% - 24px, 1200px); }
+  .vm-mobile-safe { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
 }

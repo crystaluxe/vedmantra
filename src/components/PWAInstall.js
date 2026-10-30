@@ -31,7 +31,7 @@ export default function PWAInstall() {
     };
   }, []);
 
-  if (!loaded || pathname === "/") return null;
+  if (!loaded || pathname === "/" || pathname === "/login") return null;
 
   if (dismissed || isStandalone) return null;
 

@@ -27,14 +27,14 @@ export default async function LiveChatPage({ params }) {
   const walletBalance = chatSession.user?.wallet?.balance || 0;
 
   return (
-    <main className="min-h-[100dvh] bg-[#EEE3D6] text-[#1F130D]">
-      <div className="max-w-md mx-auto h-[100dvh] bg-[#FAF7F2] flex flex-col overflow-hidden shadow-2xl">
-        <header className="shrink-0 z-40 bg-[#FFFDF9]/92 backdrop-blur-xl border-b border-[#E7D9C7] px-3 py-2.5">
+    <main className="min-h-[100dvh] bg-[#F6EFE5] text-[#390A1B]">
+      <div className="mx-auto h-[100dvh] w-full max-w-6xl bg-white flex flex-col overflow-hidden shadow-2xl md:my-6 md:h-[calc(100dvh-48px)] md:rounded-3xl md:border md:border-[#E9D9C4]">
+        <header className="shrink-0 z-40 bg-[#FFF9F0]/95 backdrop-blur-xl border-b border-[#E9D9C4] px-3 py-2.5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <a
                 href="/chat"
-                className="w-8 h-8 rounded-full bg-[#F3E8DA] border border-[#E6D8C5] flex items-center justify-center text-[17px] font-bold shrink-0"
+                className="w-8 h-8 rounded-full bg-[#F6EFE5] border border-[#E9D9C4] flex items-center justify-center text-[17px] font-bold shrink-0"
               >
                 ←
               </a>
@@ -61,7 +61,7 @@ export default async function LiveChatPage({ params }) {
               <p className="text-[10px] text-[#8B735E] font-semibold leading-none">
                 Wallet
               </p>
-              <p className="text-[15px] font-extrabold text-[#2B160E] leading-tight mt-0.5">
+              <p className="text-[15px] font-extrabold text-[#650D26] leading-tight mt-0.5">
                 ₹{walletBalance}
               </p>
             </div>

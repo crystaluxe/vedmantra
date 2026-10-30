@@ -210,7 +210,7 @@ export default async function AstrologerProfilePage({ params }) {
           </div>
         </div>
 
-        <div className="px-4 -mt-7 relative z-20">
+        <div className="px-4 -mt-7 relative z-20 pb-40 md:pb-6">
           <div className="bg-white/45 backdrop-blur-2xl border border-white/60 rounded-[34px] p-5 shadow-2xl">
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-white/50 rounded-2xl p-3 border border-white/60">
@@ -303,7 +303,7 @@ export default async function AstrologerProfilePage({ params }) {
             </div>
           </div>
 
-          <div className="sticky bottom-0 pt-6 pb-6 bg-gradient-to-t from-[#EFDCC8] to-transparent mt-8">
+          <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md border-t border-[#E9D9C4] bg-[#FFF9F0]/95 px-4 py-3 shadow-[0_-6px_24px_rgba(74,16,42,.08)] backdrop-blur-lg md:sticky md:bottom-0 md:mt-8 md:rounded-3xl md:border">
             {astrologer.online ? (
               <StartChatButton astrologerId={astrologer.id} />
             ) : (

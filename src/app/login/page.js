@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Toast from "@/components/Toast";
+import { getLoginReturnPath } from "@/lib/login-return";
 
 export default function LoginPage() {
   const [phone, setPhone] = useState("");
@@ -18,8 +19,12 @@ export default function LoginPage() {
   useEffect(() => {
     const user = localStorage.getItem("astro-user");
 
-    if (user) {
-      window.location.href = "/";
+    try {
+      if (JSON.parse(user || "null")?.id) {
+        window.location.replace(getLoginReturnPath(window.location.search));
+      }
+    } catch {
+      localStorage.removeItem("astro-user");
     }
 
     return () => {
@@ -167,6 +172,11 @@ export default function LoginPage() {
       }
 
       localStorage.setItem("astro-user", JSON.stringify(dbData.user));
+      showMessage("Login successful. Taking you back...", "success");
+      // Optional push permission must not delay returning to the consultation.
+      setTimeout(() => {
+        window.location.replace(getLoginReturnPath(window.location.search));
+      }, 900);
       try {
   const { requestFcmToken } = await import("@/lib/firebase-messaging");
 
@@ -188,11 +198,6 @@ export default function LoginPage() {
   console.error("SAVE_PUSH_TOKEN_ERROR", notificationError);
 }
 
-      showMessage("Login successful. Preparing your dashboard...", "success");
-
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 900);
     } catch (error) {
       console.error("VERIFY_OTP_ERROR", error);
       showMessage(error.message || "Invalid OTP. Please try again.", "error");

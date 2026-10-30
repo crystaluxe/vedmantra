@@ -224,23 +224,23 @@ export default function LoginPage() {
 
   return (
     <main
-      className="min-h-screen w-full overflow-x-hidden bg-[#F7EFE4] text-[#1F130D]"
+      className="min-h-screen w-full overflow-x-hidden bg-[#F6EFE5] text-[#390A1B]"
       style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
     >
-      <div className="w-full max-w-md mx-auto min-h-screen overflow-x-hidden relative bg-gradient-to-br from-[#FFF8EF] via-[#F3DEC5] to-[#DDB483] px-4 py-6">
+      <div className="w-full max-w-6xl mx-auto min-h-screen overflow-x-hidden relative bg-gradient-to-br from-[#FFF9F0] via-[#F6EFE5] to-[#EBDCC8] px-4 py-6 md:px-12 md:py-12">
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#C99055]/25 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-64 -left-24 w-64 h-64 bg-[#6B2D1A]/12 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 text-center pt-5">
-          <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-[#2A130A] to-[#6B2D1A] text-[#F8D89B] flex items-center justify-center text-5xl shadow-2xl border border-[#F7D9A5]/40">
+          <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-[#390A1B] to-[#650D26] text-[#F8D89B] flex items-center justify-center text-5xl shadow-2xl border border-[#F7D9A5]/40">
             ☸
           </div>
 
-          <p className="mt-6 text-xs uppercase tracking-[0.3em] text-[#8A5A35] font-black">
+          <p className="mt-6 text-xs uppercase tracking-[0.3em] text-[#A17A35] font-black">
             Divine Guidance
           </p>
 
-          <h1 className="text-5xl font-black tracking-[-0.07em] mt-2 text-[#24110A]">
+          <h1 className="text-5xl font-black tracking-[-0.07em] mt-2 text-[#390A1B]">
             Vedmantra
           </h1>
 
@@ -257,10 +257,10 @@ export default function LoginPage() {
             ].map((item) => (
               <div
                 key={item[1]}
-                className="bg-white/45 border border-white/70 rounded-3xl px-2 py-3 shadow-lg backdrop-blur-xl"
+                className="bg-white border border-[#E9D9C4] rounded-3xl px-2 py-3 shadow-lg backdrop-blur-xl"
               >
                 <p className="text-lg font-black text-[#24110A]">{item[0]}</p>
-                <p className="text-[10px] font-black text-[#7A5A45] mt-1">
+                <p className="text-[10px] font-black text-[#786B64] mt-1">
                   {item[1]}
                 </p>
               </div>
@@ -287,7 +287,7 @@ export default function LoginPage() {
               ["Nakshatra", "Punarvasu"],
               ["Sunrise", "05:44"],
             ].map((item) => (
-              <div key={item[0]} className="bg-white/60 rounded-2xl p-3">
+              <div key={item[0]} className="bg-white rounded-2xl p-3">
                 <p className="text-[10px] font-black text-[#8A5A35]">
                   {item[0]}
                 </p>
@@ -308,9 +308,9 @@ export default function LoginPage() {
             {astrologers.map((item, index) => (
               <div
                 key={item[0]}
-                className="bg-white/55 border border-white/75 rounded-[26px] p-4 shadow-lg backdrop-blur-xl flex items-center gap-3"
+                className="bg-white border border-[#E9D9C4] rounded-[26px] p-4 shadow-lg backdrop-blur-xl flex items-center gap-3"
               >
-                <div className="w-12 h-12 rounded-2xl bg-[#24110A] text-white flex items-center justify-center font-black">
+                <div className="w-12 h-12 rounded-2xl bg-[#650D26] text-white flex items-center justify-center font-black">
                   {index + 1}
                 </div>
 
@@ -336,7 +336,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="relative z-10 mt-6 bg-white/60 backdrop-blur-2xl border border-white/80 rounded-[34px] p-5 shadow-2xl overflow-visible">
+        <div className="relative z-10 mt-6 bg-white/60 backdrop-blur-2xl border border-[#E9D9C4] rounded-[34px] p-5 shadow-2xl overflow-visible">
           <div className="mb-5 bg-[#FFF8EF] border border-[#F0DEC8] rounded-[24px] px-4 py-3 text-center">
             <p className="text-sm font-black text-[#24110A]">
               ★★★★★ 4.9/5 Rating

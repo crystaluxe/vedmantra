@@ -58,10 +58,10 @@ export default function ChatsPage() {
 
   return (
     <main
-      className="min-h-screen bg-[#F7EFE4] text-[#1F130D]"
+      className="min-h-screen bg-[#F6EFE5] text-[#390A1B]"
       style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
     >
-      <div className="max-w-md mx-auto min-h-screen bg-gradient-to-br from-[#FFF8EF] via-[#F7E9D9] to-[#EED8BE] px-4 pt-5 pb-8">
+      <div className="max-w-6xl mx-auto min-h-screen bg-[#F6EFE5] px-4 pt-8 pb-12 md:px-8">
         <div className="flex items-center justify-between mb-6">
           <a
             href="/"
@@ -70,7 +70,7 @@ export default function ChatsPage() {
             ←
           </a>
 
-          <h1 className="text-2xl font-extrabold tracking-[-0.03em]">
+          <h1 className="text-3xl font-extrabold tracking-[-0.03em] text-[#650D26]">
             Chats
           </h1>
 
@@ -78,7 +78,7 @@ export default function ChatsPage() {
         </div>
 
         {loading ? (
-          <div className="bg-white/45 backdrop-blur-2xl rounded-[30px] p-6 shadow-xl border border-white/65 text-center">
+          <div className="bg-white rounded-[30px] p-6 shadow-xl border border-[#E9D9C4] text-center">
             <p className="text-sm font-bold text-[#7A5A45]">
               Loading chats...
             </p>
@@ -99,13 +99,13 @@ export default function ChatsPage() {
 
             <a
               href="/"
-              className="inline-flex mt-5 px-5 py-3 rounded-2xl bg-[#2b1208] text-white text-sm font-bold shadow-lg"
+              className="inline-flex mt-5 px-5 py-3 rounded-2xl bg-[#650D26] text-white text-sm font-bold shadow-lg"
             >
               Start New Chat
             </a>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {chats.map((chat) => {
               const lastMessage = chat.messages?.[0]?.message;
               const astrologer = chat.astrologer;
@@ -151,7 +151,7 @@ export default function ChatsPage() {
                             : "Session Ended"}
                         </p>
 
-                        <p className="text-xs font-bold text-[#8B4A22]">
+                        <p className="text-xs font-bold text-[#650D26]">
                           ₹{astrologer?.price || 0}/min
                         </p>
                       </div>

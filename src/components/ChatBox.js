@@ -406,10 +406,10 @@ export default function ChatBox({
 
   return (
     <>
-      <section className="shrink-0 bg-[#FFFDF9]/95 border-b border-[#E9DDCF] px-3 py-2">
+      <section className="shrink-0 bg-white/95 border-b border-[#E9D9C4] px-3 py-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="h-8 px-3 rounded-full bg-[#F4E9DC] border border-[#E5D5C2] flex items-center gap-1.5">
+            <div className="h-8 px-3 rounded-full bg-[#FFF9F0] border border-[#E9D9C4] flex items-center gap-1.5">
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
                   chatEnded ? "bg-red-500" : "bg-green-500"
@@ -443,7 +443,7 @@ export default function ChatBox({
                   setSoundEnabled(next);
                   if (next) unlockSound();
                 }}
-                className="h-8 w-8 rounded-full bg-[#F4E9DC] border border-[#E5D5C2] text-[13px]"
+                className="h-8 w-8 rounded-full bg-[#FFF9F0] border border-[#E9D9C4] text-[13px]"
               >
                 {soundEnabled ? "🔊" : "🔇"}
               </button>
@@ -453,7 +453,7 @@ export default function ChatBox({
               <button
                 onClick={endChat}
                 disabled={endingChat}
-                className="h-8 px-3 rounded-full bg-[#3A1D12] text-white text-[11px] font-bold disabled:opacity-50"
+                className="h-8 px-3 rounded-full bg-[#650D26] text-white text-[11px] font-bold disabled:opacity-50"
               >
                 {endingChat ? "Ending" : "End"}
               </button>
@@ -463,7 +463,7 @@ export default function ChatBox({
       </section>
 
       <section
-        className="relative flex-1 overflow-y-auto px-3 py-3 space-y-2.5 bg-[#FAF7F2]"
+        className="relative min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-8 md:py-6 space-y-3 bg-[#F6EFE5]"
         style={{
           backgroundImage:
             "radial-gradient(circle at 0% 100%, rgba(133, 89, 47, 0.08), transparent 32%)",
@@ -492,7 +492,7 @@ export default function ChatBox({
 
         {chatQueued && !chatEnded && messages.length > 0 && (
           <div className="flex justify-center py-2">
-            <div className="bg-white border border-[#E3D5C4] text-[#3A1D12] px-4 py-2 rounded-full text-[11px] font-extrabold shadow-sm">
+            <div className="bg-white border border-[#E3D5C4] text-[#650D26] px-4 py-2 rounded-full text-[11px] font-extrabold shadow-sm">
               Astrologer will join this chat shortly
             </div>
           </div>
@@ -507,9 +507,9 @@ export default function ChatBox({
               className={`flex ${isUser ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[78%] px-3 py-2 shadow-sm border ${
+                className={`max-w-[85%] md:max-w-[68%] px-4 py-3 shadow-sm border ${
                   isUser
-                    ? "bg-[#E8F7D9] border-[#D6EAC8] text-[#1B2514] rounded-2xl rounded-tr-md"
+                    ? "bg-[#650D26] border-[#650D26] text-white rounded-2xl rounded-tr-md"
                     : "bg-white border-[#EFE7DD] text-[#21150F] rounded-2xl rounded-tl-md"
                 } ${msg.pending ? "opacity-70" : ""}`}
               >
@@ -551,7 +551,7 @@ export default function ChatBox({
         {chatPaused && !chatEnded && (
           <div className="space-y-2 py-2">
             <div className="flex justify-center">
-              <div className="bg-white border border-[#E3D5C4] text-[#3A1D12] px-3 py-1.5 rounded-full text-[10px] font-extrabold shadow-sm">
+              <div className="bg-white border border-[#E3D5C4] text-[#650D26] px-3 py-1.5 rounded-full text-[10px] font-extrabold shadow-sm">
                 CHAT PAUSED
               </div>
             </div>
@@ -574,23 +574,23 @@ export default function ChatBox({
 
       {showRechargePopup && !chatEnded && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-end justify-center">
-          <div className="w-full max-w-md bg-[#FFFDF9] rounded-t-[26px] p-5 shadow-2xl">
+          <div className="w-full max-w-md bg-white rounded-t-[26px] p-5 shadow-2xl">
             <div className="w-14 h-1 bg-[#D8C9B8] rounded-full mx-auto mb-4" />
-            <h2 className="text-xl font-extrabold text-[#24110A] text-center">
+            <h2 className="text-xl font-extrabold text-[#390A1B] text-center">
               Continue This Chat
             </h2>
             <p className="text-[#6F5B49] text-center mt-2 text-sm leading-6">
               Your wallet balance is exhausted. Recharge now to continue your
               consultation.
             </p>
-            <div className="mt-4 rounded-2xl bg-[#F4E9DC] border border-[#E5D5C2] px-4 py-3 text-[#3A1D12] font-bold text-center text-sm">
+            <div className="mt-4 rounded-2xl bg-[#FFF9F0] border border-[#E9D9C4] px-4 py-3 text-[#650D26] font-bold text-center text-sm">
               🎁 Recharge ₹199 and Get ₹20 Extra
             </div>
             <button
               onClick={() => {
                 window.location.href = "/wallet";
               }}
-              className="w-full mt-4 h-12 rounded-2xl bg-[#3A1D12] text-white font-bold text-sm shadow-lg"
+              className="w-full mt-4 h-12 rounded-2xl bg-[#650D26] text-white font-bold text-sm shadow-lg"
             >
               Recharge & Continue
             </button>
@@ -599,7 +599,7 @@ export default function ChatBox({
       )}
 
       {!chatEnded ? (
-        <footer className="shrink-0 bg-[#FFFDF9] border-t border-[#E9DDCF] px-3 py-2.5">
+        <footer className="shrink-0 bg-white border-t border-[#E9D9C4] px-3 py-2.5">
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -617,20 +617,20 @@ export default function ChatBox({
                   ? "Waiting for astrologer..."
                   : "Type your message..."
               }
-              className="min-w-0 flex-1 h-11 rounded-full bg-[#F8F1E8] border border-[#E5D5C2] px-4 outline-none disabled:opacity-60 text-[13.5px] text-[#21150F] placeholder:text-[#9B8A7A]"
+              className="min-w-0 flex-1 h-11 rounded-full bg-[#FFF9F0] border border-[#E9D9C4] px-4 outline-none disabled:opacity-60 text-[13.5px] text-[#21150F] placeholder:text-[#9B8A7A]"
             />
 
             <button
               onClick={sendMessage}
               disabled={sending || !input.trim() || chatPaused || chatQueued}
-              className="shrink-0 w-11 h-11 rounded-full bg-[#3A1D12] text-white text-[15px] font-bold flex items-center justify-center shadow-md disabled:opacity-45"
+              className="shrink-0 w-11 h-11 rounded-full bg-[#650D26] text-white text-[15px] font-bold flex items-center justify-center shadow-md disabled:opacity-45"
             >
               {sending ? "…" : "➤"}
             </button>
           </div>
         </footer>
       ) : (
-        <footer className="shrink-0 bg-[#FFFDF9] border-t border-[#E9DDCF] px-3 py-3">
+        <footer className="shrink-0 bg-white border-t border-[#E9D9C4] px-3 py-3">
           <p className="text-center text-[12px] font-semibold text-[#8B735E]">
             This consultation has ended. You can start a new chat from the
             astrologer profile.

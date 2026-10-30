@@ -73,423 +73,111 @@ function filterAstrologersByCategory(astrologers, category) {
   });
 }
 
-function AstrologerCard({ astro, index, carousel = false, tag = "" }) {
+
+function AstrologerCard({ astro, tag = "" }) {
   return (
-    <div
-      className={`bg-[#FFFDF9] rounded-[24px] p-3.5 shadow-sm border border-[#E8DCCB] transition-all duration-300 relative overflow-hidden ${
-        carousel ? "min-w-[82%] snap-start" : ""
-      }`}
-      style={{
-        animation: carousel
-          ? "none"
-          : `premiumFloat ${5 + index * 0.18}s ease-in-out infinite`,
-      }}
-    >
-      <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-[#C99055]/10 blur-xl" />
-
-      <div className="flex gap-3 relative z-10">
-        <img
-          src={astro.image}
-          alt={astro.name}
-          referrerPolicy="no-referrer"
-          className="w-16 h-16 rounded-2xl object-cover border border-[#E5D5C2]"
-        />
-
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between gap-2">
-            <div className="min-w-0">
-              <h2 className="text-[16px] font-extrabold tracking-[-0.02em] truncate">
-                {astro.name}
-              </h2>
-
-              <p className="text-[12px] text-[#7B5A43] mt-1 font-semibold line-clamp-1">
-                {astro.skills}
-              </p>
-            </div>
-
-            <span className="text-[#5A2A18] text-[13px] font-extrabold whitespace-nowrap">
-              ₹{astro.price}/min
-            </span>
+    <article className="group rounded-3xl border border-[#E9D9C4] bg-[#FFFDF8] p-5 shadow-[0_12px_35px_rgba(69,15,34,.06)] transition hover:-translate-y-1 hover:shadow-xl">
+      <div className="flex items-start gap-4">
+        <img src={astro.image} alt={astro.name} referrerPolicy="no-referrer" className="h-20 w-20 rounded-2xl border-2 border-[#D4B676] object-cover" />
+        <div className="min-w-0 flex-1">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[.18em] text-[#A17A35]">{tag || "Vedic Guidance"}</p>
+          <h3 className="truncate text-lg font-bold text-[#4A102A]">{astro.name}</h3>
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#76635C]">{astro.skills}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-semibold">
+            <span className={astro.online ? "text-emerald-700" : "text-[#947C70]"}>{astro.online ? "● Online" : "● Offline"}</span>
+            {astro.rating != null && <span className="text-[#8D682A]">★ {astro.rating}</span>}
           </div>
-
-          <div className="flex items-center justify-between mt-2">
-            <p
-              className={`text-[12px] font-bold ${
-                astro.online ? "text-green-600" : "text-red-500"
-              }`}
-            >
-              {astro.online ? "● Online" : "● Offline"}
-            </p>
-
-            <p className="text-[12px] font-bold text-[#6F452B]">
-              ★ {astro.rating}
-            </p>
-          </div>
-
-          {tag && (
-            <div className="mt-2">
-              <span className="inline-flex text-[9px] uppercase tracking-[0.12em] bg-[#F4E9DC] text-[#6F452B] border border-[#E5D5C2] rounded-full px-2 py-0.5 font-extrabold">
-                {tag}
-              </span>
-            </div>
-          )}
         </div>
       </div>
-
-      <a
-        href={`/astrologer/${astro.id}`}
-        className="relative z-10 block w-full mt-3 bg-[#24110A] text-white rounded-xl py-2.5 font-bold text-center text-[14px]"
-      >
-        Chat Now
-      </a>
-    </div>
+      <div className="mt-5 flex items-center justify-between border-t border-[#F0E5D8] pt-4">
+        <div><span className="text-xl font-bold text-[#4A102A]">₹{astro.price}</span><span className="text-xs text-[#786B64]"> / min</span></div>
+        <a href={`/astrologer/${astro.id}`} className="rounded-full bg-[#650D26] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#44091A]">Chat Now →</a>
+      </div>
+    </article>
   );
 }
 
+const ZODIAC = [
+  ["♈", "Aries"], ["♉", "Taurus"], ["♊", "Gemini"], ["♋", "Cancer"],
+  ["♌", "Leo"], ["♍", "Virgo"], ["♎", "Libra"], ["♏", "Scorpio"],
+  ["♐", "Sagittarius"], ["♑", "Capricorn"], ["♒", "Aquarius"], ["♓", "Pisces"],
+];
+
 export default async function HomePage({ searchParams }) {
-  const resolvedSearchParams = await searchParams;
-  const selectedCategory = resolvedSearchParams?.category || "";
-
-  const astrologersRaw = await prisma.astrologer.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
+  const params = await searchParams;
+  const selectedCategory = params?.category || "";
+  const astrologersRaw = await prisma.astrologer.findMany({ orderBy: { createdAt: "desc" } });
   const uniqueAstrologers = removeDuplicateAstrologers(astrologersRaw);
-  const astrologers = filterAstrologersByCategory(
-    uniqueAstrologers,
-    selectedCategory
-  );
+  const astrologers = filterAstrologersByCategory(uniqueAstrologers, selectedCategory);
   const aiAstrologers = astrologers.filter(isAiAstrologer);
   const humanAstrologers = astrologers.filter((astro) => !isAiAstrologer(astro));
-  const eliteAstrologerIds = new Set(
-    humanAstrologers.slice(0, 3).map((astro) => astro.id)
-  );
-  const sortedHumanAstrologers = [
-    ...humanAstrologers.filter((astro) => eliteAstrologerIds.has(astro.id)),
-    ...humanAstrologers.filter((astro) => !eliteAstrologerIds.has(astro.id)),
-  ];
-
   return (
     <AuthGuard>
       <PushNotificationRegister />
-
-      <main
-        className="min-h-screen bg-[#ECE0D2] text-[#1F130D]"
-        style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
-      >
-        <div className="max-w-md mx-auto min-h-screen relative overflow-hidden bg-[#FAF6EF]">
-          <style>{`
-            @keyframes premiumFloat {
-              0%, 100% { transform: translateY(0px) scale(1); }
-              50% { transform: translateY(-4px) scale(1.01); }
-            }
-
-            @keyframes softShine {
-              0% { transform: translateX(-120%); opacity: 0; }
-              35% { opacity: 0.45; }
-              100% { transform: translateX(180%); opacity: 0; }
-            }
-
-            @keyframes cardGlow {
-              0%, 100% { box-shadow: 0 10px 30px rgba(43, 22, 14, 0.08); }
-              50% { box-shadow: 0 18px 44px rgba(43, 22, 14, 0.15); }
-            }
-
-            .premium-float {
-              animation: premiumFloat 4.8s ease-in-out infinite;
-            }
-
-            .premium-glow {
-              animation: cardGlow 4.2s ease-in-out infinite;
-            }
-
-            .shine-layer::after {
-              content: "";
-              position: absolute;
-              top: 0;
-              left: 0;
-              height: 100%;
-              width: 42%;
-              background: linear-gradient(110deg, transparent, rgba(255,255,255,0.25), transparent);
-              animation: softShine 4.2s ease-in-out infinite;
-            }
-          `}</style>
-
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#B68455]/20 rounded-full blur-3xl premium-float" />
-          <div className="absolute top-80 -left-28 w-72 h-72 bg-[#4E2617]/10 rounded-full blur-3xl premium-float" />
-
-          <header className="sticky top-0 z-50 px-4 pt-4 pb-4 bg-[#FFFDF9]/90 backdrop-blur-xl border-b border-[#E6D7C5]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.24em] text-[#8A5A35] font-bold">
-                  Divine Guidance
-                </p>
-
-                <h1 className="text-[28px] font-extrabold tracking-[-0.04em] text-[#24110A]">
-                  Vedmantra
-                </h1>
-              </div>
-
-              <HomeWalletBalance />
-            </div>
-
-            <nav className="grid grid-cols-4 gap-2 text-[12px] font-bold mt-4">
-              <a
-                href="/"
-                className="bg-[#2B1510] text-white rounded-full py-2.5 shadow-sm text-center"
-              >
-                Home
-              </a>
-
-              <a
-                href="/wallet"
-                className="bg-[#F4E9DC] border border-[#E5D5C2] text-[#6F452B] rounded-full py-2.5 text-center"
-              >
-                Wallet
-              </a>
-
-              <a
-                href="/chat"
-                className="bg-[#F4E9DC] border border-[#E5D5C2] text-[#6F452B] rounded-full py-2.5 text-center"
-              >
-                Chat
-              </a>
-
-              <a
-                href="/profile"
-                className="bg-[#F4E9DC] border border-[#E5D5C2] text-[#6F452B] rounded-full py-2.5 text-center"
-              >
-                Profile
-              </a>
-            </nav>
-          </header>
-
-          <section className="relative z-10 px-4 pt-5">
-            <div className="rounded-[30px] bg-[#2B160E] text-white p-5 shadow-xl overflow-hidden relative shine-layer premium-glow">
-              <div className="absolute -top-12 -right-10 w-40 h-40 rounded-full bg-[#D9A66B]/25 blur-2xl premium-float" />
-
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[#D8BFA8] font-bold">
-                Live Astrology
-              </p>
-
-              <h2 className="text-[29px] leading-[1.1] mt-3 font-extrabold tracking-[-0.035em]">
-                Get clarity from trusted astrologers
-              </h2>
-
-              <p className="text-[14px] text-[#E7D4C1] mt-3 leading-6 font-medium">
-                Instant guidance for money, career, love, marriage, kundli and
-                important life decisions.
-              </p>
-
-              <div className="grid grid-cols-3 gap-2 mt-5">
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-3">
-                  <p className="text-lg font-extrabold">24x7</p>
-                  <p className="text-[10px] text-[#D8BFA8] font-bold">
-                    Online
-                  </p>
-                </div>
-
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-3">
-                  <p className="text-lg font-extrabold">
-                    {uniqueAstrologers.length}+
-                  </p>
-                  <p className="text-[10px] text-[#D8BFA8] font-bold">
-                    Experts
-                  </p>
-                </div>
-
-                <div className="bg-white/10 border border-white/10 rounded-2xl p-3">
-                  <p className="text-lg font-extrabold">₹5</p>
-                  <p className="text-[10px] text-[#D8BFA8] font-bold">
-                    Starting
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="relative z-10 px-4 mt-5">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
-                  Choose Concern
-                </p>
-                <h3 className="text-[22px] font-extrabold tracking-[-0.035em] text-[#24110A]">
-                  What do you need help with?
-                </h3>
-              </div>
-
-              {selectedCategory && (
-                <a
-                  href="/"
-                  className="text-[11px] font-bold text-[#7A4A2A] underline"
-                >
-                  Clear
-                </a>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {CATEGORIES.map((category, index) => {
-                const active = selectedCategory === category.key;
-
-                return (
-                  <a
-                    key={category.key}
-                    href={`/?category=${category.key}`}
-                    className={`rounded-[26px] p-4 min-h-[142px] border shadow-sm transition-all duration-300 active:scale-95 relative overflow-hidden ${
-                      active
-                        ? "bg-[#2B160E] text-white border-[#2B160E] premium-glow"
-                        : "bg-[#FFFDF9] text-[#24110A] border-[#E8DCCB]"
-                    }`}
-                    style={{
-                      animation: `premiumFloat ${
-                        4.4 + index * 0.25
-                      }s ease-in-out infinite`,
-                    }}
-                  >
-                    <div className="absolute -top-8 -right-8 w-20 h-20 rounded-full bg-[#C99055]/15 blur-xl" />
-
-                    <div className="text-2xl mb-3">{category.emoji}</div>
-
-                    <p className="text-[16px] font-extrabold tracking-[-0.02em]">
-                      {category.title}
-                    </p>
-
-                    <p
-                      className={`text-[11px] mt-1 leading-4 font-semibold ${
-                        active ? "text-[#E7D4C1]" : "text-[#7B5A43]"
-                      }`}
-                    >
-                      {category.subtitle}
-                    </p>
-                  </a>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className="relative z-10 px-4 mt-5">
-            <div className="flex items-end justify-between mb-4">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
-                  Available Now
-                </p>
-
-                <h3 className="text-[24px] font-extrabold tracking-[-0.035em] text-[#24110A]">
-                  Astrologers
-                </h3>
-              </div>
-
-              <span className="text-[11px] bg-[#EAF7E9] text-green-700 px-3 py-1 rounded-full font-bold border border-green-200">
-                Live
-              </span>
-            </div>
-
-            {aiAstrologers.length > 0 && (
-              <div className="mb-6 -mx-4 bg-[#2B160E] border-y border-[#4C2A1B] px-4 py-5 shadow-sm overflow-hidden relative">
-                <div className="absolute -right-12 -top-12 w-36 h-36 rounded-full bg-[#D9A66B]/20 blur-2xl" />
-
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.22em] text-[#D8BFA8] font-bold">
-                      Instant Guidance
-                    </p>
-
-                    <h4 className="text-[20px] font-extrabold tracking-[-0.035em] text-white">
-                      AI Astrologers
-                    </h4>
-                  </div>
-
-                  <span className="text-[10px] uppercase tracking-[0.14em] bg-white/10 text-[#F7D7B4] px-3 py-1 rounded-full font-extrabold border border-white/15">
-                    AI
-                  </span>
-                </div>
-
-                <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-4 px-4 relative z-10">
-                  {aiAstrologers.map((astro, index) => (
-                    <AstrologerCard
-                      key={astro.id}
-                      astro={astro}
-                      index={index}
-                      tag="AI Astrologer"
-                      carousel
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {sortedHumanAstrologers.length > 0 && (
-              <div className="flex items-end justify-between mb-3">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
-                    Verified Experts
-                  </p>
-
-                  <h4 className="text-[21px] font-extrabold tracking-[-0.035em] text-[#24110A]">
-                    Top Astrologers
-                  </h4>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-3">
-              {sortedHumanAstrologers.length > 0 ? (
-                sortedHumanAstrologers.map((astro, index) => (
-                  <AstrologerCard
-                    key={astro.id}
-                    astro={astro}
-                    index={index}
-                    tag={eliteAstrologerIds.has(astro.id) ? "Elite" : ""}
-                  />
-                ))
-              ) : astrologers.length === 0 ? (
-                <div className="bg-[#FFFDF9] rounded-[24px] p-5 border border-[#E8DCCB] text-center">
-                  <p className="font-bold text-[#24110A]">
-                    No astrologers found for this concern.
-                  </p>
-                  <a
-                    href="/"
-                    className="inline-block mt-3 text-sm font-bold text-[#8A5A35] underline"
-                  >
-                    View all astrologers
-                  </a>
-                </div>
-              ) : null}
-            </div>
-          </section>
-
-          <section className="relative z-10 px-4 mt-6 pb-10">
-            <a
-              href="https://crystaluxe.in"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-[28px] bg-gradient-to-br from-[#FFFDF9] to-[#F1E2D0] border border-[#E5D5C2] p-5 shadow-sm overflow-hidden relative shine-layer premium-glow"
-            >
-              <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#C99055]/20 rounded-full blur-2xl premium-float" />
-
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[#8A5A35] font-bold">
-                Crystaluxe Mall
-              </p>
-
-              <h3 className="text-[24px] leading-tight font-extrabold tracking-[-0.035em] text-[#24110A] mt-2">
-                Buy genuine spiritual items
-              </h3>
-
-              <p className="text-[14px] text-[#6F513F] mt-3 leading-6 font-medium">
-                Shop crystals, bracelets, yantras and spiritual products at
-                unbeatable prices from Crystaluxe.
-              </p>
-
-              <div className="mt-4 inline-flex items-center gap-2 bg-[#24110A] text-white rounded-full px-5 py-2.5 text-sm font-extrabold">
-                Visit Crystaluxe Mall →
-              </div>
+      <main className="min-h-screen bg-[#F6EFE5] text-[#302321]" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+        <div className="border-b border-[#DCC49B] bg-[#4A102A] px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-[#F3DEB0]">✦ Timeless Vedic wisdom, thoughtfully delivered ✦</div>
+        <header className="sticky top-0 z-50 border-b border-[#EADBC5] bg-[#FFF9F0]/95 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-4 lg:px-8">
+            <a href="/" className="flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full border border-[#C6A15B] bg-[#650D26] text-2xl text-[#E8D19B]">✺</span>
+              <span><span className="block font-serif text-2xl font-bold tracking-tight text-[#650D26]">Vedmantra</span><span className="block text-[9px] font-bold uppercase tracking-[.22em] text-[#A17A35]">Divine Guidance</span></span>
             </a>
-          </section>
-        </div>
+            <nav className="order-3 flex w-full items-center justify-between gap-3 overflow-x-auto border-t border-[#EADBC5] pt-3 text-xs font-semibold text-[#650D26] sm:order-none sm:w-auto sm:border-0 sm:pt-0 sm:text-sm">
+              <a href="/" className="whitespace-nowrap hover:text-[#B18B43]">Home</a>
+              <a href="#astrologers" className="whitespace-nowrap hover:text-[#B18B43]">Astrologers</a>
+              <a href="#explore" className="whitespace-nowrap hover:text-[#B18B43]">Explore</a>
+              <a href="/chat" className="whitespace-nowrap hover:text-[#B18B43]">My Chats</a>
+              <a href="/profile" className="whitespace-nowrap hover:text-[#B18B43]">Profile</a>
+            </nav>
+            <HomeWalletBalance />
+          </div>
+        </header>
+
+        <section className="relative isolate overflow-hidden bg-[#4A102A] text-[#FFF9F0]">
+          <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 78% 35%, #E8D19B 0, transparent 34%), radial-gradient(circle at 5% 95%, #C6A15B 0, transparent 28%)" }} />
+          <div className="pointer-events-none absolute -right-28 top-12 hidden h-[520px] w-[520px] rounded-full border border-[#C6A15B]/40 lg:block" />
+          <div className="pointer-events-none absolute -right-14 top-24 hidden h-[410px] w-[410px] rounded-full border border-[#C6A15B]/30 lg:flex items-center justify-center text-[240px] font-serif text-[#C6A15B]/30">✺</div>
+          <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 md:grid-cols-[1.3fr_.7fr] md:py-28 lg:px-8">
+            <div>
+              <p className="mb-6 inline-flex items-center rounded-full border border-[#D9BC7B]/50 px-4 py-2 text-[11px] font-bold uppercase tracking-[.22em] text-[#E8D19B]">✦ Welcome to Vedmantra</p>
+              <h1 className="max-w-3xl font-serif text-5xl font-semibold leading-[1.1] tracking-tight md:text-6xl lg:text-7xl">Ancient Wisdom.<br /><span className="text-[#E8D19B]">Modern Guidance.</span></h1>
+              <p className="mt-7 max-w-xl text-base leading-8 text-[#F1DDE2] md:text-lg">Find perspective on love, career, relationships and life's important questions with personalized Vedic astrology consultations.</p>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <a href="#astrologers" className="rounded-full bg-[#E8D19B] px-7 py-4 text-sm font-extrabold text-[#4A102A] shadow-lg transition hover:bg-white">Consult an Astrologer →</a>
+                <a href="#explore" className="rounded-full border border-[#E8D19B]/70 px-7 py-4 text-sm font-bold text-[#FFF9F0] transition hover:bg-white/10">Explore Guidance</a>
+              </div>
+              <div className="mt-12 flex flex-wrap gap-x-8 gap-y-4 border-t border-white/15 pt-6 text-sm text-[#EEDFE2]"><span>✧ Personalised Consultations</span><span>✧ Transparent Pricing</span><span>✧ Convenient Online Chat</span></div>
+            </div>
+            <div className="relative mx-auto flex aspect-square w-full max-w-[380px] items-center justify-center rounded-full border border-[#D9BC7B]/40 bg-[#6A1B37]/40 shadow-[0_0_90px_rgba(232,209,155,.13)]">
+              <div className="absolute inset-5 rounded-full border border-dashed border-[#E8D19B]/50" />
+              <div className="absolute inset-12 rounded-full border border-[#E8D19B]/40" />
+              <div className="text-center"><div className="font-serif text-[120px] leading-none text-[#E8D19B]">✺</div><p className="mt-2 text-xs font-bold uppercase tracking-[.32em] text-[#E8D19B]">Discover Your Path</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="explore" className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.24em] text-[#A17A35]">Your Journey</p><h2 className="mt-3 font-serif text-3xl font-bold text-[#4A102A] md:text-4xl">What is on your mind?</h2><p className="mt-3 text-sm text-[#786B64]">Choose an area of life to find relevant astrologers.</p></div>{selectedCategory && <a href="/" className="text-sm font-bold text-[#650D26] underline">Clear filter</a>}</div>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {CATEGORIES.map((cat) => <a key={cat.key} href={`/?category=${cat.key}#astrologers`} className={`group rounded-3xl border p-5 transition hover:-translate-y-1 hover:shadow-xl md:p-7 ${selectedCategory === cat.key ? "border-[#C6A15B] bg-[#650D26] text-white" : "border-[#E9D9C4] bg-[#FFF9F0] text-[#4A102A]"}`}><span className="mb-6 block text-4xl">{cat.emoji}</span><h3 className="text-lg font-extrabold">{cat.title}</h3><p className={`mt-2 text-xs leading-5 ${selectedCategory === cat.key ? "text-[#F3DDE4]" : "text-[#786B64]"}`}>{cat.subtitle}</p><span className="mt-5 block text-xl text-[#C6A15B]">↗</span></a>)}
+          </div>
+        </section>
+
+        <section id="astrologers" className="bg-[#FFF9F0] py-16">
+          <div className="mx-auto max-w-7xl px-5 lg:px-8">
+            <p className="text-xs font-bold uppercase tracking-[.24em] text-[#A17A35]">Expert Guidance</p><h2 className="mt-3 font-serif text-3xl font-bold text-[#4A102A] md:text-4xl">Connect with an Astrologer</h2><p className="mt-3 mb-9 text-sm text-[#786B64]">Browse available profiles and choose the consultation that feels right for you.</p>
+            {aiAstrologers.length > 0 && <div className="mb-12"><div className="mb-5 flex items-center gap-3"><h3 className="font-serif text-2xl font-bold text-[#4A102A]">Instant AI Guidance</h3><span className="rounded-full bg-[#F2E4CC] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#650D26]">AI-powered</span></div><div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{aiAstrologers.map(astro => <AstrologerCard key={astro.id} astro={astro} tag="AI Astrologer" />)}</div></div>}
+            {humanAstrologers.length > 0 && <div><h3 className="mb-5 font-serif text-2xl font-bold text-[#4A102A]">Astrology Consultants</h3><div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{humanAstrologers.map(astro => <AstrologerCard key={astro.id} astro={astro} />)}</div></div>}
+            {astrologers.length === 0 && <div className="rounded-3xl border border-[#E9D9C4] bg-white p-10 text-center"><p className="font-bold text-[#4A102A]">No astrologers found for this concern.</p><a href="/#astrologers" className="mt-3 inline-block text-sm font-bold text-[#650D26] underline">View all astrologers</a></div>}
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8"><div className="text-center"><p className="text-xs font-bold uppercase tracking-[.24em] text-[#A17A35]">Simple & Personal</p><h2 className="mt-3 font-serif text-3xl font-bold text-[#4A102A] md:text-4xl">Your guidance, in three steps</h2></div><div className="mt-10 grid gap-5 md:grid-cols-3">{[["01","Find your astrologer","Explore profiles and select a consultant."],["02","Prepare your wallet","Add balance securely before your consultation."],["03","Start your conversation","Chat online and explore your questions."]].map(([n,t,d])=><div key={n} className="rounded-3xl border border-[#E9D9C4] bg-[#FFF9F0] p-8"><span className="font-serif text-4xl text-[#C6A15B]">{n}</span><h3 className="mt-5 text-lg font-bold text-[#4A102A]">{t}</h3><p className="mt-3 text-sm leading-6 text-[#786B64]">{d}</p></div>)}</div></section>
+
+        <section className="bg-[#4A102A] px-5 py-16 text-center text-[#FFF9F0]"><p className="text-xs font-bold uppercase tracking-[.24em] text-[#E8D19B]">The Zodiac</p><h2 className="mt-3 font-serif text-3xl font-bold md:text-4xl">A universe of possibilities</h2><p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#EBD9DF]">Every sign has its own story. Discover guidance tailored to your journey.</p><div className="mx-auto mt-10 grid max-w-5xl grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">{ZODIAC.map(([symbol,name])=><div key={name} className="rounded-2xl border border-[#C6A15B]/35 bg-white/5 p-4"><div className="text-3xl text-[#E8D19B]">{symbol}</div><p className="mt-2 text-xs font-semibold">{name}</p></div>)}</div></section>
+
+        <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8"><div className="flex flex-col items-center justify-between gap-6 rounded-[32px] border border-[#E9D9C4] bg-[#FFF9F0] p-8 md:flex-row md:p-12"><div><p className="text-xs font-bold uppercase tracking-[.24em] text-[#A17A35]">Crystaluxe Mall</p><h2 className="mt-3 font-serif text-3xl font-bold text-[#4A102A]">Bring intention into everyday life.</h2><p className="mt-3 max-w-xl text-sm leading-7 text-[#786B64]">Explore crystals, bracelets and thoughtfully selected spiritual products.</p></div><a href="https://crystaluxe.in" target="_blank" rel="noopener noreferrer" className="shrink-0 rounded-full bg-[#650D26] px-7 py-4 text-sm font-bold text-white">Explore Crystaluxe →</a></div></section>
+        <footer className="border-t border-[#D9C8AE] bg-[#FFF9F0] px-5 py-9"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 text-sm"><span className="font-serif text-2xl font-bold text-[#650D26]">✺ Vedmantra</span><div className="flex flex-wrap gap-5 font-semibold text-[#650D26]"><a href="/">Home</a><a href="/wallet">Wallet</a><a href="/chat">Chats</a><a href="/profile">Profile</a></div><span className="text-xs text-[#786B64]">Vedic wisdom for modern lives.</span></div></footer>
       </main>
     </AuthGuard>
   );

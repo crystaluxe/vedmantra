@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import ZodiacExplorer from "@/components/ZodiacExplorer";
 import HomeHero from "@/components/HomeHero";
 import HomeWalletBalance from "@/components/HomeWalletBalance";
 import PushNotificationRegister from "@/components/PushNotificationRegister";
@@ -97,11 +98,6 @@ function AstrologerCard({ astro, tag = "" }) {
   );
 }
 
-const ZODIAC = [
-  ["♈", "Aries"], ["♉", "Taurus"], ["♊", "Gemini"], ["♋", "Cancer"],
-  ["♌", "Leo"], ["♍", "Virgo"], ["♎", "Libra"], ["♏", "Scorpio"],
-  ["♐", "Sagittarius"], ["♑", "Capricorn"], ["♒", "Aquarius"], ["♓", "Pisces"],
-];
 
 export default async function HomePage({ searchParams }) {
   const params = await searchParams;
@@ -152,7 +148,7 @@ export default async function HomePage({ searchParams }) {
 
         <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8"><div className="text-center"><p className="text-xs font-bold uppercase tracking-[.24em] text-[#A17A35]">Simple & Personal</p><h2 className="mt-3 font-display text-3xl font-semibold text-[#4A102A] md:text-4xl">Your guidance, in three steps</h2></div><div className="mt-10 grid gap-5 md:grid-cols-3">{[["01","Find your astrologer","Explore profiles and select a consultant."],["02","Prepare your wallet","Add balance securely before your consultation."],["03","Start your conversation","Chat online and explore your questions."]].map(([n,t,d])=><div key={n} className="rounded-3xl border border-[#E9D9C4] bg-[#FFF9F0] p-8"><span className="font-display text-4xl text-[#C6A15B]">{n}</span><h3 className="mt-5 text-lg font-bold text-[#4A102A]">{t}</h3><p className="mt-3 text-sm leading-6 text-[#786B64]">{d}</p></div>)}</div></section>
 
-        <section className="bg-[#4A102A] px-5 py-16 text-center text-[#FFF9F0]"><p className="text-xs font-bold uppercase tracking-[.24em] text-[#E8D19B]">The Zodiac</p><h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">A universe of possibilities</h2><p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#EBD9DF]">Every sign has its own story. Discover guidance tailored to your journey.</p><div className="mx-auto mt-10 grid max-w-5xl grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">{ZODIAC.map(([symbol,name])=><div key={name} className="rounded-2xl border border-[#C6A15B]/35 bg-white/5 p-4"><div className="text-3xl text-[#E8D19B]">{symbol}</div><p className="mt-2 text-xs font-semibold">{name}</p></div>)}</div></section>
+        <ZodiacExplorer />
 
         <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8"><div className="flex flex-col items-center justify-between gap-6 rounded-[32px] border border-[#E9D9C4] bg-[#FFF9F0] p-8 md:flex-row md:p-12"><div><p className="text-xs font-bold uppercase tracking-[.24em] text-[#A17A35]">Crystaluxe Mall</p><h2 className="mt-3 font-display text-3xl font-semibold text-[#4A102A]">Bring intention into everyday life.</h2><p className="mt-3 max-w-xl text-sm leading-7 text-[#786B64]">Explore crystals, bracelets and thoughtfully selected spiritual products.</p></div><a href="https://crystaluxe.in" target="_blank" rel="noopener noreferrer" className="shrink-0 rounded-full bg-[#650D26] px-7 py-4 text-sm font-bold text-white">Explore Crystaluxe →</a></div></section>
         <footer className="border-t border-[#D9C8AE] bg-[#FFF9F0] px-5 py-9"><div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 text-sm"><span className="font-display text-2xl font-semibold text-[#650D26]">✺ Vedmantra</span><div className="flex flex-wrap gap-5 font-semibold text-[#650D26]"><a href="/">Home</a><a href="/wallet">Wallet</a><a href="/chat">Chats</a><a href="/profile">Profile</a></div><span className="text-xs text-[#786B64]">Vedic wisdom for modern lives.</span></div></footer>

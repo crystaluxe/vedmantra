@@ -118,7 +118,7 @@ export default async function HomePage({ searchParams }) {
         <header className="sticky top-0 z-50 border-b border-[#EEE9D9] bg-[#FFFEF7]/95 backdrop-blur-xl">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-5 py-4 lg:px-8">
             <a href="/" className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E6D536] bg-[#F8ED6C] text-2xl text-[#302719]">✺</span>
+              <span className="flex h-11 w-11 items-center justify-center rounded-full border border-[#650D26] bg-[#650D26] text-2xl text-white">✺</span>
               <span><span className="block font-display text-2xl font-semibold tracking-tight text-[#650D26]">Vedmantra</span><span className="block text-[9px] font-bold uppercase tracking-[.22em] text-[#A17A35]">Divine Guidance</span></span>
             </a>
             <nav className="order-3 flex w-full items-center justify-between gap-3 overflow-x-auto border-t border-[#EADBC5] pt-3 text-xs font-semibold text-[#650D26] sm:order-none sm:w-auto sm:border-0 sm:pt-0 sm:text-sm">

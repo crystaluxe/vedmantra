@@ -1,9 +1,11 @@
 "use client";
+import { useSiteDialog } from "@/components/DialogProvider";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+  const { notify } = useSiteDialog();
   const router = useRouter();
 
   const [user, setUser] = useState(null);
@@ -68,9 +70,9 @@ export default function ProfilePage() {
     }
   }
 
-  function saveProfile() {
+  async function saveProfile() {
     if (!nameInput.trim()) {
-      alert("Please enter your name");
+      await notify("Please enter your name");
       return;
     }
 
@@ -82,7 +84,7 @@ export default function ProfilePage() {
     setUser(updatedUser);
     localStorage.setItem("astro-user", JSON.stringify(updatedUser));
     setEditMode(false);
-    alert("Profile updated successfully");
+    await notify("Your profile has been updated.", { tone: "success", title: "Profile saved" });
   }
 
   function handleLogout() {

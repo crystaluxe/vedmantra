@@ -1,9 +1,11 @@
 "use client";
+import { useSiteDialog } from "@/components/DialogProvider";
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 export default function PWAInstall() {
+  const { notify } = useSiteDialog();
   const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [dismissed, setDismissed] = useState(false);
@@ -48,8 +50,8 @@ export default function PWAInstall() {
       return;
     }
 
-    alert(
-      "To install Vedmantra, tap the browser menu and choose 'Add to Home screen' or 'Install app'."
+    await notify(
+      "To install Vedmantra, tap the browser menu and choose 'Add to Home screen' or 'Install app'.", { tone: "info", title: "Keep your guidance close" }
     );
   };
 

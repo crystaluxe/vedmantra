@@ -4,7 +4,7 @@ export default function Toast({ toast }) {
   const isSuccess = toast.type === "success";
 
   return (
-    <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] w-[92%] max-w-sm">
+    <div role={isSuccess ? "status" : "alert"} aria-live={isSuccess ? "polite" : "assertive"} className="fixed top-16 left-1/2 -translate-x-1/2 z-[100000] w-[92%] max-w-sm">
       <div
         className={`rounded-[24px] px-4 py-4 shadow-2xl border backdrop-blur-2xl flex items-start gap-3 ${
           isSuccess
@@ -21,7 +21,7 @@ export default function Toast({ toast }) {
         </div>
 
         <div className="flex-1">
-          <p className="text-sm font-black">
+          <p className="font-display text-sm font-semibold">
             {isSuccess ? "Success" : "Something went wrong"}
           </p>
 

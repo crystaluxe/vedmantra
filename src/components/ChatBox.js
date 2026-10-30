@@ -1,4 +1,6 @@
 "use client";
+import SiteDialog from "@/components/SiteDialog";
+import { useSiteDialog } from "@/components/DialogProvider";
 
 import { useEffect, useRef, useState } from "react";
 
@@ -13,6 +15,7 @@ export default function ChatBox({
   initialMessages,
   initialStatus,
 }) {
+  const { notify, confirm: confirmDialog } = useSiteDialog();
   const [messages, setMessages] = useState(initialMessages || []);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -348,7 +351,7 @@ export default function ChatBox({
 
       if (!data.success) {
         setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
-        alert(data.error || "Unable to send message");
+        await notify(data.error || "Unable to send message");
         return;
       }
 
@@ -357,7 +360,7 @@ export default function ChatBox({
       console.error("SEND_MESSAGE_CLIENT_ERROR", error);
       setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
       setTyping(false);
-      alert("Something went wrong while sending message.");
+      await notify("Something went wrong while sending message.");
     } finally {
       setSending(false);
     }
@@ -366,7 +369,7 @@ export default function ChatBox({
   const endChat = async () => {
     if (endingChat || !chatSessionId || chatEnded) return;
 
-    const confirmed = window.confirm(
+    const confirmed = await confirmDialog(
       "Are you sure you want to end this consultation?"
     );
     if (!confirmed) return;
@@ -383,16 +386,16 @@ export default function ChatBox({
       const data = await safeJson(res);
 
       if (!data.success) {
-        alert(data.error || "Unable to end chat");
+        await notify(data.error || "Unable to end chat");
         return;
       }
 
       setChatEnded(true);
-      alert("Consultation ended successfully");
+      await notify("You can revisit this consultation in My Chats.", { tone: "success", title: "Consultation complete" });
       window.location.href = "/";
     } catch (error) {
       console.error("END_CHAT_ERROR", error);
-      alert("Unable to end chat");
+      await notify("Unable to end chat");
     } finally {
       setEndingChat(false);
     }
@@ -572,32 +575,11 @@ export default function ChatBox({
         <div ref={messagesEndRef} />
       </section>
 
-      {showRechargePopup && !chatEnded && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-end justify-center">
-          <div className="w-full max-w-md bg-[#FFFDF9] rounded-t-[26px] p-5 shadow-2xl">
-            <div className="w-14 h-1 bg-[#D8C9B8] rounded-full mx-auto mb-4" />
-            <h2 className="text-xl font-extrabold text-[#24110A] text-center">
-              Continue This Chat
-            </h2>
-            <p className="text-[#6F5B49] text-center mt-2 text-sm leading-6">
-              Your wallet balance is exhausted. Recharge now to continue your
-              consultation.
-            </p>
-            <div className="mt-4 rounded-2xl bg-[#F4E9DC] border border-[#E5D5C2] px-4 py-3 text-[#3A1D12] font-bold text-center text-sm">
-              🎁 Recharge ₹199 and Get ₹20 Extra
-            </div>
-            <button
-              onClick={() => {
-                window.location.href = "/wallet";
-              }}
-              className="w-full mt-4 h-12 rounded-2xl bg-[#3A1D12] text-white font-bold text-sm shadow-lg"
-            >
-              Recharge & Continue
-            </button>
-          </div>
-        </div>
-      )}
-
+      <SiteDialog open={showRechargePopup && !chatEnded} title="Keep your conversation going" message="Your wallet balance is low. Add balance to continue your consultation." onDismiss={() => setShowRechargePopup(false)}>
+        <p className="mb-5 rounded-2xl border border-[#E8D7DC] bg-[#F8EEF2] px-4 py-3 text-sm text-[#650D26]">Recharge ₹199 and get ₹20 extra</p>
+        <a href="/wallet" className="block rounded-full bg-[#650D26] px-5 py-4 text-sm font-semibold text-white hover:bg-[#44091A]">Recharge wallet →</a>
+        <button type="button" onClick={() => setShowRechargePopup(false)} className="mt-3 rounded-full px-5 py-3 text-sm font-medium text-[#806B70]">Not now</button>
+      </SiteDialog>
       {!chatEnded ? (
         <footer className="shrink-0 bg-[#FFFDF9] border-t border-[#E9DDCF] px-3 py-2.5">
           <div className="flex items-center gap-2">

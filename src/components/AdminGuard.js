@@ -1,8 +1,10 @@
 "use client";
+import { useSiteDialog } from "@/components/DialogProvider";
 
 import { useEffect, useState } from "react";
 
 export default function AdminGuard({ children }) {
+  const { notify } = useSiteDialog();
   const [allowed, setAllowed] = useState(false);
   const [password, setPassword] = useState("");
 
@@ -14,12 +16,12 @@ export default function AdminGuard({ children }) {
     }
   }, []);
 
-  const loginAdmin = () => {
+  const loginAdmin = async () => {
     if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
       localStorage.setItem("vedmantra-admin-access", "true");
       setAllowed(true);
     } else {
-      alert("Invalid admin password");
+      await notify("Invalid admin password");
     }
   };
 

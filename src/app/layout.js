@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Poppins, Raleway } from "next/font/google";
 import PWAInstall from "@/components/PWAInstall";
 import SiteNavigation from "@/components/SiteNavigation";
+import DialogProvider from "@/components/DialogProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -46,9 +47,11 @@ export default function RootLayout({ children }) {
         }}
       >
 
+        <DialogProvider>
         <PWAInstall />
         <SiteNavigation />
         {children}
+        </DialogProvider>
 
         {/* Meta Pixel */}
         <Script id="facebook-pixel" strategy="afterInteractive">

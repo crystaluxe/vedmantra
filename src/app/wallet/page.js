@@ -1,9 +1,11 @@
 "use client";
+import { useSiteDialog } from "@/components/DialogProvider";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function WalletPage() {
+  const { notify } = useSiteDialog();
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -95,14 +97,14 @@ export default function WalletPage() {
       const user = getLoggedInUser();
 
       if (!user?.id) {
-        alert("Please login again before recharging wallet.");
+        await notify("Please login again before recharging wallet.");
         return;
       }
 
       const loaded = await loadRazorpay();
 
       if (!loaded) {
-        alert("Razorpay failed to load. Check internet connection.");
+        await notify("Razorpay failed to load. Check internet connection.");
         return;
       }
 
@@ -117,7 +119,7 @@ export default function WalletPage() {
       const data = await res.json();
 
       if (!data.success) {
-        alert("Unable to create payment order");
+        await notify("Unable to create payment order");
         return;
       }
 
@@ -148,10 +150,10 @@ export default function WalletPage() {
 
           if (verifyData.success) {
             trackMetaEvent("Purchase", amount);
-            alert("Wallet recharged successfully!");
+            await notify("Your wallet balance has been updated.", { tone: "success", title: "Recharge successful" });
             fetchWallet();
           } else {
-            alert(verifyData.error || "Payment verification failed.");
+            await notify(verifyData.error || "Payment verification failed.");
           }
         },
 
@@ -162,7 +164,7 @@ export default function WalletPage() {
         },
 
         theme: {
-          color: "#7c3f12",
+          color: "#650D26",
         },
       };
 
@@ -172,7 +174,7 @@ export default function WalletPage() {
       paymentObject.open();
     } catch (error) {
       console.error("RECHARGE_ERROR", error);
-      alert("Something went wrong while starting recharge.");
+      await notify("Something went wrong while starting recharge.");
     }
   };
 

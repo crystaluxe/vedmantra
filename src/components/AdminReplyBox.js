@@ -1,8 +1,10 @@
 "use client";
+import { useSiteDialog } from "@/components/DialogProvider";
 
 import { useEffect, useRef, useState } from "react";
 
 export default function AdminReplyBox({ chatId, initialMessages }) {
+  const { notify, confirm: confirmDialog } = useSiteDialog();
   const [messages, setMessages] = useState(initialMessages || []);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -195,7 +197,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
           prev.filter((msg) => msg.id !== tempMessage.id)
         );
 
-        alert(data.error || "Unable to send reply");
+        await notify(data.error || "Unable to send reply");
         return;
       }
 
@@ -208,7 +210,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
       }, 100);
     } catch (error) {
       console.error("SEND_ADMIN_REPLY_ERROR", error);
-      alert("Something went wrong");
+      await notify("Something went wrong");
     } finally {
       setSending(false);
     }
@@ -233,7 +235,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
       const data = await safeJson(res);
 
       if (!data.success) {
-        alert(data.error || "Unable to join chat");
+        await notify(data.error || "Unable to join chat");
         return;
       }
 
@@ -249,7 +251,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
       await fetchMeta();
     } catch (error) {
       console.error("ADMIN_JOIN_CHAT_ERROR", error);
-      alert("Unable to join chat");
+      await notify("Unable to join chat");
     } finally {
       setJoining(false);
     }
@@ -258,7 +260,7 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
   const endChat = async () => {
     if (ending || !chatId) return;
 
-    const confirmed = window.confirm("End this chat now?");
+    const confirmed = await confirmDialog("End this chat now?");
     if (!confirmed) return;
 
     try {
@@ -277,15 +279,15 @@ export default function AdminReplyBox({ chatId, initialMessages }) {
       const data = await safeJson(res);
 
       if (!data.success) {
-        alert(data.error || "Unable to end chat");
+        await notify(data.error || "Unable to end chat");
         return;
       }
 
       await fetchMeta();
-      alert("Chat ended successfully");
+      await notify("This chat has been closed.", { tone: "success", title: "Chat ended" });
     } catch (error) {
       console.error("ADMIN_END_CHAT_ERROR", error);
-      alert("Unable to end chat");
+      await notify("Unable to end chat");
     } finally {
       setEnding(false);
     }

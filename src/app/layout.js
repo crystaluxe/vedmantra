@@ -1,6 +1,7 @@
 import "./globals.css";
 import Script from "next/script";
 import PWAInstall from "@/components/PWAInstall";
+import SiteNavigation from "@/components/SiteNavigation";
 
 export const metadata = {
   title: "Vedmantra",
@@ -26,13 +27,14 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body
         style={{
-          fontFamily: "Plus Jakarta Sans, sans-serif",
-          background: "#F7EFE4",
+          fontFamily: "DM Sans, sans-serif",
+          background: "#F6EFE5",
           
         }}
       >
 
         <PWAInstall />
+        <SiteNavigation />
         {children}
 
         {/* Meta Pixel */}

@@ -1,6 +1,7 @@
 import "./globals.css";
 import Script from "next/script";
 import PWAInstall from "@/components/PWAInstall";
+import SiteNavigation from "@/components/SiteNavigation";
 
 export const metadata = {
   title: "Vedmantra",
@@ -33,7 +34,8 @@ export default function RootLayout({ children }) {
       >
 
         <PWAInstall />
-        {children}
+        <SiteNavigation />
+        <div className="pb-16 md:pb-0">{children}</div>
 
         {/* Meta Pixel */}
         <Script id="facebook-pixel" strategy="afterInteractive">

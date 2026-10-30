@@ -160,18 +160,18 @@ export default async function AstrologerProfilePage({ params }) {
 
   return (
     <main
-      className="min-h-screen bg-[#F7EFE4] text-[#1F130D]"
+      className="min-h-screen bg-[#F6EFE5] text-[#390A1B]"
       style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
     >
-      <div className="max-w-md mx-auto min-h-screen bg-gradient-to-br from-[#FFF8EF] via-[#F7E9D9] to-[#EED8BE]">
-        <div className="relative h-[360px] overflow-hidden">
+      <div className="max-w-6xl mx-auto min-h-screen bg-[#FFF9F0] md:my-8 md:rounded-[32px] md:border md:border-[#E9D9C4] md:overflow-hidden">
+        <div className="relative h-[360px] overflow-hidden md:h-[430px]">
           <img
             src={astrologer.image}
             alt={astrologer.name}
             className="w-full h-full object-cover"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1A0E09] via-[#1A0E0920] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#390A1B] via-[#390A1B20] to-transparent" />
 
           <div className="absolute top-5 left-4">
             <a
@@ -211,15 +211,15 @@ export default async function AstrologerProfilePage({ params }) {
           </div>
         </div>
 
-        <div className="px-4 -mt-7 relative z-20">
-          <div className="bg-white/45 backdrop-blur-2xl border border-white/60 rounded-[34px] p-5 shadow-2xl">
+        <div className="px-4 md:px-10 -mt-7 relative z-20">
+          <div className="bg-white border border-[#E9D9C4] rounded-[34px] p-5 shadow-2xl">
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-white/50 rounded-2xl p-3 border border-white/60">
+              <div className="bg-[#FFF9F0] rounded-2xl p-3 border border-[#E9D9C4]">
                 <p className="text-2xl font-extrabold">
                   {astrologer.rating}
                 </p>
 
-                <p className="text-xs text-[#7A5A45] font-bold mt-1">
+                <p className="text-xs text-[#786B64] font-bold mt-1">
                   Rating
                 </p>
               </div>
@@ -244,11 +244,11 @@ export default async function AstrologerProfilePage({ params }) {
             </div>
 
             <div className="mt-6">
-              <p className="text-xs uppercase tracking-[0.22em] text-[#8A5A35] font-bold mb-3">
+              <p className="text-xs uppercase tracking-[0.22em] text-[#A17A35] font-bold mb-3">
                 About
               </p>
 
-              <p className="text-[15px] leading-7 text-[#5F483A] font-medium">
+              <p className="text-[15px] leading-7 text-[#5D4C48] font-medium">
                 {profile.about}
               </p>
             </div>
@@ -262,7 +262,7 @@ export default async function AstrologerProfilePage({ params }) {
                 {profile.languages.map((language) => (
                   <span
                     key={language}
-                    className="bg-white/50 border border-white/60 rounded-full px-4 py-2 text-sm font-bold"
+                    className="bg-[#FFF9F0] border border-[#E9D9C4] rounded-full px-4 py-2 text-sm font-bold"
                   >
                     {language}
                   </span>
@@ -283,7 +283,7 @@ export default async function AstrologerProfilePage({ params }) {
                 </h2>
               </div>
 
-              <span className="bg-white/45 backdrop-blur-xl border border-white/60 rounded-full px-4 py-2 text-sm font-bold">
+              <span className="bg-white border border-[#E9D9C4] rounded-full px-4 py-2 text-sm font-bold">
                 {profile.reviewsCount} Reviews
               </span>
             </div>
@@ -304,7 +304,7 @@ export default async function AstrologerProfilePage({ params }) {
             </div>
           </div>
 
-          <div className="sticky bottom-0 pt-6 pb-6 bg-gradient-to-t from-[#EFDCC8] to-transparent mt-8">
+          <div className="sticky bottom-0 pt-6 pb-6 bg-gradient-to-t from-[#F6EFE5] to-transparent mt-8">
             {astrologer.online ? (
               <StartChatButton astrologerId={astrologer.id} />
             ) : (

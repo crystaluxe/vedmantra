@@ -161,7 +161,6 @@ export default async function AstrologerProfilePage({ params }) {
   return (
     <main
       className="min-h-screen bg-[#F7EFE4] text-[#1F130D]"
-      style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
     >
       <div className="max-w-md mx-auto min-h-screen bg-gradient-to-br from-[#FFF8EF] via-[#F7E9D9] to-[#EED8BE]">
         <div className="relative h-[360px] overflow-hidden">

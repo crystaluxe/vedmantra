@@ -59,7 +59,6 @@ export default function ChatsPage() {
   return (
     <main
       className="min-h-screen bg-[#F7EFE4] text-[#1F130D]"
-      style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
     >
       <div className="max-w-md mx-auto min-h-screen bg-gradient-to-br from-[#FFF8EF] via-[#F7E9D9] to-[#EED8BE] px-4 pt-5 pb-8">
         <div className="flex items-center justify-between mb-6">

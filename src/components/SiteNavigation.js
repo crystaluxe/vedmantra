@@ -20,7 +20,7 @@ export default function SiteNavigation() {
     <>
       <header className="sticky top-0 z-40 hidden border-b border-[#E9D9C4] bg-white/95 backdrop-blur-lg md:block">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-8 px-8">
-          <Link href="/" className="font-serif text-3xl font-bold text-[#650D26]">✺ Vedmantra</Link>
+          <Link href="/" className="font-display text-3xl font-semibold text-[#650D26]">✺ Vedmantra</Link>
           <nav aria-label="Main navigation" className="flex items-center gap-8">
             {items.map((item) => (
               <Link key={item.label} href={item.href} className={`text-sm font-semibold transition hover:text-[#A17A35] ${pathname === item.href ? "text-[#650D26]" : "text-[#786B64]"}`}>

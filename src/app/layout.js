@@ -1,7 +1,21 @@
 import "./globals.css";
 import Script from "next/script";
+import { Poppins, Raleway } from "next/font/google";
 import PWAInstall from "@/components/PWAInstall";
 import SiteNavigation from "@/components/SiteNavigation";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const raleway = Raleway({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  display: "swap",
+});
 
 export const metadata = {
   title: "Vedmantra",
@@ -24,10 +38,9 @@ const FB_PIXEL_ID = "1685249759459324";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${poppins.variable} ${raleway.variable}`}>
       <body
         style={{
-          fontFamily: "DM Sans, sans-serif",
           background: "#F6EFE5",
           
         }}

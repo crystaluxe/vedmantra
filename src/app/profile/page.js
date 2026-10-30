@@ -97,7 +97,6 @@ export default function ProfilePage() {
   return (
     <main
       className="min-h-screen bg-[#F7EFE4] text-[#1F130D]"
-      style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
     >
       <div className="max-w-md mx-auto min-h-screen relative overflow-hidden bg-gradient-to-br from-[#FFF8EF] via-[#F5E4CF] to-[#E7C8A6] px-4 pt-5 pb-8">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#C58A45]/20 rounded-full blur-3xl" />

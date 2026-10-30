@@ -225,7 +225,6 @@ export default function LoginPage() {
   return (
     <main
       className="min-h-screen w-full overflow-x-hidden bg-[#F7EFE4] text-[#1F130D]"
-      style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
     >
       <div className="w-full max-w-md mx-auto min-h-screen overflow-x-hidden relative bg-gradient-to-br from-[#FFF8EF] via-[#F3DEC5] to-[#DDB483] px-4 py-6">
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#C99055]/25 rounded-full blur-3xl pointer-events-none" />

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import HomeHero from "@/components/HomeHero";
 import HomeWalletBalance from "@/components/HomeWalletBalance";
 import PushNotificationRegister from "@/components/PushNotificationRegister";
 
@@ -114,11 +115,10 @@ export default async function HomePage({ searchParams }) {
     <>
       <PushNotificationRegister />
       <main className="min-h-screen bg-[#F6EFE5] text-[#302321]">
-        <div className="border-b border-[#DCC49B] bg-[#4A102A] px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-[#F3DEB0]">✦ Timeless Vedic wisdom, thoughtfully delivered ✦</div>
-        <header className="sticky top-0 z-50 border-b border-[#EADBC5] bg-[#FFF9F0]/95 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-4 lg:px-8">
+        <header className="sticky top-0 z-50 border-b border-[#EEE9D9] bg-[#FFFEF7]/95 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-5 py-4 lg:px-8">
             <a href="/" className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full border border-[#C6A15B] bg-[#650D26] text-2xl text-[#E8D19B]">✺</span>
+              <span className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E6D536] bg-[#F8ED6C] text-2xl text-[#302719]">✺</span>
               <span><span className="block font-display text-2xl font-semibold tracking-tight text-[#650D26]">Vedmantra</span><span className="block text-[9px] font-bold uppercase tracking-[.22em] text-[#A17A35]">Divine Guidance</span></span>
             </a>
             <nav className="order-3 flex w-full items-center justify-between gap-3 overflow-x-auto border-t border-[#EADBC5] pt-3 text-xs font-semibold text-[#650D26] sm:order-none sm:w-auto sm:border-0 sm:pt-0 sm:text-sm">
@@ -132,28 +132,7 @@ export default async function HomePage({ searchParams }) {
           </div>
         </header>
 
-        <section className="relative isolate overflow-hidden bg-[#4A102A] text-[#FFF9F0]">
-          <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 78% 35%, #E8D19B 0, transparent 34%), radial-gradient(circle at 5% 95%, #C6A15B 0, transparent 28%)" }} />
-          <div className="pointer-events-none absolute -right-28 top-12 hidden h-[520px] w-[520px] rounded-full border border-[#C6A15B]/40 lg:block" />
-          <div className="pointer-events-none absolute -right-14 top-24 hidden h-[410px] w-[410px] rounded-full border border-[#C6A15B]/30 lg:flex items-center justify-center text-[240px] font-display text-[#C6A15B]/30">✺</div>
-          <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 md:grid-cols-[1.3fr_.7fr] md:py-28 lg:px-8">
-            <div>
-              <p className="mb-6 inline-flex items-center rounded-full border border-[#D9BC7B]/50 px-4 py-2 text-[11px] font-bold uppercase tracking-[.22em] text-[#E8D19B]">✦ Welcome to Vedmantra</p>
-              <h1 className="max-w-3xl font-display text-5xl font-semibold leading-[1.12] tracking-[-0.035em] md:text-6xl lg:text-7xl">Ancient Wisdom.<br /><span className="text-[#E8D19B]">Modern Guidance.</span></h1>
-              <p className="mt-7 max-w-xl text-base leading-8 text-[#F1DDE2] md:text-lg">Find perspective on love, career, relationships and life's important questions with personalized Vedic astrology consultations.</p>
-              <div className="mt-9 flex flex-wrap gap-3">
-                <a href="#astrologers" className="rounded-full bg-[#E8D19B] px-7 py-4 text-sm font-extrabold text-[#4A102A] shadow-lg transition hover:bg-white">Consult an Astrologer →</a>
-                <a href="#explore" className="rounded-full border border-[#E8D19B]/70 px-7 py-4 text-sm font-bold text-[#FFF9F0] transition hover:bg-white/10">Explore Guidance</a>
-              </div>
-              <div className="mt-12 flex flex-wrap gap-x-8 gap-y-4 border-t border-white/15 pt-6 text-sm text-[#EEDFE2]"><span>✧ Personalised Consultations</span><span>✧ Transparent Pricing</span><span>✧ Convenient Online Chat</span></div>
-            </div>
-            <div className="relative mx-auto flex aspect-square w-full max-w-[380px] items-center justify-center rounded-full border border-[#D9BC7B]/40 bg-[#6A1B37]/40 shadow-[0_0_90px_rgba(232,209,155,.13)]">
-              <div className="absolute inset-5 rounded-full border border-dashed border-[#E8D19B]/50" />
-              <div className="absolute inset-12 rounded-full border border-[#E8D19B]/40" />
-              <div className="text-center"><div className="font-display text-[120px] leading-none text-[#E8D19B]">✺</div><p className="mt-2 text-xs font-bold uppercase tracking-[.32em] text-[#E8D19B]">Discover Your Path</p></div>
-            </div>
-          </div>
-        </section>
+        <HomeHero astrologers={uniqueAstrologers.map((astro) => ({ ...astro, isAi: isAiAstrologer(astro) }))} />
 
         <section id="explore" className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.24em] text-[#A17A35]">Your Journey</p><h2 className="mt-3 font-display text-3xl font-semibold text-[#4A102A] md:text-4xl">What is on your mind?</h2><p className="mt-3 text-sm text-[#786B64]">Choose an area of life to find relevant astrologers.</p></div>{selectedCategory && <a href="/" className="text-sm font-bold text-[#650D26] underline">Clear filter</a>}</div>
@@ -176,7 +155,7 @@ export default async function HomePage({ searchParams }) {
         <section className="bg-[#4A102A] px-5 py-16 text-center text-[#FFF9F0]"><p className="text-xs font-bold uppercase tracking-[.24em] text-[#E8D19B]">The Zodiac</p><h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">A universe of possibilities</h2><p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#EBD9DF]">Every sign has its own story. Discover guidance tailored to your journey.</p><div className="mx-auto mt-10 grid max-w-5xl grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">{ZODIAC.map(([symbol,name])=><div key={name} className="rounded-2xl border border-[#C6A15B]/35 bg-white/5 p-4"><div className="text-3xl text-[#E8D19B]">{symbol}</div><p className="mt-2 text-xs font-semibold">{name}</p></div>)}</div></section>
 
         <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8"><div className="flex flex-col items-center justify-between gap-6 rounded-[32px] border border-[#E9D9C4] bg-[#FFF9F0] p-8 md:flex-row md:p-12"><div><p className="text-xs font-bold uppercase tracking-[.24em] text-[#A17A35]">Crystaluxe Mall</p><h2 className="mt-3 font-display text-3xl font-semibold text-[#4A102A]">Bring intention into everyday life.</h2><p className="mt-3 max-w-xl text-sm leading-7 text-[#786B64]">Explore crystals, bracelets and thoughtfully selected spiritual products.</p></div><a href="https://crystaluxe.in" target="_blank" rel="noopener noreferrer" className="shrink-0 rounded-full bg-[#650D26] px-7 py-4 text-sm font-bold text-white">Explore Crystaluxe →</a></div></section>
-        <footer className="border-t border-[#D9C8AE] bg-[#FFF9F0] px-5 py-9"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 text-sm"><span className="font-display text-2xl font-semibold text-[#650D26]">✺ Vedmantra</span><div className="flex flex-wrap gap-5 font-semibold text-[#650D26]"><a href="/">Home</a><a href="/wallet">Wallet</a><a href="/chat">Chats</a><a href="/profile">Profile</a></div><span className="text-xs text-[#786B64]">Vedic wisdom for modern lives.</span></div></footer>
+        <footer className="border-t border-[#D9C8AE] bg-[#FFF9F0] px-5 py-9"><div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 text-sm"><span className="font-display text-2xl font-semibold text-[#650D26]">✺ Vedmantra</span><div className="flex flex-wrap gap-5 font-semibold text-[#650D26]"><a href="/">Home</a><a href="/wallet">Wallet</a><a href="/chat">Chats</a><a href="/profile">Profile</a></div><span className="text-xs text-[#786B64]">Vedic wisdom for modern lives.</span></div></footer>
       </main>
     </>
   );

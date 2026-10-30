@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export default function PWAInstall() {
+  const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [dismissed, setDismissed] = useState(false);
   const [isStandalone, setIsStandalone] = useState(true);
@@ -29,7 +31,7 @@ export default function PWAInstall() {
     };
   }, []);
 
-  if (!loaded) return null;
+  if (!loaded || pathname === "/") return null;
 
   if (dismissed || isStandalone) return null;
 

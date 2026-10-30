@@ -4,17 +4,20 @@ import { useEffect, useState } from "react";
 
 export default function HomeWalletBalance() {
   const [balance, setBalance] = useState(0);
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
   const fetchWallet = async () => {
     try {
       const userData = localStorage.getItem("astro-user");
 
       if (!userData) {
+        setIsSignedIn(false);
         setBalance(0);
         return;
       }
 
       const user = JSON.parse(userData);
+      setIsSignedIn(Boolean(user?.id || user?.phone));
 
       const userId = user?.id;
       const phone = user?.phone;
@@ -48,6 +51,7 @@ export default function HomeWalletBalance() {
         setBalance(0);
       }
     } catch (error) {
+      setIsSignedIn(false);
       console.error("HOME_WALLET_ERROR", error);
       setBalance(0);
     }
@@ -60,6 +64,14 @@ export default function HomeWalletBalance() {
 
     return () => clearInterval(interval);
   }, []);
+
+  if (!isSignedIn) {
+    return (
+      <a href="/login" className="rounded-full bg-[#650D26] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#44091A]">
+        Sign In
+      </a>
+    );
+  }
 
   return (
     <a

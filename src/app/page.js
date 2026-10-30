@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import AuthGuard from "@/components/AuthGuard";
 import HomeWalletBalance from "@/components/HomeWalletBalance";
 import PushNotificationRegister from "@/components/PushNotificationRegister";
 
@@ -112,7 +111,7 @@ export default async function HomePage({ searchParams }) {
   const aiAstrologers = astrologers.filter(isAiAstrologer);
   const humanAstrologers = astrologers.filter((astro) => !isAiAstrologer(astro));
   return (
-    <AuthGuard>
+    <>
       <PushNotificationRegister />
       <main className="min-h-screen bg-[#F6EFE5] text-[#302321]" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
         <div className="border-b border-[#DCC49B] bg-[#4A102A] px-4 py-2 text-center text-[11px] font-semibold tracking-wide text-[#F3DEB0]">✦ Timeless Vedic wisdom, thoughtfully delivered ✦</div>
@@ -179,6 +178,6 @@ export default async function HomePage({ searchParams }) {
         <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8"><div className="flex flex-col items-center justify-between gap-6 rounded-[32px] border border-[#E9D9C4] bg-[#FFF9F0] p-8 md:flex-row md:p-12"><div><p className="text-xs font-bold uppercase tracking-[.24em] text-[#A17A35]">Crystaluxe Mall</p><h2 className="mt-3 font-serif text-3xl font-bold text-[#4A102A]">Bring intention into everyday life.</h2><p className="mt-3 max-w-xl text-sm leading-7 text-[#786B64]">Explore crystals, bracelets and thoughtfully selected spiritual products.</p></div><a href="https://crystaluxe.in" target="_blank" rel="noopener noreferrer" className="shrink-0 rounded-full bg-[#650D26] px-7 py-4 text-sm font-bold text-white">Explore Crystaluxe →</a></div></section>
         <footer className="border-t border-[#D9C8AE] bg-[#FFF9F0] px-5 py-9"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 text-sm"><span className="font-serif text-2xl font-bold text-[#650D26]">✺ Vedmantra</span><div className="flex flex-wrap gap-5 font-semibold text-[#650D26]"><a href="/">Home</a><a href="/wallet">Wallet</a><a href="/chat">Chats</a><a href="/profile">Profile</a></div><span className="text-xs text-[#786B64]">Vedic wisdom for modern lives.</span></div></footer>
       </main>
-    </AuthGuard>
+    </>
   );
 }

@@ -162,7 +162,7 @@ export default function WalletPage() {
         },
 
         theme: {
-          color: "#7c3f12",
+          color: "#650D26",
         },
       };
 
@@ -177,21 +177,21 @@ export default function WalletPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f8efe3] px-5 py-6">
-      <div className="max-w-md mx-auto">
+    <main className="min-h-screen bg-[#F6EFE5] px-4 py-8 md:px-8 md:py-12">
+      <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <Link href="/" className="text-sm text-[#5b3215]">
+          <Link href="/" className="text-sm text-[#650D26]">
             ← Back
           </Link>
 
-          <h1 className="text-xl font-semibold text-[#2b1608]">
+          <h1 className="text-xl font-semibold text-[#390A1B]">
             Wallet
           </h1>
 
           <div className="w-10" />
         </div>
 
-        <div className="rounded-3xl bg-gradient-to-br from-[#4b250c] to-[#9b5a20] text-white p-6 shadow-xl mb-6">
+        <div className="rounded-3xl bg-gradient-to-br from-[#390A1B] via-[#650D26] to-[#8B2C4A] text-white p-6 shadow-xl mb-6">
           <p className="text-sm opacity-80">Available Balance</p>
 
           <h2 className="text-4xl font-bold mt-2">
@@ -207,18 +207,18 @@ export default function WalletPage() {
           Recharge Wallet
         </h3>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {rechargePlans.map((plan) => (
             <button
               key={plan.amount}
               onClick={() => handleRecharge(plan.amount)}
-              className="rounded-2xl bg-white p-5 text-left shadow-md border border-[#ead8c2] active:scale-95 transition"
+              className="rounded-2xl bg-white p-5 text-left shadow-md border border-[#E9D9C4] active:scale-95 transition"
             >
               <p className="text-2xl font-bold text-[#2b1608]">
                 ₹{plan.amount}
               </p>
 
-              <p className="text-sm text-[#7a5a3a] mt-1">
+              <p className="text-sm text-[#786B64] mt-1">
                 {plan.bonus > 0
                   ? `₹${plan.bonus} bonus`
                   : "Starter recharge"}
@@ -241,7 +241,7 @@ export default function WalletPage() {
               {transactions.map((txn) => (
                 <div
                   key={txn.id}
-                  className="flex items-center justify-between rounded-xl bg-[#fff8ef] border border-[#f0dec7] px-4 py-3"
+                  className="flex items-center justify-between rounded-xl bg-[#FFF9F0] border border-[#f0dec7] px-4 py-3"
                 >
                   <div>
                     <p className="text-sm font-semibold text-[#2b1608]">

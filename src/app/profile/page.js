@@ -96,17 +96,17 @@ export default function ProfilePage() {
 
   return (
     <main
-      className="min-h-screen bg-[#F7EFE4] text-[#1F130D]"
+      className="min-h-screen bg-[#F6EFE5] text-[#390A1B]"
       style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
     >
-      <div className="max-w-md mx-auto min-h-screen relative overflow-hidden bg-gradient-to-br from-[#FFF8EF] via-[#F5E4CF] to-[#E7C8A6] px-4 pt-5 pb-8">
+      <div className="max-w-6xl mx-auto min-h-screen relative overflow-hidden bg-[#F6EFE5] px-4 pt-8 pb-12 md:px-8">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#C58A45]/20 rounded-full blur-3xl" />
         <div className="absolute top-52 -left-24 w-56 h-56 bg-[#8B4513]/10 rounded-full blur-3xl" />
 
         <div className="relative z-10 flex items-center justify-between mb-6">
           <button
             onClick={() => router.push("/")}
-            className="w-11 h-11 rounded-full bg-white/55 backdrop-blur-xl border border-white/70 flex items-center justify-center shadow-lg text-xl"
+            className="w-11 h-11 rounded-full bg-white border border-[#E9D9C4] flex items-center justify-center shadow-lg text-xl"
           >
             ←
           </button>
@@ -117,7 +117,7 @@ export default function ProfilePage() {
 
           <button
             onClick={() => router.push("/wallet")}
-            className="w-11 h-11 rounded-full bg-[#24110A] text-white flex items-center justify-center shadow-lg"
+            className="w-11 h-11 rounded-full bg-[#650D26] text-white flex items-center justify-center shadow-lg"
           >
             ₹
           </button>
@@ -127,13 +127,13 @@ export default function ProfilePage() {
           <div className="absolute -right-12 -top-12 w-36 h-36 bg-[#D9A45D]/25 rounded-full blur-2xl" />
 
           <div className="relative flex items-center gap-4">
-            <div className="w-20 h-20 rounded-[28px] bg-gradient-to-br from-[#F7D9A4] to-[#B97835] text-[#24110A] flex items-center justify-center text-3xl font-black shadow-xl">
+            <div className="w-20 h-20 rounded-[28px] bg-gradient-to-br from-[#E8D19B] to-[#C6A15B] text-[#390A1B] flex items-center justify-center text-3xl font-black shadow-xl">
               {firstLetter}
             </div>
 
             {editMode ? (
               <div className="flex-1">
-                <p className="text-xs uppercase tracking-[0.22em] text-[#E6C99A] font-bold">
+                <p className="text-xs uppercase tracking-[0.22em] text-[#E8D19B] font-bold">
                   Edit Profile
                 </p>
 
@@ -216,7 +216,7 @@ export default function ProfilePage() {
               💰
             </div>
             <p className="font-black tracking-[-0.02em]">Recharge</p>
-            <p className="text-xs text-[#7A5A45] font-semibold mt-1">
+            <p className="text-xs text-[#786B64] font-semibold mt-1">
               Add wallet balance
             </p>
           </button>
@@ -235,7 +235,7 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        <div className="relative z-10 mt-5 rounded-[32px] bg-white/50 backdrop-blur-xl border border-white/70 shadow-xl overflow-hidden">
+        <div className="relative z-10 mt-5 rounded-[32px] bg-white border border-[#E9D9C4] shadow-xl overflow-hidden">
           <button
             onClick={() => router.push("/")}
             className="w-full flex items-center justify-between p-4 border-b border-[#E8D5BF]"

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import ZodiacExplorer from "@/components/ZodiacExplorer";
 import HomeHero from "@/components/HomeHero";
+import DailyHoroscope from "@/components/DailyHoroscope";
 import HomeWalletBalance from "@/components/HomeWalletBalance";
 import PushNotificationRegister from "@/components/PushNotificationRegister";
 
@@ -129,6 +130,7 @@ export default async function HomePage({ searchParams }) {
         </header>
 
         <HomeHero astrologers={uniqueAstrologers.map((astro) => ({ ...astro, isAi: isAiAstrologer(astro) }))} />
+        <DailyHoroscope />
 
         <section id="explore" className="mx-auto max-w-7xl px-5 py-16 lg:px-8">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.24em] text-[#A17A35]">Your Journey</p><h2 className="mt-3 font-display text-3xl font-semibold text-[#4A102A] md:text-4xl">What is on your mind?</h2><p className="mt-3 text-sm text-[#786B64]">Choose an area of life to find relevant astrologers.</p></div>{selectedCategory && <a href="/" className="text-sm font-bold text-[#650D26] underline">Clear filter</a>}</div>

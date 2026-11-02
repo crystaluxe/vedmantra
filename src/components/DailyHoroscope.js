@@ -65,10 +65,8 @@ export default function DailyHoroscope() {
               {loading ? <p role="status" className="text-sm leading-8 text-[#806B70]">Finding today’s perspective for {selected[1]}…</p> : error ? <div><p className="text-sm leading-7 text-[#806B70]">{error}</p><button type="button" onClick={() => setRetry(value => value + 1)} className="mt-4 rounded-full border border-[#DFC7D0] bg-white px-5 py-3 text-xs font-semibold text-[#650D26] hover:bg-[#FAF1F4]">Try again</button></div> : <p className="text-sm leading-8 text-[#6E5960]">{reading?.reading}</p>}
             </div>
             <div className="mt-6 border-t border-[#EADDE1] pt-5"><p className="text-[10px] leading-5 text-[#A08B90]">General sun-sign guidance. For a personal reading, share your birth details with an astrologer.</p><a href="#astrologers" onClick={() => setOpen(false)} className="mt-4 block rounded-full bg-[#650D26] px-5 py-3 text-xs font-semibold text-white hover:bg-[#44091A]">Get personal guidance →</a><button type="button" onClick={() => setOpen(false)} className="mt-2 rounded-full px-5 py-3 text-xs font-medium text-[#806B70]">Choose another sign</button></div>
-            <a href="https://freehoroscopeapi.com" target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#A08B90] underline underline-offset-4">Powered by FreeHoroscopeAPI</a>
           </SiteDialog>}
         </div>
-        <a href="https://freehoroscopeapi.com" target="_blank" rel="noopener noreferrer" className="mt-5 inline-block text-[10px] text-[#A08B90] underline underline-offset-4 hover:text-[#650D26]">Powered by FreeHoroscopeAPI</a>
       </div>
     </section>
   );

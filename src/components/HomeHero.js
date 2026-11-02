@@ -1,4 +1,5 @@
 import styles from "./HomeHero.module.css";
+import AstrologersToExplore from "./AstrologersToExplore";
 
 export default function HomeHero({ astrologers }) {
   const onlineCount = astrologers.filter((astro) => astro.online).length;
@@ -11,8 +12,8 @@ export default function HomeHero({ astrologers }) {
       <div className={styles.inner}>
         <div className={styles.copy}>
           <a href="#astrologers" className={styles.availability}>
-            <span className={styles.status} aria-hidden="true" />
-            <span><strong>{onlineCount}</strong> astrologers online now</span>
+            <span aria-hidden="true" className="text-[#A17A35]">✦</span>
+            <AstrologersToExplore />
             <span className={styles.avatars} aria-hidden="true">
               {featured.map((astro) => <img key={astro.id} src={astro.image} alt="" referrerPolicy="no-referrer" />)}
             </span>

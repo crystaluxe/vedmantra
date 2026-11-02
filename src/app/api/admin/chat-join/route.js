@@ -33,6 +33,8 @@ export async function POST(request) {
       return Response.json({ success: true, chat });
     }
 
+    if (chat.status !== "QUEUED") return Response.json({ success: false, error: "This consultation requires recharge before continuing." }, { status: 409 });
+
     const updatedChat = await prisma.chatSession.update({
       where: { id: Number(chatId) },
       data: {

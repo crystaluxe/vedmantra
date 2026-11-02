@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { freeSecondsRemaining } from "@/lib/consultation-billing";
 
 export async function GET(request) {
   try {
@@ -19,6 +20,8 @@ export async function GET(request) {
         status: true,
         startedAt: true,
         endedAt: true,
+        freeMinutesRemaining: true,
+        lastDeductedAt: true,
       },
     });
 
@@ -31,7 +34,7 @@ export async function GET(request) {
 
     return Response.json({
       success: true,
-      chat,
+      chat: { ...chat, freeSecondsRemaining: freeSecondsRemaining(chat), showFreeRechargePopup: chat.status === "PAUSED_FREE" },
     });
   } catch (error) {
     console.error("CHAT_STATUS_ERROR", error);

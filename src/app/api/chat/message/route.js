@@ -1,3 +1,4 @@
+import { billConsultation } from "@/lib/consultation-billing";
 import { prisma } from "@/lib/prisma";
 import { getFirebaseAdmin } from "@/lib/firebase-admin";
 
@@ -757,6 +758,9 @@ export async function POST(request) {
         { status: 400 }
       );
     }
+
+    const billing = await billConsultation(prisma, Number(chatSessionId));
+    if (billing.code === "FREE_OFFER_ENDED") return Response.json({ ...billing, success: false, error: "Please recharge to continue" }, { status: 402 });
 
     const session = await prisma.chatSession.findUnique({
       where: { id: Number(chatSessionId) },

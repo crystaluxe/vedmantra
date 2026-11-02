@@ -152,6 +152,8 @@ export default function WalletPage() {
             trackMetaEvent("Purchase", amount);
             await notify("Your wallet balance has been updated.", { tone: "success", title: "Recharge successful" });
             fetchWallet();
+            const returnChat = new URLSearchParams(window.location.search).get("chatSessionId");
+            if (/^[1-9]\d*$/.test(returnChat || "")) window.location.href = `/chat/${returnChat}?resume=1`;
           } else {
             await notify(verifyData.error || "Payment verification failed.");
           }

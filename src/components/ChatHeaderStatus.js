@@ -34,12 +34,13 @@ export default function ChatHeaderStatus({ chatSessionId, initialStatus }) {
   const normalizedStatus = String(status || "").toUpperCase();
   const isQueued = normalizedStatus === "QUEUED";
   const isEnded = normalizedStatus === "ENDED";
+  const isPaused = normalizedStatus === "PAUSED_FREE";
 
   return (
     <div className="flex items-center gap-1.5 mt-0.5">
       <span
         className={`w-1.5 h-1.5 rounded-full ${
-          isEnded ? "bg-red-500" : isQueued ? "bg-amber-500" : "bg-green-500"
+          isEnded ? "bg-red-500" : isQueued || isPaused ? "bg-amber-500" : "bg-green-500"
         }`}
       ></span>
       <span
@@ -51,7 +52,7 @@ export default function ChatHeaderStatus({ chatSessionId, initialStatus }) {
             : "text-[#287A3E]"
         }`}
       >
-        {isEnded ? "Ended" : isQueued ? "Waiting" : "Active"}
+        {isEnded ? "Ended" : isPaused ? "Recharge to continue" : isQueued ? "Waiting" : "Active"}
       </span>
     </div>
   );

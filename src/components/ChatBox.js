@@ -21,6 +21,9 @@ export default function ChatBox({
   const [sending, setSending] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
   const [showRechargePopup, setShowRechargePopup] = useState(false);
+  const [freeSeconds, setFreeSeconds] = useState(0);
+  const offerPopupShown = useRef(false);
+  const resumeRequested = useRef(false);
   const [deductedAmount, setDeductedAmount] = useState(null);
   const [seconds, setSeconds] = useState(0);
   const [endingChat, setEndingChat] = useState(false);
@@ -131,7 +134,9 @@ export default function ChatBox({
 
   const fetchWallet = async () => {
     try {
-      const res = await fetch("/api/wallet", { cache: "no-store" });
+      const user = JSON.parse(localStorage.getItem("astro-user") || "null");
+      if (!user?.id) return;
+      const res = await fetch(`/api/wallet?userId=${user.id}`, { cache: "no-store" });
       const data = await safeJson(res);
       if (data.success && data.wallet) setWalletBalance(data.wallet.balance);
     } catch (error) {
@@ -200,6 +205,14 @@ export default function ChatBox({
       if (!data.success || !data.chat?.status) return;
 
       const nextStatus = data.chat.status;
+      setFreeSeconds(data.chat.freeSecondsRemaining || 0);
+      if (data.chat.showFreeRechargePopup) {
+        setChatPaused(true);
+        if (!offerPopupShown.current) {
+          offerPopupShown.current = true;
+          setShowRechargePopup(true);
+        }
+      }
 
       setChatStatus((currentStatus) => {
         if (
@@ -223,10 +236,48 @@ export default function ChatBox({
     }
   };
 
+  const applyBilling = (data) => {
+    if (data.balance != null) setWalletBalance(data.balance);
+    setFreeSeconds(data.freeSecondsRemaining || 0);
+    if (data.showFreeRechargePopup) {
+      setChatPaused(true);
+      setChatStatus("PAUSED_FREE");
+      if (!offerPopupShown.current) {
+        offerPopupShown.current = true;
+        setShowRechargePopup(true);
+      }
+    }
+    if (data.deducted > 0) {
+      setDeductedAmount(data.deducted);
+      setTimeout(() => setDeductedAmount(null), 2500);
+    }
+    if (data.chatEnded || data.code === "CHAT_ENDED") setChatEnded(true);
+  };
+
+  const resumeConsultation = async () => {
+    try {
+    const res = await fetch("/api/chat/deduct", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ chatSessionId: Number(chatSessionId), resume: true }) });
+    const data = await safeJson(res);
+    applyBilling(data);
+    if (data.success && !data.paused && !data.chatEnded) {
+      setChatPaused(false);
+      setChatStatus("ACTIVE");
+      setShowRechargePopup(false);
+    }
+    } catch {
+      await notify("Unable to resume your consultation. Please try again.");
+    }
+  };
+
   useEffect(() => {
     fetchMessages();
     fetchWallet();
-    fetchStatus();
+    if (!resumeRequested.current && new URLSearchParams(window.location.search).get("resume") === "1") {
+      resumeRequested.current = true;
+      resumeConsultation().then(fetchStatus);
+    } else {
+      fetchStatus();
+    }
 
     const messageInterval = setInterval(fetchMessages, 2000);
     const walletInterval = setInterval(fetchWallet, 5000);
@@ -244,32 +295,11 @@ export default function ChatBox({
 
         const data = await safeJson(res);
 
-        if (data.success) {
-          setWalletBalance(data.balance);
-
-          if (data.deducted > 0) {
-            setDeductedAmount(data.deducted);
-            setTimeout(() => setDeductedAmount(null), 2500);
-          }
-
-          if (data.chatEnded || data.code === "LOW_BALANCE") {
-            setChatPaused(true);
-            setShowRechargePopup(true);
-          }
-        }
-
-        if (!data.success && data.code === "LOW_BALANCE") {
-          setChatPaused(true);
-          setShowRechargePopup(true);
-        }
-
-        if (!data.success && data.code === "CHAT_ENDED") {
-          setChatEnded(true);
-        }
+        applyBilling(data);
       } catch (error) {
         console.error("DEDUCTION_ERROR", error);
       }
-    }, 10000);
+    }, 5000);
 
     return () => {
       clearInterval(messageInterval);
@@ -351,6 +381,7 @@ export default function ChatBox({
 
       if (!data.success) {
         setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
+        if (data.code === "FREE_OFFER_ENDED") { applyBilling(data); return; }
         await notify(data.error || "Unable to send message");
         return;
       }
@@ -463,6 +494,7 @@ export default function ChatBox({
             )}
           </div>
         </div>
+        {freeSeconds > 0 && <p role="status" className="mt-2 text-center text-xs font-semibold text-[#650D26]">First consultation free · {Math.floor(freeSeconds / 60)}:{String(freeSeconds % 60).padStart(2, "0")} remaining</p>}
       </section>
 
       <section
@@ -561,6 +593,8 @@ export default function ChatBox({
             <p className="text-center text-xs text-[#6F5B49] leading-5 px-6">
               Wallet balance is low. Please recharge to continue.
             </p>
+            <a href={`/wallet?chatSessionId=${chatSessionId}`} className="block text-center text-xs font-semibold text-[#650D26] underline">Recharge wallet →</a>
+            {walletBalance > 0 && <button onClick={resumeConsultation} className="block w-full text-center text-xs font-semibold text-[#650D26]">Continue with wallet balance</button>}
           </div>
         )}
 
@@ -575,9 +609,10 @@ export default function ChatBox({
         <div ref={messagesEndRef} />
       </section>
 
-      <SiteDialog open={showRechargePopup && !chatEnded} title="Keep your conversation going" message="Your wallet balance is low. Add balance to continue your consultation." onDismiss={() => setShowRechargePopup(false)}>
+      <SiteDialog open={showRechargePopup && !chatEnded} title="Please recharge to continue" message="Your first 5 free minutes are complete. Add wallet balance to continue this consultation." onDismiss={() => setShowRechargePopup(false)}>
         <p className="mb-5 rounded-2xl border border-[#E8D7DC] bg-[#F8EEF2] px-4 py-3 text-sm text-[#650D26]">Recharge ₹199 and get ₹20 extra</p>
-        <a href="/wallet" className="block rounded-full bg-[#650D26] px-5 py-4 text-sm font-semibold text-white hover:bg-[#44091A]">Recharge wallet →</a>
+        <a href={`/wallet?chatSessionId=${chatSessionId}`} className="block rounded-full bg-[#650D26] px-5 py-4 text-sm font-semibold text-white hover:bg-[#44091A]">Recharge wallet →</a>
+        {walletBalance > 0 && <button onClick={resumeConsultation} className="mt-3 rounded-full px-5 py-3 text-sm font-medium text-[#650D26]">Continue with wallet balance</button>}
         <button type="button" onClick={() => setShowRechargePopup(false)} className="mt-3 rounded-full px-5 py-3 text-sm font-medium text-[#806B70]">Not now</button>
       </SiteDialog>
       {!chatEnded ? (
